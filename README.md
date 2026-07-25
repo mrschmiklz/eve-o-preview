@@ -40,6 +40,10 @@ Support:
 ## Development Details
 We have migrated to a unified source code where Windows and Linux share the same code base. When doing do we also implemented the ability to build the source using Github Actions. If you would like to make changed to the code for yourself, fork this repo, make changes to the code as you see fit and actions will build the .exe files. If you would like to share your code changes with the community open a PR for approval.
 
+### This fork (`mrschmiklz/eve-o-preview`)
+
+This fork adds GUI-configurable **client action bindings** (cycle next / minimize all), default mouse side-button shortcuts, and several client-cycling fixes. See [CHANGELOG.md](CHANGELOG.md) for version history and [Releases](https://github.com/mrschmiklz/eve-o-preview/releases) for Windows builds.
+
 ## System Requirements
 
 * Windows 7, Windows 8/8.1, Windows 10, Windows 11, Linux Wine
@@ -76,7 +80,8 @@ CCP Grimmi wrote:
 | Minimize to System Tray | Determines whether the main window form be minimized to windows tray when it is closed |
 | Track client locations | Determines whether the client's window position should be restored when it is activated or started |
 | Hide preview of active EVE client | Determines whether the thumbnail corresponding to the active EVE client is not displayed |
-| Minimize inactive EVE clients | Allows to auto-minimize inactive EVE clients to save CPU and GPU |
+| Minimize inactive EVE clients | Allows to auto-minimize inactive EVE clients to save CPU and GPU (enabled by default in this fork for new and upgraded configs) |
+| Client action bindings | Click the record button, then press a key combo or mouse button to bind **Cycle to next client** or **Minimize all clients**. Defaults: **F14** / **Mouse 4** = next client, **Mouse 5** = minimize all |
 | Animation Style | Use original animation style (0) or No Animation style (1). You may find Original is cleaner with fixed window mode and No Animation is cleaner with windowed mode. Especially when using minimize inactive clients.
 | Hide caption bar on clients | Hides (or shows) caption bar on eve clients |
 | Previews always on top | Determines whether EVE client thumbnails should stay on top of all other windows |
@@ -192,7 +197,9 @@ The following hotkey is described as `modifier+key` where `modifier` can be **Co
 
 ### Cycle Clients with Hotkey Setup
 
-In a similar pattern to the per client Hotkey Setup, It is possible to set a key combinations to cycle through select Eve Windows. EVE-O Preview doesn't provide any GUI to set the these hotkeys. It should be done via editing the configuration file directly. Don't forget to make a backup copy of the file before editing it.
+**Cycle to next client** (cycle group 1 forward) can be set on the **General** tab under **Client action bindings**. Use the record button and press your key or mouse button.
+
+For additional cycle groups (2–5), backward cycling, or custom client order, edit the configuration file directly. Don't forget to make a backup copy of the file before editing it.
 
 If you have not run EVE-O Preview before, or since this feature was added then it is recommended to quickly open and close EVE-O Preview once to trigger the config to update with some sample values. 
 
@@ -249,10 +256,10 @@ Should you wish to remove these HotKeys completely, Simply set the values to emp
 
 ### Minimize All Clients with Hotkey Setup
 
-In a similar pattern to the per client Hotkey Setup, It is possible to set a key combinations to Minimize all the Eve Windows. EVE-O Preview doesn't provide any GUI to set the these hotkeys. It should be done via editing the configuration file directly. Don't forget to make a backup copy of the file before editing it.
+**Minimize all clients** can be set on the **General** tab under **Client action bindings** (default: **Mouse 5**). You can also configure it in the configuration file:
 
   "MinimizeAllClientsHotkeys": [
-    "F22"
+    "MouseXButton2"
   ],
 
 
