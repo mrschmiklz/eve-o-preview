@@ -109,6 +109,10 @@ namespace EveOPreview.Presenters
 			this.View.EnableClientLayoutTracking = this._configuration.EnableClientLayoutTracking;
 			this.View.HideActiveClientThumbnail = this._configuration.HideActiveClientThumbnail;
 			this.View.MinimizeInactiveClients = this._configuration.MinimizeInactiveClients;
+			this.View.EnableSideMouseButtonCycle = this._configuration.EnableSideMouseButtonCycle;
+			this.View.SideButton1CycleAction = this._configuration.SideButton1CycleAction;
+			this.View.SideButton2CycleAction = this._configuration.SideButton2CycleAction;
+			this.View.MiddleButtonCycleAction = this._configuration.MiddleButtonCycleAction;
 			this.View.HideCaptionOnClients = this._configuration.HideCaptionOnClients;
 			this.View.WindowsAnimationStyle = ViewAnimationStyleConverter.Convert(this._configuration.WindowsAnimationStyle);
 			this.View.ShowThumbnailsAlwaysOnTop = this._configuration.ShowThumbnailsAlwaysOnTop;
@@ -140,6 +144,7 @@ namespace EveOPreview.Presenters
 
 
 			this.View.IconName = this._configuration.IconName;
+			this.View.RefreshMouseButtonCycleSettings();
 		}
 
 		private async void SaveApplicationSettings()
@@ -151,6 +156,10 @@ namespace EveOPreview.Presenters
 			this._configuration.EnableClientLayoutTracking = this.View.EnableClientLayoutTracking;
 			this._configuration.HideActiveClientThumbnail = this.View.HideActiveClientThumbnail;
 			this._configuration.MinimizeInactiveClients = this.View.MinimizeInactiveClients;
+			this._configuration.EnableSideMouseButtonCycle = this.View.EnableSideMouseButtonCycle;
+			this._configuration.SideButton1CycleAction = this.View.SideButton1CycleAction;
+			this._configuration.SideButton2CycleAction = this.View.SideButton2CycleAction;
+			this._configuration.MiddleButtonCycleAction = this.View.MiddleButtonCycleAction;
 
 			if (this._configuration.HideCaptionOnClients != this.View.HideCaptionOnClients ) {
 				this._configuration.HideCaptionOnClients = this.View.HideCaptionOnClients;
@@ -210,6 +219,7 @@ namespace EveOPreview.Presenters
 			this._configurationStorage.Save();
 
 			this.View.RefreshZoomSettings();
+			this.View.RefreshMouseButtonCycleSettings();
 
 			await this._mediator.Send(new SaveConfiguration());
 		}

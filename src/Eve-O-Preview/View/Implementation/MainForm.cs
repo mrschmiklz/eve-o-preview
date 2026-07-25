@@ -39,14 +39,21 @@ namespace EveOPreview.View
 
 			InitializeComponent();
 
+#if LINUX
+			this.EnableSideMouseButtonCycleCheckBox.Visible = false;
+			this.MouseButtonCycleGroupBox.Visible = false;
+#endif
+
 			this.ThumbnailsList.DisplayMember = "Title";
 
 			this.InitZoomAnchorMap();
 			this.InitOverlayLabelMap();
 			this.InitCycleGroupIndicatorMap();
 			this.InitFormSize();
+			this.InitMouseButtonCycleCombos();
 
 			this.AnimationStyleCombo.DataSource = Enum.GetValues(typeof(AnimationStyle));
+			this.RefreshMouseButtonCycleSettings();
 		}
 
 		public bool MinimizeToTray
@@ -128,6 +135,26 @@ namespace EveOPreview.View
 		{
 			get => this.MinimizeInactiveClientsCheckBox.Checked;
 			set => this.MinimizeInactiveClientsCheckBox.Checked = value;
+		}
+		public bool EnableSideMouseButtonCycle
+		{
+			get => this.EnableSideMouseButtonCycleCheckBox.Checked;
+			set => this.EnableSideMouseButtonCycleCheckBox.Checked = value;
+		}
+		public MouseButtonCycleAction SideButton1CycleAction
+		{
+			get => (MouseButtonCycleAction)this.SideButton1CycleActionCombo.SelectedItem;
+			set => this.SideButton1CycleActionCombo.SelectedItem = value;
+		}
+		public MouseButtonCycleAction SideButton2CycleAction
+		{
+			get => (MouseButtonCycleAction)this.SideButton2CycleActionCombo.SelectedItem;
+			set => this.SideButton2CycleActionCombo.SelectedItem = value;
+		}
+		public MouseButtonCycleAction MiddleButtonCycleAction
+		{
+			get => (MouseButtonCycleAction)this.MiddleButtonCycleActionCombo.SelectedItem;
+			set => this.MiddleButtonCycleActionCombo.SelectedItem = value;
 		}
 		public bool HideCaptionOnClients
 		{
@@ -423,6 +450,55 @@ namespace EveOPreview.View
 			bool enableControls = this.EnableThumbnailZoom;
 			this.ThumbnailZoomFactorNumericEdit.Enabled = enableControls;
 			this.ZoomAnchorPanel.Enabled = enableControls;
+		}
+
+		public void RefreshMouseButtonCycleSettings()
+		{
+			bool enableControls = this.EnableSideMouseButtonCycle;
+			this.MouseButtonCycleGroupBox.Enabled = enableControls;
+		}
+
+		private void InitMouseButtonCycleCombos()
+		{
+			MouseButtonCycleAction[] options = (MouseButtonCycleAction[])Enum.GetValues(typeof(MouseButtonCycleAction));
+
+			foreach (System.Windows.Forms.ComboBox comboBox in new[]
+			{
+				this.SideButton1CycleActionCombo,
+				this.SideButton2CycleActionCombo,
+				this.MiddleButtonCycleActionCombo
+			})
+			{
+				comboBox.DataSource = options;
+				comboBox.Format += this.MouseButtonCycleActionCombo_Format;
+			}
+		}
+
+		private void MouseButtonCycleActionCombo_Format(object sender, ListControlConvertEventArgs e)
+		{
+			if (e.Value is MouseButtonCycleAction action)
+			{
+				e.Value = this.FormatMouseButtonCycleAction(action);
+			}
+		}
+
+		private string FormatMouseButtonCycleAction(MouseButtonCycleAction action)
+		{
+			switch (action)
+			{
+				case MouseButtonCycleAction.CycleForward:
+					return "Cycle to next client";
+				case MouseButtonCycleAction.CycleBackward:
+					return "Cycle to previous client";
+				default:
+					return "Do nothing";
+			}
+		}
+
+		private void MouseButtonCycleEnabledChanged_Handler(object sender, EventArgs e)
+		{
+			this.RefreshMouseButtonCycleSettings();
+			this.OptionChanged_Handler(sender, e);
 		}
 
 		public Action ApplicationExitRequested { get; set; }

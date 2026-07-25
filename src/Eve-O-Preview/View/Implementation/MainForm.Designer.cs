@@ -63,6 +63,15 @@ namespace EveOPreview.View
 			HideCaptionOnClientsCheckBox = new CheckBox();
 			AnimationStyleCombo = new ComboBox();
 			MinimizeInactiveClientsCheckBox = new CheckBox();
+			EnableSideMouseButtonCycleCheckBox = new CheckBox();
+			MouseButtonCycleGroupBox = new GroupBox();
+			MouseButtonCycleHintLabel = new Label();
+			SideButton1CycleActionLabel = new Label();
+			SideButton1CycleActionCombo = new ComboBox();
+			SideButton2CycleActionLabel = new Label();
+			SideButton2CycleActionCombo = new ComboBox();
+			MiddleButtonCycleActionLabel = new Label();
+			MiddleButtonCycleActionCombo = new ComboBox();
 			EnableClientLayoutTrackingCheckBox = new CheckBox();
 			HideActiveClientThumbnailCheckBox = new CheckBox();
 			ShowThumbnailsAlwaysOnTopCheckBox = new CheckBox();
@@ -244,7 +253,10 @@ namespace EveOPreview.View
 			// 
 			// GeneralSettingsPanel
 			// 
+			GeneralSettingsPanel.AutoScroll = true;
 			GeneralSettingsPanel.BorderStyle = BorderStyle.FixedSingle;
+			GeneralSettingsPanel.Controls.Add(MouseButtonCycleGroupBox);
+			GeneralSettingsPanel.Controls.Add(EnableSideMouseButtonCycleCheckBox);
 			GeneralSettingsPanel.Controls.Add(HideCaptionOnClientsCheckBox);
 			GeneralSettingsPanel.Controls.Add(label4);
 			GeneralSettingsPanel.Controls.Add(AnimationStyleCombo);
@@ -306,6 +318,109 @@ namespace EveOPreview.View
 			MinimizeInactiveClientsCheckBox.Text = "Minimize inactive EVE clients";
 			MinimizeInactiveClientsCheckBox.UseVisualStyleBackColor = true;
 			MinimizeInactiveClientsCheckBox.CheckedChanged += OptionChanged_Handler;
+			// 
+			// EnableSideMouseButtonCycleCheckBox
+			// 
+			EnableSideMouseButtonCycleCheckBox.AutoSize = true;
+			EnableSideMouseButtonCycleCheckBox.Location = new Point(9, 207);
+			EnableSideMouseButtonCycleCheckBox.Margin = new Padding(4);
+			EnableSideMouseButtonCycleCheckBox.Name = "EnableSideMouseButtonCycleCheckBox";
+			EnableSideMouseButtonCycleCheckBox.Size = new Size(240, 19);
+			EnableSideMouseButtonCycleCheckBox.TabIndex = 29;
+			EnableSideMouseButtonCycleCheckBox.Text = "Enable mouse button client cycling";
+			EnableSideMouseButtonCycleCheckBox.UseVisualStyleBackColor = true;
+			EnableSideMouseButtonCycleCheckBox.CheckedChanged += MouseButtonCycleEnabledChanged_Handler;
+			// 
+			// MouseButtonCycleGroupBox
+			// 
+			MouseButtonCycleGroupBox.Controls.Add(MiddleButtonCycleActionCombo);
+			MouseButtonCycleGroupBox.Controls.Add(MiddleButtonCycleActionLabel);
+			MouseButtonCycleGroupBox.Controls.Add(SideButton2CycleActionCombo);
+			MouseButtonCycleGroupBox.Controls.Add(SideButton2CycleActionLabel);
+			MouseButtonCycleGroupBox.Controls.Add(SideButton1CycleActionCombo);
+			MouseButtonCycleGroupBox.Controls.Add(SideButton1CycleActionLabel);
+			MouseButtonCycleGroupBox.Controls.Add(MouseButtonCycleHintLabel);
+			MouseButtonCycleGroupBox.Location = new Point(9, 229);
+			MouseButtonCycleGroupBox.Margin = new Padding(4);
+			MouseButtonCycleGroupBox.Name = "MouseButtonCycleGroupBox";
+			MouseButtonCycleGroupBox.Padding = new Padding(4);
+			MouseButtonCycleGroupBox.Size = new Size(300, 152);
+			MouseButtonCycleGroupBox.TabIndex = 30;
+			MouseButtonCycleGroupBox.TabStop = false;
+			MouseButtonCycleGroupBox.Text = "Mouse button mapping";
+			// 
+			// MouseButtonCycleHintLabel
+			// 
+			MouseButtonCycleHintLabel.AutoSize = true;
+			MouseButtonCycleHintLabel.Location = new Point(8, 22);
+			MouseButtonCycleHintLabel.Margin = new Padding(4, 0, 4, 0);
+			MouseButtonCycleHintLabel.Name = "MouseButtonCycleHintLabel";
+			MouseButtonCycleHintLabel.Size = new Size(276, 30);
+			MouseButtonCycleHintLabel.TabIndex = 0;
+			MouseButtonCycleHintLabel.Text = "G203 and most mice: rear side = Button 4, front side = Button 5.";
+			// 
+			// SideButton1CycleActionLabel
+			// 
+			SideButton1CycleActionLabel.AutoSize = true;
+			SideButton1CycleActionLabel.Location = new Point(8, 58);
+			SideButton1CycleActionLabel.Margin = new Padding(4, 0, 4, 0);
+			SideButton1CycleActionLabel.Name = "SideButton1CycleActionLabel";
+			SideButton1CycleActionLabel.Size = new Size(145, 15);
+			SideButton1CycleActionLabel.TabIndex = 1;
+			SideButton1CycleActionLabel.Text = "Rear side button (Button 4)";
+			// 
+			// SideButton1CycleActionCombo
+			// 
+			SideButton1CycleActionCombo.DropDownStyle = ComboBoxStyle.DropDownList;
+			SideButton1CycleActionCombo.FormattingEnabled = true;
+			SideButton1CycleActionCombo.Location = new Point(165, 55);
+			SideButton1CycleActionCombo.Margin = new Padding(4);
+			SideButton1CycleActionCombo.Name = "SideButton1CycleActionCombo";
+			SideButton1CycleActionCombo.Size = new Size(127, 23);
+			SideButton1CycleActionCombo.TabIndex = 2;
+			SideButton1CycleActionCombo.SelectedIndexChanged += OptionChanged_Handler;
+			// 
+			// SideButton2CycleActionLabel
+			// 
+			SideButton2CycleActionLabel.AutoSize = true;
+			SideButton2CycleActionLabel.Location = new Point(8, 88);
+			SideButton2CycleActionLabel.Margin = new Padding(4, 0, 4, 0);
+			SideButton2CycleActionLabel.Name = "SideButton2CycleActionLabel";
+			SideButton2CycleActionLabel.Size = new Size(149, 15);
+			SideButton2CycleActionLabel.TabIndex = 3;
+			SideButton2CycleActionLabel.Text = "Front side button (Button 5)";
+			// 
+			// SideButton2CycleActionCombo
+			// 
+			SideButton2CycleActionCombo.DropDownStyle = ComboBoxStyle.DropDownList;
+			SideButton2CycleActionCombo.FormattingEnabled = true;
+			SideButton2CycleActionCombo.Location = new Point(165, 85);
+			SideButton2CycleActionCombo.Margin = new Padding(4);
+			SideButton2CycleActionCombo.Name = "SideButton2CycleActionCombo";
+			SideButton2CycleActionCombo.Size = new Size(127, 23);
+			SideButton2CycleActionCombo.TabIndex = 4;
+			SideButton2CycleActionCombo.SelectedIndexChanged += OptionChanged_Handler;
+			// 
+			// MiddleButtonCycleActionLabel
+			// 
+			MiddleButtonCycleActionLabel.AutoSize = true;
+			MiddleButtonCycleActionLabel.Location = new Point(8, 118);
+			MiddleButtonCycleActionLabel.Margin = new Padding(4, 0, 4, 0);
+			MiddleButtonCycleActionLabel.Name = "MiddleButtonCycleActionLabel";
+			MiddleButtonCycleActionLabel.Size = new Size(75, 15);
+			MiddleButtonCycleActionLabel.TabIndex = 5;
+			MiddleButtonCycleActionLabel.Text = "Middle click";
+			// 
+			// MiddleButtonCycleActionCombo
+			// 
+			MiddleButtonCycleActionCombo.DropDownStyle = ComboBoxStyle.DropDownList;
+			MiddleButtonCycleActionCombo.FormattingEnabled = true;
+			MiddleButtonCycleActionCombo.Location = new Point(165, 115);
+			MiddleButtonCycleActionCombo.Margin = new Padding(4);
+			MiddleButtonCycleActionCombo.Name = "MiddleButtonCycleActionCombo";
+			MiddleButtonCycleActionCombo.Size = new Size(127, 23);
+			MiddleButtonCycleActionCombo.TabIndex = 6;
+			MiddleButtonCycleActionCombo.SelectedIndexChanged += OptionChanged_Handler;
 			// 
 			// EnableClientLayoutTrackingCheckBox
 			// 
@@ -1464,6 +1579,15 @@ namespace EveOPreview.View
 		private LinkLabel DocumentationLink;
 		private Label VersionLabel;
 		private CheckBox MinimizeInactiveClientsCheckBox;
+		private CheckBox EnableSideMouseButtonCycleCheckBox;
+		private GroupBox MouseButtonCycleGroupBox;
+		private Label MouseButtonCycleHintLabel;
+		private Label SideButton1CycleActionLabel;
+		private ComboBox SideButton1CycleActionCombo;
+		private Label SideButton2CycleActionLabel;
+		private ComboBox SideButton2CycleActionCombo;
+		private Label MiddleButtonCycleActionLabel;
+		private ComboBox MiddleButtonCycleActionCombo;
         private CheckBox LockThumbnailLocationCheckbox;
         private NumericUpDown ThumbnailSnapToGridSizeYNumericEdit;
         private Label SnapYLabel;

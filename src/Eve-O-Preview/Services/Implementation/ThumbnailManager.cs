@@ -52,6 +52,9 @@ namespace EveOPreview.Services
 		private int _hideThumbnailsDelay;
 
 		private List<HotkeyHandler> _cycleClientHotkeyHandlers = new List<HotkeyHandler>();
+#if !LINUX
+		private readonly SideMouseButtonHandler _sideMouseButtonHandler;
+#endif
 		#endregion
 
 		public ThumbnailManager(IMediator mediator, IThumbnailConfiguration configuration, IProcessMonitor processMonitor, IWindowManager windowManager, IThumbnailViewFactory factory)
@@ -96,6 +99,11 @@ namespace EveOPreview.Services
 			RegisterCycleClientHotkey(this._configuration.CycleGroup5BackwardHotkeys?.Select(x => this._configuration.StringToKey(x)), false, this._configuration.CycleGroup5ClientsOrder);
 
 			RegisterMinimizeAllClientsHotkey(this._configuration.MinimizeAllClientsHotkeys?.Select(x => this._configuration.StringToKey(x)));
+
+#if !LINUX
+			this._sideMouseButtonHandler = new SideMouseButtonHandler();
+			this._sideMouseButtonHandler.SideButtonPressed += this.OnSideMouseButtonPressed;
+#endif
 		}
 
 		public IThumbnailView GetClientByTitle(string title)
@@ -280,13 +288,77 @@ namespace EveOPreview.Services
 		{
 			this._thumbnailUpdateTimer.Start();
 
+#if !LINUX
+			this._sideMouseButtonHandler.Register();
+#endif
+
 			this.RefreshThumbnails();
 		}
 
 		public void Stop()
 		{
+#if !LINUX
+			this._sideMouseButtonHandler.Unregister();
+#endif
+
 			this._thumbnailUpdateTimer.Stop();
 		}
+
+#if !LINUX
+		private void OnSideMouseButtonPressed(object sender, SideMouseButtonEventArgs eventArgs)
+		{
+			if (!this._configuration.EnableSideMouseButtonCycle)
+			{
+				return;
+			}
+
+			if (this._thumbnailViews.Count == 0)
+			{
+				return;
+			}
+
+			IntPtr foregroundWindowHandle = this._windowManager.GetForegroundWindowHandle();
+			if (!this.IsClientWindowActive(foregroundWindowHandle))
+			{
+				return;
+			}
+
+			MouseButtonCycleAction cycleAction = this.GetConfiguredMouseButtonCycleAction(eventArgs.Button);
+			if (cycleAction == MouseButtonCycleAction.None)
+			{
+				return;
+			}
+
+			eventArgs.Handled = true;
+
+			bool isForwards = cycleAction == MouseButtonCycleAction.CycleForward;
+			Action cycle = () => this.CycleNextClient(isForwards, this._configuration.CycleGroup1ClientsOrder);
+
+			if (Application.OpenForms.Count > 0)
+			{
+				Application.OpenForms[0].BeginInvoke(cycle);
+			}
+			else
+			{
+				cycle();
+			}
+		}
+
+		private MouseButtonCycleAction GetConfiguredMouseButtonCycleAction(MappedMouseButton button)
+		{
+			switch (button)
+			{
+				case MappedMouseButton.SideButton1:
+					return this._configuration.SideButton1CycleAction;
+				case MappedMouseButton.SideButton2:
+					return this._configuration.SideButton2CycleAction;
+				case MappedMouseButton.MiddleButton:
+					return this._configuration.MiddleButtonCycleAction;
+				default:
+					return MouseButtonCycleAction.None;
+			}
+		}
+#endif
 
 		private void ThumbnailUpdateTimerTick(object sender, EventArgs e)
 		{
