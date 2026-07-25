@@ -13,6 +13,7 @@ namespace EveOPreview.Services
 		void UpdateCycleGroupIndicator();
 		void UpdateThumbnailsSize();
 		void UpdateThumbnailFrames();
+		void UpdateThumbnailClickThrough();
 
 		void UpdateActionBindings();
 

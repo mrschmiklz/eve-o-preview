@@ -195,6 +195,12 @@ namespace EveOPreview.View
 			//this.OverlayLabel.Visible = enable;
 			this._showOverlayText = enable;
 		}
+
+		public void SetClickThrough(bool enable)
+		{
+			ClickThroughHelper.SetClickThrough(this, enable);
+		}
+
 		public void EnableFakePreview(bool enable, bool resizeForHighlight, int highlightSize, Color bgColor)
 		{
 			bool IsLocationUpdateRequired(Point currentLocation, int left, int top)

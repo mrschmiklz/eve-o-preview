@@ -86,6 +86,7 @@ namespace EveOPreview.View
 			ThumbnailSnapToGridSizeXNumericEdit = new NumericUpDown();
 			SnapXLabel = new Label();
 			LockThumbnailLocationCheckbox = new CheckBox();
+			ThumbnailClickThroughCheckbox = new CheckBox();
 			ThumbnailsWidthNumericEdit = new NumericUpDown();
 			ThumbnailsHeightNumericEdit = new NumericUpDown();
 			ThumbnailOpacityTrackBar = new TrackBar();
@@ -512,6 +513,7 @@ namespace EveOPreview.View
 			ThumbnailSettingsPanel.Controls.Add(ThumbnailSnapToGridSizeXNumericEdit);
 			ThumbnailSettingsPanel.Controls.Add(SnapXLabel);
 			ThumbnailSettingsPanel.Controls.Add(LockThumbnailLocationCheckbox);
+			ThumbnailSettingsPanel.Controls.Add(ThumbnailClickThroughCheckbox);
 			ThumbnailSettingsPanel.Controls.Add(HeigthLabel);
 			ThumbnailSettingsPanel.Controls.Add(WidthLabel);
 			ThumbnailSettingsPanel.Controls.Add(ThumbnailsWidthNumericEdit);
@@ -560,7 +562,7 @@ namespace EveOPreview.View
 			// ThumbnailSnapToGridCheckBox
 			// 
 			ThumbnailSnapToGridCheckBox.AutoSize = true;
-			ThumbnailSnapToGridCheckBox.Location = new Point(13, 120);
+			ThumbnailSnapToGridCheckBox.Location = new Point(13, 138);
 			ThumbnailSnapToGridCheckBox.Margin = new Padding(4);
 			ThumbnailSnapToGridCheckBox.Name = "ThumbnailSnapToGridCheckBox";
 			ThumbnailSnapToGridCheckBox.Size = new Size(152, 19);
@@ -575,7 +577,7 @@ namespace EveOPreview.View
 			ThumbnailSnapToGridSizeYNumericEdit.BorderStyle = BorderStyle.FixedSingle;
 			ThumbnailSnapToGridSizeYNumericEdit.CausesValidation = false;
 			ThumbnailSnapToGridSizeYNumericEdit.Increment = new decimal(new int[] { 10, 0, 0, 0 });
-			ThumbnailSnapToGridSizeYNumericEdit.Location = new Point(152, 141);
+			ThumbnailSnapToGridSizeYNumericEdit.Location = new Point(152, 159);
 			ThumbnailSnapToGridSizeYNumericEdit.Margin = new Padding(4);
 			ThumbnailSnapToGridSizeYNumericEdit.Maximum = new decimal(new int[] { 999999, 0, 0, 0 });
 			ThumbnailSnapToGridSizeYNumericEdit.Name = "ThumbnailSnapToGridSizeYNumericEdit";
@@ -587,7 +589,7 @@ namespace EveOPreview.View
 			// SnapYLabel
 			// 
 			SnapYLabel.AutoSize = true;
-			SnapYLabel.Location = new Point(128, 143);
+			SnapYLabel.Location = new Point(128, 161);
 			SnapYLabel.Margin = new Padding(4, 0, 4, 0);
 			SnapYLabel.Name = "SnapYLabel";
 			SnapYLabel.Size = new Size(14, 15);
@@ -600,7 +602,7 @@ namespace EveOPreview.View
 			ThumbnailSnapToGridSizeXNumericEdit.BorderStyle = BorderStyle.FixedSingle;
 			ThumbnailSnapToGridSizeXNumericEdit.CausesValidation = false;
 			ThumbnailSnapToGridSizeXNumericEdit.Increment = new decimal(new int[] { 10, 0, 0, 0 });
-			ThumbnailSnapToGridSizeXNumericEdit.Location = new Point(65, 141);
+			ThumbnailSnapToGridSizeXNumericEdit.Location = new Point(65, 159);
 			ThumbnailSnapToGridSizeXNumericEdit.Margin = new Padding(4);
 			ThumbnailSnapToGridSizeXNumericEdit.Maximum = new decimal(new int[] { 999999, 0, 0, 0 });
 			ThumbnailSnapToGridSizeXNumericEdit.Name = "ThumbnailSnapToGridSizeXNumericEdit";
@@ -612,7 +614,7 @@ namespace EveOPreview.View
 			// SnapXLabel
 			// 
 			SnapXLabel.AutoSize = true;
-			SnapXLabel.Location = new Point(9, 143);
+			SnapXLabel.Location = new Point(9, 161);
 			SnapXLabel.Margin = new Padding(4, 0, 4, 0);
 			SnapXLabel.Name = "SnapXLabel";
 			SnapXLabel.Size = new Size(43, 15);
@@ -630,6 +632,19 @@ namespace EveOPreview.View
 			LockThumbnailLocationCheckbox.Text = "Lock Thumbnail Location";
 			LockThumbnailLocationCheckbox.UseVisualStyleBackColor = true;
 			LockThumbnailLocationCheckbox.CheckedChanged += OptionChanged_Handler;
+			// 
+			// ThumbnailClickThroughCheckbox
+			// 
+			ThumbnailClickThroughCheckbox.AutoSize = true;
+			ThumbnailClickThroughCheckbox.Enabled = false;
+			ThumbnailClickThroughCheckbox.Location = new Point(29, 115);
+			ThumbnailClickThroughCheckbox.Margin = new Padding(4);
+			ThumbnailClickThroughCheckbox.Name = "ThumbnailClickThroughCheckbox";
+			ThumbnailClickThroughCheckbox.Size = new Size(220, 19);
+			ThumbnailClickThroughCheckbox.TabIndex = 36;
+			ThumbnailClickThroughCheckbox.Text = "Click through (pass mouse to below)";
+			ThumbnailClickThroughCheckbox.UseVisualStyleBackColor = true;
+			ThumbnailClickThroughCheckbox.CheckedChanged += OptionChanged_Handler;
 			// 
 			// HeigthLabel
 			// 
@@ -1574,6 +1589,7 @@ namespace EveOPreview.View
 		private Button CycleBackwardRecordButton;
 		private TextBox CycleBackwardBindingTextBox;
         private CheckBox LockThumbnailLocationCheckbox;
+        private CheckBox ThumbnailClickThroughCheckbox;
         private NumericUpDown ThumbnailSnapToGridSizeYNumericEdit;
         private Label SnapYLabel;
         private NumericUpDown ThumbnailSnapToGridSizeXNumericEdit;

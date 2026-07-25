@@ -31,6 +31,7 @@ namespace EveOPreview.View
 		private bool _isSizeChanged;
 
 		private bool _isCustomMouseModeActive;
+		private bool _isClickThrough;
 
 		private double _opacity;
 		 
@@ -283,6 +284,19 @@ namespace EveOPreview.View
 
 			this.FormBorderStyle = style;
 		}
+
+		public void SetClickThrough(bool enable)
+		{
+			if (this._isClickThrough == enable)
+			{
+				return;
+			}
+
+			this._isClickThrough = enable;
+			ClickThroughHelper.SetClickThrough(this, enable);
+			this._overlay.SetClickThrough(enable);
+		}
+
 		public void SetOverlayLabel()
 		{
 		}

@@ -420,6 +420,7 @@ namespace EveOPreview.Services
 				// Otherwise thumbnail window will be unnecessary resized
 				view.SetSizeLimitations(this._configuration.ThumbnailMinimumSize, this._configuration.ThumbnailMaximumSize);
 				view.SetTopMost(this._configuration.ShowThumbnailsAlwaysOnTop);
+				view.SetClickThrough(this.IsThumbnailClickThroughEnabled());
 
 				view.ThumbnailLocation = this.IsManageableThumbnail(view)
 											? this._configuration.GetThumbnailLocation(view.Title, this._activeClient.Title, view.ThumbnailLocation)
@@ -711,6 +712,25 @@ namespace EveOPreview.Services
 			}
 
 			this.EnableViewEvents();
+		}
+
+		public void UpdateThumbnailClickThrough()
+		{
+			bool enabled = this.IsThumbnailClickThroughEnabled();
+
+			this.DisableViewEvents();
+
+			foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews)
+			{
+				entry.Value.SetClickThrough(enabled);
+			}
+
+			this.EnableViewEvents();
+		}
+
+		private bool IsThumbnailClickThroughEnabled()
+		{
+			return this._configuration.LockThumbnailLocation && this._configuration.ThumbnailClickThrough;
 		}
 
 		private void EnableViewEvents()

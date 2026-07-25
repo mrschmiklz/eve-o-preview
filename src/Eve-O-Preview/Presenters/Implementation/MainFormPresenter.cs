@@ -135,6 +135,8 @@ namespace EveOPreview.Presenters
 			this.View.ShowThumbnailOverlays = this._configuration.ShowThumbnailOverlays;
 			this.View.ShowThumbnailFrames = this._configuration.ShowThumbnailFrames;
 			this.View.LockThumbnailLocation = this._configuration.LockThumbnailLocation;
+			this.View.ThumbnailClickThrough = this._configuration.ThumbnailClickThrough;
+			this.View.RefreshClickThroughCheckboxState();
 			this.View.ThumbnailSnapToGrid = this._configuration.ThumbnailSnapToGrid;
 			this.View.ThumbnailSnapToGridSizeX = this._configuration.ThumbnailSnapToGridSizeX;
 			this.View.ThumbnailSnapToGridSizeY = this._configuration.ThumbnailSnapToGridSizeY;
@@ -205,6 +207,9 @@ namespace EveOPreview.Presenters
 			}
 
 			this._configuration.LockThumbnailLocation = this.View.LockThumbnailLocation;
+			this._configuration.ThumbnailClickThrough = this.View.LockThumbnailLocation && this.View.ThumbnailClickThrough;
+			this._thumbnailManager.UpdateThumbnailClickThrough();
+			this.View.RefreshClickThroughCheckboxState();
 			this._configuration.ThumbnailSnapToGrid = this.View.ThumbnailSnapToGrid;
 			this._configuration.ThumbnailSnapToGridSizeX = this.View.ThumbnailSnapToGridSizeX;
 			this._configuration.ThumbnailSnapToGridSizeY = this.View.ThumbnailSnapToGridSizeY;

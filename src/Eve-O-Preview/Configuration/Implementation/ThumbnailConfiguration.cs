@@ -171,6 +171,7 @@ namespace EveOPreview.Configuration.Implementation
 		public bool ShowThumbnailOverlays { get; set; }
 		public bool ShowThumbnailFrames { get; set; }
 		public bool LockThumbnailLocation { get; set; }
+		public bool ThumbnailClickThrough { get; set; }
 		public bool ThumbnailSnapToGrid { get; set; }
 		public int ThumbnailSnapToGridSizeX {  get; set; }
 		public int ThumbnailSnapToGridSizeY { get; set; }
@@ -346,6 +347,11 @@ namespace EveOPreview.Configuration.Implementation
 			}
 
 			this.EnsureDefaultMouseActionBindings();
+
+			if (!this.LockThumbnailLocation)
+			{
+				this.ThumbnailClickThrough = false;
+			}
 			this.ThumbnailRefreshPeriod = ThumbnailConfiguration.ApplyRestrictions(this.ThumbnailRefreshPeriod, 300, 1000);
 			this.ThumbnailResizeTimeoutPeriod = ThumbnailConfiguration.ApplyRestrictions(this.ThumbnailResizeTimeoutPeriod, 200, 5000);
 			this.ThumbnailSize = new Size(ThumbnailConfiguration.ApplyRestrictions(this.ThumbnailSize.Width, this.ThumbnailMinimumSize.Width, this.ThumbnailMaximumSize.Width),

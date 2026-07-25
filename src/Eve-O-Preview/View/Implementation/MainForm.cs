@@ -64,6 +64,12 @@ namespace EveOPreview.View
 
 			this.AnimationStyleCombo.DataSource = Enum.GetValues(typeof(AnimationStyle));
 			this.RefreshCycleBindingCaptureState();
+			this.LockThumbnailLocationCheckbox.CheckedChanged += this.LockThumbnailLocationCheckbox_CheckedChanged;
+		}
+
+		private void LockThumbnailLocationCheckbox_CheckedChanged(object sender, EventArgs e)
+		{
+			this.RefreshClickThroughCheckboxState();
 		}
 
 		public bool MinimizeToTray
@@ -332,6 +338,24 @@ namespace EveOPreview.View
 			get => this.LockThumbnailLocationCheckbox.Checked;
 			set => this.LockThumbnailLocationCheckbox.Checked = value;
 		}
+
+		public bool ThumbnailClickThrough
+		{
+			get => this.ThumbnailClickThroughCheckbox.Checked;
+			set => this.ThumbnailClickThroughCheckbox.Checked = value;
+		}
+
+		public void RefreshClickThroughCheckboxState()
+		{
+			bool locked = this.LockThumbnailLocationCheckbox.Checked;
+			this.ThumbnailClickThroughCheckbox.Enabled = locked;
+
+			if (!locked && this.ThumbnailClickThroughCheckbox.Checked)
+			{
+				this.ThumbnailClickThroughCheckbox.Checked = false;
+			}
+		}
+
 		public bool ThumbnailSnapToGrid
 		{
 			get => this.ThumbnailSnapToGridCheckBox.Checked;

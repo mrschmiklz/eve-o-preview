@@ -23,6 +23,7 @@ namespace EveOPreview.View
 		void SetSizeLimitations(Size minimumSize, Size maximumSize);
 		void SetOpacity(double opacity);
 		void SetFrames(bool enable);
+		void SetClickThrough(bool enable);
 		void SetOverlayLabel();
 		void SetCycleGroupIndicator(bool displayCycleGroup, ZoomAnchor anchor);
 		void SetTopMost(bool enableTopmost);

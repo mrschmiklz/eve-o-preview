@@ -39,6 +39,8 @@ namespace EveOPreview.View
 		bool ShowThumbnailFrames { get; set; }
 
 		bool LockThumbnailLocation { get; set; }
+		bool ThumbnailClickThrough { get; set; }
+		void RefreshClickThroughCheckboxState();
 		bool ThumbnailSnapToGrid { get; set; }
 		int ThumbnailSnapToGridSizeX { get; set; }
 		int ThumbnailSnapToGridSizeY { get; set; }
