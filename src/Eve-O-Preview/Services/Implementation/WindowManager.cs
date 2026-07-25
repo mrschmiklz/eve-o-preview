@@ -110,17 +110,22 @@ namespace EveOPreview.Services.Implementation
 
 		// if building for LINUX the window handling is slightly different
 #if LINUX
-		private void WindowsActivateWindow(IntPtr handle)
+		private bool WindowsActivateWindow(IntPtr handle)
 		{
-			User32NativeMethods.SetForegroundWindow(handle);
-			User32NativeMethods.SetFocus(handle);
-
-			uint style = User32NativeMethods.GetWindowLong(handle, InteropConstants.GWL_STYLE);
-
-			if ((style & InteropConstants.WS_MINIMIZE) == InteropConstants.WS_MINIMIZE)
+			if (handle == IntPtr.Zero)
 			{
-				User32NativeMethods.ShowWindowAsync(handle, InteropConstants.SW_RESTORE);
+				return false;
 			}
+
+			this.RestoreWindowIfMinimized(handle, AnimationStyle.NoAnimation);
+			this.ForceForegroundWindow(handle);
+
+			if (User32NativeMethods.GetForegroundWindow() == handle)
+			{
+				return true;
+			}
+
+			return !User32NativeMethods.IsIconic(handle);
 		}
 
 		private void WineActivateWindow(string windowName)
@@ -166,16 +171,15 @@ namespace EveOPreview.Services.Implementation
 			}
 		}
 
-        public void ActivateWindow(IntPtr handle, string windowName)
+        public bool ActivateWindow(IntPtr handle, string windowName)
         {
             if (this._enableWineCompatabilityMode)
             {
                 this.WineActivateWindow(windowName);
+                return true;
             }
-            else
-            {
-                this.WindowsActivateWindow(handle);
-            }
+
+            return this.WindowsActivateWindow(handle);
         }
 
         public void MinimizeWindow(IntPtr handle, bool enableAnimation)
@@ -197,25 +201,80 @@ namespace EveOPreview.Services.Implementation
 #endif
 
 #if WINDOWS
-		public void ActivateWindow(IntPtr handle, AnimationStyle animation)
+		public bool ActivateWindow(IntPtr handle, AnimationStyle animation)
 		{
-			User32NativeMethods.SetForegroundWindow(handle);
-			User32NativeMethods.SetFocus(handle);
-
-			uint style = User32NativeMethods.GetWindowLong(handle, InteropConstants.GWL_STYLE);
-
-			if ((style & InteropConstants.WS_MINIMIZE) == InteropConstants.WS_MINIMIZE)
+			if (handle == IntPtr.Zero)
 			{
-				switch (animation)
+				return false;
+			}
+
+			this.RestoreWindowIfMinimized(handle, animation);
+			this.ForceForegroundWindow(handle);
+
+			if (User32NativeMethods.GetForegroundWindow() == handle)
+			{
+				return true;
+			}
+
+			// A restored window may lag foreground; avoid minimizing the current client if restore succeeded.
+			return !User32NativeMethods.IsIconic(handle);
+		}
+
+		private void RestoreWindowIfMinimized(IntPtr handle, AnimationStyle animation)
+		{
+			if (!User32NativeMethods.IsIconic(handle))
+			{
+				return;
+			}
+
+			switch (animation)
+			{
+				case AnimationStyle.OriginalAnimation:
+					User32NativeMethods.ShowWindowAsync(handle, InteropConstants.SW_RESTORE);
+					break;
+				case AnimationStyle.NoAnimation:
+					this.TurnOffAnimation();
+					User32NativeMethods.ShowWindowAsync(handle, InteropConstants.SW_RESTORE);
+					this.RestoreAnimation();
+					break;
+			}
+		}
+
+		private void ForceForegroundWindow(IntPtr handle)
+		{
+			IntPtr foregroundWindow = User32NativeMethods.GetForegroundWindow();
+			uint foregroundThread = User32NativeMethods.GetWindowThreadProcessId(foregroundWindow, IntPtr.Zero);
+			uint targetThread = User32NativeMethods.GetWindowThreadProcessId(handle, IntPtr.Zero);
+			uint currentThread = User32NativeMethods.GetCurrentThreadId();
+			bool attachedToForeground = false;
+			bool attachedToTarget = false;
+
+			try
+			{
+				if (foregroundThread != 0 && foregroundThread != currentThread)
 				{
-					case AnimationStyle.OriginalAnimation:
-						User32NativeMethods.ShowWindowAsync(handle, InteropConstants.SW_RESTORE);
-						break;
-					case AnimationStyle.NoAnimation:
-						TurnOffAnimation();
-						User32NativeMethods.ShowWindowAsync(handle, InteropConstants.SW_RESTORE);
-						RestoreAnimation();
-						break;
+					attachedToForeground = User32NativeMethods.AttachThreadInput(currentThread, foregroundThread, true);
+				}
+
+				if (targetThread != 0 && targetThread != currentThread)
+				{
+					attachedToTarget = User32NativeMethods.AttachThreadInput(currentThread, targetThread, true);
+				}
+
+				User32NativeMethods.BringWindowToTop(handle);
+				User32NativeMethods.SetForegroundWindow(handle);
+				User32NativeMethods.SetFocus(handle);
+			}
+			finally
+			{
+				if (attachedToTarget)
+				{
+					User32NativeMethods.AttachThreadInput(currentThread, targetThread, false);
+				}
+
+				if (attachedToForeground)
+				{
+					User32NativeMethods.AttachThreadInput(currentThread, foregroundThread, false);
 				}
 			}
 		}

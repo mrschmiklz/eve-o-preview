@@ -15,7 +15,20 @@ namespace EveOPreview.Services.Interop
 		public static extern bool SetForegroundWindow(IntPtr window);
 
 		[DllImport("user32.dll")]
+		public static extern bool BringWindowToTop(IntPtr window);
+
+		[DllImport("user32.dll")]
 		public static extern void SetFocus(IntPtr window);
+
+		[DllImport("user32.dll")]
+		public static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr processId);
+
+		[DllImport("kernel32.dll")]
+		public static extern uint GetCurrentThreadId();
+
+		[DllImport("user32.dll")]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
 
 		[DllImport("user32.dll")]
 		public static extern void EnableWindow(IntPtr window, bool isEnabled);

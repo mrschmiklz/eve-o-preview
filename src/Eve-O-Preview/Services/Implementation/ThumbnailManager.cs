@@ -190,7 +190,7 @@ namespace EveOPreview.Services
 						continue;
 					}
 
-					HotkeyHandler handler = new HotkeyHandler(default(IntPtr), key);
+					HotkeyHandler handler = new HotkeyHandler(this.GetHotkeyTarget(), key);
 					handler.Pressed += (object sender, HandledEventArgs eventArgs) =>
 					{
 						this.SyncActiveClientFromForeground();
@@ -205,7 +205,7 @@ namespace EveOPreview.Services
 				}
 				else
 				{
-					this._globalMouseInputHandler.Register(trimmedBinding, () => this.InvokePrimaryMouseCycle(isForwards));
+					this._globalMouseInputHandler.Register(trimmedBinding, () => this.InvokeOnUiThread(() => this.InvokePrimaryMouseCycle(isForwards)));
 					this._primaryCycleMouseBindings.Add(trimmedBinding);
 				}
 			}
@@ -234,7 +234,7 @@ namespace EveOPreview.Services
 						continue;
 					}
 
-					HotkeyHandler handler = new HotkeyHandler(default(IntPtr), key);
+					HotkeyHandler handler = new HotkeyHandler(this.GetHotkeyTarget(), key);
 					handler.Pressed += (object sender, HandledEventArgs eventArgs) =>
 					{
 						this.MinimizeAllClients();
@@ -248,7 +248,7 @@ namespace EveOPreview.Services
 				}
 				else
 				{
-					this._globalMouseInputHandler.Register(trimmedBinding, this.MinimizeAllClients);
+					this._globalMouseInputHandler.Register(trimmedBinding, () => this.InvokeOnUiThread(this.MinimizeAllClients));
 					this._minimizeAllMouseBindings.Add(trimmedBinding);
 				}
 			}
@@ -264,7 +264,31 @@ namespace EveOPreview.Services
 			this.SyncActiveClientFromForeground();
 			this.CycleNextClientByHandle(isForwards);
 		}
+
+		private void InvokeOnUiThread(Action action)
+		{
+			if (Application.OpenForms.Count == 0)
+			{
+				action();
+				return;
+			}
+
+			Form mainForm = Application.OpenForms[0];
+			if (mainForm.InvokeRequired)
+			{
+				mainForm.BeginInvoke(action);
+			}
+			else
+			{
+				action();
+			}
+		}
 #endif
+
+		private IntPtr GetHotkeyTarget()
+		{
+			return Application.OpenForms.Count > 0 ? Application.OpenForms[0].Handle : IntPtr.Zero;
+		}
 
 		private void SyncActiveClientFromForeground()
 		{
@@ -309,10 +333,15 @@ namespace EveOPreview.Services
 		{
 			this.GetActiveClient()?.ClearBorder();
 #if LINUX
-			this._windowManager.ActivateWindow(newClient.Key, newClient.Value.Title);
+			bool activated = this._windowManager.ActivateWindow(newClient.Key, newClient.Value.Title);
 #else
-			this._windowManager.ActivateWindow(newClient.Key, this._configuration.WindowsAnimationStyle);
+			bool activated = this._windowManager.ActivateWindow(newClient.Key, this._configuration.WindowsAnimationStyle);
 #endif
+			if (!activated)
+			{
+				return;
+			}
+
 			this.SwitchActiveClient(newClient.Key, newClient.Value.Title);
 
 			newClient.Value.SetHighlight();
@@ -532,7 +561,7 @@ namespace EveOPreview.Services
 					continue;
 				}
 
-				var newHandler = new HotkeyHandler(default(IntPtr), hotkey);
+				var newHandler = new HotkeyHandler(this.GetHotkeyTarget(), hotkey);
 				newHandler.Pressed += (object s, HandledEventArgs e) =>
 				{
 					this.CycleNextClient(isForwards, cycleOrder);
@@ -557,7 +586,7 @@ namespace EveOPreview.Services
 					continue;
 				}
 
-				var newHandler = new HotkeyHandler(default(IntPtr), hotkey);
+				var newHandler = new HotkeyHandler(this.GetHotkeyTarget(), hotkey);
 				newHandler.Pressed += (object s, HandledEventArgs e) =>
 				{
 					this.MinimizeAllClients();
