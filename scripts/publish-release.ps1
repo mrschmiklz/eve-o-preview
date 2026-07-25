@@ -86,7 +86,7 @@ if (-not $SkipLocalBuild) {
 }
 
 Write-Step "Creating and pushing tag '$Tag'"
-git tag -a $Tag -m $Notes
+git -c user.name="mrschmiklz" -c user.email="mrschmiklz@users.noreply.github.com" tag -a $Tag -m $Notes
 git push origin $Tag
 
 Write-Step "Creating GitHub release (triggers Actions to build zips)"

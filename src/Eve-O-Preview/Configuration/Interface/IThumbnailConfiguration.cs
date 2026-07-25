@@ -99,6 +99,8 @@ namespace EveOPreview.Configuration
 		void SetClientHotkey(string currentClient, Keys hotkey);
 		Keys StringToKey(string hotkey);
 		bool IsPriorityClient(string currentClient);
+		IReadOnlyList<string> ExecutablesToPreview { get; }
+
 		bool IsExecutableToPreview(string processName);
 
 		bool IsThumbnailDisabled(string currentClient);

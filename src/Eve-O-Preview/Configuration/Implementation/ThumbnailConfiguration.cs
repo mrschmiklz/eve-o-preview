@@ -324,7 +324,9 @@ namespace EveOPreview.Configuration.Implementation
 		[JsonProperty]
 		private List<string> PriorityClients { get; set; }
 		[JsonProperty]
-		private List<string> ExecutablesToPreview { get; set; }
+		public List<string> ExecutablesToPreview { get; set; }
+
+		IReadOnlyList<string> IThumbnailConfiguration.ExecutablesToPreview => this.ExecutablesToPreview;
 
 		public Point GetThumbnailLocation(string currentClient, string activeClient, Point defaultLocation)
 		{

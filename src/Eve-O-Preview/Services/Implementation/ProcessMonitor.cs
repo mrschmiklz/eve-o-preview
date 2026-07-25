@@ -76,40 +76,24 @@ namespace EveOPreview.Services.Implementation
 			removedProcesses = new List<IProcessInfo>(16);
 
 			IList<IntPtr> knownProcesses = new List<IntPtr>(this._processCache.Keys);
-			foreach (Process process in Process.GetProcesses())
+
+			foreach (string executableName in this._configuration.ExecutablesToPreview)
 			{
-				string processName = process.ProcessName;
+				Process[] processes = Process.GetProcessesByName(executableName);
 
-				if (!this.IsMonitoredProcess(processName))
+				try
 				{
-					continue;
-				}
-
-				IntPtr mainWindowHandle = process.MainWindowHandle;
-				if (mainWindowHandle == IntPtr.Zero)
-				{
-					continue; // No need to monitor non-visual processes
-				}
-
-				string mainWindowTitle = process.MainWindowTitle.Replace("—", "-");
-				this._processCache.TryGetValue(mainWindowHandle, out string cachedTitle);
-
-				if (cachedTitle == null)
-				{
-					// This is a new process in the list
-					this._processCache.Add(mainWindowHandle, mainWindowTitle);
-					addedProcesses.Add(new ProcessInfo(mainWindowHandle, mainWindowTitle));
-				}
-				else
-				{
-					// This is an already known process
-					if (cachedTitle != mainWindowTitle)
+					foreach (Process process in processes)
 					{
-						this._processCache[mainWindowHandle] = mainWindowTitle;
-						updatedProcesses.Add(new ProcessInfo(mainWindowHandle, mainWindowTitle));
+						this.ProcessCandidateProcess(process, knownProcesses, addedProcesses, updatedProcesses);
 					}
-
-					knownProcesses.Remove(mainWindowHandle);
+				}
+				finally
+				{
+					foreach (Process process in processes)
+					{
+						process.Dispose();
+					}
 				}
 			}
 
@@ -118,6 +102,41 @@ namespace EveOPreview.Services.Implementation
 				string title = this._processCache[index];
 				removedProcesses.Add(new ProcessInfo(index, title));
 				this._processCache.Remove(index);
+			}
+		}
+
+		private void ProcessCandidateProcess(Process process, IList<IntPtr> knownProcesses, ICollection<IProcessInfo> addedProcesses, ICollection<IProcessInfo> updatedProcesses)
+		{
+			string processName = process.ProcessName;
+
+			if (!this.IsMonitoredProcess(processName))
+			{
+				return;
+			}
+
+			IntPtr mainWindowHandle = process.MainWindowHandle;
+			if (mainWindowHandle == IntPtr.Zero)
+			{
+				return; // No need to monitor non-visual processes
+			}
+
+			string mainWindowTitle = process.MainWindowTitle.Replace("—", "-");
+			this._processCache.TryGetValue(mainWindowHandle, out string cachedTitle);
+
+			if (cachedTitle == null)
+			{
+				this._processCache.Add(mainWindowHandle, mainWindowTitle);
+				addedProcesses.Add(new ProcessInfo(mainWindowHandle, mainWindowTitle));
+			}
+			else
+			{
+				if (cachedTitle != mainWindowTitle)
+				{
+					this._processCache[mainWindowHandle] = mainWindowTitle;
+					updatedProcesses.Add(new ProcessInfo(mainWindowHandle, mainWindowTitle));
+				}
+
+				knownProcesses.Remove(mainWindowHandle);
 			}
 		}
 	}

@@ -12,7 +12,6 @@ using System.Linq;
 using System.Net;
 using System.Reflection.Metadata;
 using System.Threading.Tasks;
-using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Threading;
 
@@ -50,6 +49,7 @@ namespace EveOPreview.Services
 
 		private int _refreshCycleCount;
 		private int _hideThumbnailsDelay;
+		private bool _isThumbnailUpdateInProgress;
 
 		private List<HotkeyHandler> _cycleClientHotkeyHandlers = new List<HotkeyHandler>();
 #if !LINUX
@@ -245,11 +245,16 @@ namespace EveOPreview.Services
 
 		public void RegisterCycleClientHotkey(IEnumerable<Keys> keys, bool isForwards, Dictionary<string, int> cycleOrder)
 		{
+			if (keys == null)
+			{
+				return;
+			}
+
 			foreach (var hotkey in keys)
 			{
 				if (hotkey == Keys.None)
 				{
-					return;
+					continue;
 				}
 
 				var newHandler = new HotkeyHandler(default(IntPtr), hotkey);
@@ -265,11 +270,16 @@ namespace EveOPreview.Services
 		}
 		public void RegisterMinimizeAllClientsHotkey(IEnumerable<Keys> keys)
 		{
+			if (keys == null)
+			{
+				return;
+			}
+
 			foreach (var hotkey in keys)
 			{
 				if (hotkey == Keys.None)
 				{
-					return;
+					continue;
 				}
 
 				var newHandler = new HotkeyHandler(default(IntPtr), hotkey);
@@ -302,6 +312,11 @@ namespace EveOPreview.Services
 #endif
 
 			this._thumbnailUpdateTimer.Stop();
+
+			foreach (HotkeyHandler handler in this._cycleClientHotkeyHandlers)
+			{
+				handler.Dispose();
+			}
 		}
 
 #if !LINUX
@@ -360,13 +375,26 @@ namespace EveOPreview.Services
 		}
 #endif
 
-		private void ThumbnailUpdateTimerTick(object sender, EventArgs e)
+		private async void ThumbnailUpdateTimerTick(object sender, EventArgs e)
 		{
-			this.UpdateThumbnailsList();
-			this.RefreshThumbnails();
+			if (this._isThumbnailUpdateInProgress)
+			{
+				return;
+			}
+
+			this._isThumbnailUpdateInProgress = true;
+			try
+			{
+				await this.UpdateThumbnailsList();
+				this.RefreshThumbnails();
+			}
+			finally
+			{
+				this._isThumbnailUpdateInProgress = false;
+			}
 		}
 
-		private async void UpdateThumbnailsList()
+		private async Task UpdateThumbnailsList()
 		{
 			this._processMonitor.GetUpdatedProcesses(out ICollection<IProcessInfo> addedProcesses, out ICollection<IProcessInfo> updatedProcesses, out ICollection<IProcessInfo> removedProcesses);
 
@@ -375,13 +403,11 @@ namespace EveOPreview.Services
 
 			foreach (IProcessInfo process in addedProcesses)
 			{
-				Size initialSize = this._configuration.ThumbnailSize;
-				if (this._configuration.PerClientThumbnailSize.Any(x => x.Key == process.Title))
-				{
-					initialSize = this._configuration.PerClientThumbnailSize[process.Title];
-				}
+				Size initialSize = this._configuration.PerClientThumbnailSize.TryGetValue(process.Title, out Size perClientSize)
+					? perClientSize
+					: this._configuration.ThumbnailSize;
 
-				IThumbnailView view = this._thumbnailViewFactory.Create(process.Handle, process.Title, this._configuration.ThumbnailSize);
+				IThumbnailView view = this._thumbnailViewFactory.Create(process.Handle, process.Title, initialSize);
 				view.IsOverlayEnabled = this._configuration.ShowThumbnailOverlays;
 				view.IsExcludedFromCycleGroup = false;
 				view.SetFrames(this._configuration.ShowThumbnailFrames);
