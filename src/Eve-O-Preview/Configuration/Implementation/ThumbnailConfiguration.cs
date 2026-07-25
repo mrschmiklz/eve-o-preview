@@ -16,7 +16,7 @@ namespace EveOPreview.Configuration.Implementation
 
 		public ThumbnailConfiguration()
 		{
-			this.ConfigVersion = 1;
+			this.ConfigVersion = 2;
 
 			this.CycleGroup1ForwardHotkeys = new List<string> { "F14", "MouseXButton1" };
 			this.CycleGroup1BackwardHotkeys = new List<string> { "F13", "Control+F13" };
@@ -436,6 +436,12 @@ namespace EveOPreview.Configuration.Implementation
 		/// </summary>
 		public void ApplyRestrictions()
 		{
+			if (this.ConfigVersion < 2)
+			{
+				this.MinimizeInactiveClients = true;
+				this.ConfigVersion = 2;
+			}
+
 #if LINUX
 			this.ThumbnailRefreshPeriod = ThumbnailConfiguration.ApplyRestrictions(this.ThumbnailRefreshPeriod, 10, 1000);
 #else

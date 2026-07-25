@@ -194,7 +194,7 @@ namespace EveOPreview.Services
 					handler.Pressed += (object sender, HandledEventArgs eventArgs) =>
 					{
 						this.SyncActiveClientFromForeground();
-						this.CycleNextClient(isForwards, this._configuration.CycleGroup1ClientsOrder);
+						this.CycleNextClientByHandle(isForwards);
 						eventArgs.Handled = true;
 					};
 
@@ -262,7 +262,7 @@ namespace EveOPreview.Services
 			}
 
 			this.SyncActiveClientFromForeground();
-			this.CycleNextClient(isForwards, this._configuration.CycleGroup1ClientsOrder);
+			this.CycleNextClientByHandle(isForwards);
 		}
 #endif
 
@@ -321,11 +321,52 @@ namespace EveOPreview.Services
 
 		public void MinimizeAllClients()
 		{
-			foreach (var x in _thumbnailViews.Reverse())
+			foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews.Reverse())
 			{
-				this._windowManager.MinimizeWindow(x.Value.Id, this._configuration.WindowsAnimationStyle, false);
+				if (!this.IsManageableThumbnail(entry.Value))
+				{
+					continue;
+				}
+
+				this._windowManager.MinimizeWindow(entry.Value.Id, this._configuration.WindowsAnimationStyle, false);
 			}
 		}
+
+		private void CycleNextClientByHandle(bool isForwards)
+		{
+			List<KeyValuePair<IntPtr, IThumbnailView>> clients = this._thumbnailViews
+				.Where(entry => this.IsManageableThumbnail(entry.Value) && !entry.Value.IsExcludedFromCycleGroup)
+				.OrderBy(entry => entry.Value.Id.ToInt64())
+				.ToList();
+
+			if (clients.Count == 0)
+			{
+				return;
+			}
+
+			if (clients.Count == 1)
+			{
+				this.SetActive(clients[0]);
+				return;
+			}
+
+			int currentIndex = clients.FindIndex(entry =>
+				entry.Key == this._activeClient.Handle
+				|| entry.Value.Id == this._activeClient.Handle
+				|| entry.Value.Title == this._activeClient.Title);
+
+			if (currentIndex < 0)
+			{
+				currentIndex = 0;
+			}
+
+			int nextIndex = isForwards
+				? (currentIndex + 1) % clients.Count
+				: (currentIndex - 1 + clients.Count) % clients.Count;
+
+			this.SetActive(clients[nextIndex]);
+		}
+
 		public void CycleNextClient(bool isForwards, Dictionary<string, int> cycleOrder)
 		{
 			if (this._thumbnailViews.Count == 0)
@@ -453,11 +494,22 @@ namespace EveOPreview.Services
 		private Dictionary<string, int> BuildCycleOrderFromThumbnails()
 		{
 			Dictionary<string, int> resolvedOrder = new Dictionary<string, int>();
+			bool hasLoggedInClients = this._thumbnailViews.Values.Any(view => this.IsManageableThumbnail(view));
 			int order = 0;
 
 			foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews.OrderBy(x => x.Value.Id.ToInt64()))
 			{
-				if (!entry.Value.IsExcludedFromCycleGroup)
+				if (entry.Value.IsExcludedFromCycleGroup)
+				{
+					continue;
+				}
+
+				if (hasLoggedInClients && entry.Value.Title == ThumbnailManager.DEFAULT_CLIENT_TITLE)
+				{
+					continue;
+				}
+
+				if (!resolvedOrder.ContainsKey(entry.Value.Title))
 				{
 					resolvedOrder[entry.Value.Title] = order++;
 				}
@@ -885,7 +937,9 @@ namespace EveOPreview.Services
 			}
 
 			// Minimize the currently active client if needed
-			if (this._configuration.MinimizeInactiveClients && !this._configuration.IsPriorityClient(this._activeClient.Title))
+			if (this._activeClient.Handle != IntPtr.Zero
+				&& this._configuration.MinimizeInactiveClients
+				&& !this._configuration.IsPriorityClient(this._activeClient.Title))
 			{
 				this._windowManager.MinimizeWindow(this._activeClient.Handle, this._configuration.WindowsAnimationStyle, false);
 #if LINUX
