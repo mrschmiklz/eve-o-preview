@@ -18,10 +18,10 @@ namespace EveOPreview.View
 		bool EnableClientLayoutTracking { get; set; }
 		bool HideActiveClientThumbnail { get; set; }
 		bool MinimizeInactiveClients { get; set; }
-		bool EnableSideMouseButtonCycle { get; set; }
-		MouseButtonCycleAction SideButton1CycleAction { get; set; }
-		MouseButtonCycleAction SideButton2CycleAction { get; set; }
-		MouseButtonCycleAction MiddleButtonCycleAction { get; set; }
+#if !LINUX
+		string CycleForwardBinding { get; set; }
+		string CycleBackwardBinding { get; set; }
+#endif
 		bool HideCaptionOnClients { get; set; }
 		ViewAnimationStyle WindowsAnimationStyle { get; set; }
         bool ShowThumbnailsAlwaysOnTop { get; set; }
@@ -63,7 +63,7 @@ namespace EveOPreview.View
 		void RemoveThumbnails(IList<IThumbnailDescription> thumbnails);
 		void RefreshZoomSettings();
 
-		void RefreshMouseButtonCycleSettings();
+		void RefreshCycleBindingCaptureState();
 
 		Action ApplicationExitRequested { get; set; }
 		Action FormActivated { get; set; }

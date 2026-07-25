@@ -109,10 +109,6 @@ namespace EveOPreview.Configuration.Implementation
 			this.HideActiveClientThumbnail = false;
 			this.HideLoginClientThumbnail = false;
 			this.MinimizeInactiveClients = false;
-			this.EnableSideMouseButtonCycle = false;
-			this.SideButton1CycleAction = MouseButtonCycleAction.CycleBackward;
-			this.SideButton2CycleAction = MouseButtonCycleAction.CycleForward;
-			this.MiddleButtonCycleAction = MouseButtonCycleAction.None;
 			this.HideCaptionOnClients = false;
 			this.WindowsAnimationStyle = AnimationStyle.NoAnimation;
 			this.ShowThumbnailsAlwaysOnTop = true;
@@ -248,10 +244,6 @@ namespace EveOPreview.Configuration.Implementation
 		public bool HideActiveClientThumbnail { get; set; }
 		public bool HideLoginClientThumbnail { get; set; }
 		public bool MinimizeInactiveClients { get; set; }
-		public bool EnableSideMouseButtonCycle { get; set; }
-		public MouseButtonCycleAction SideButton1CycleAction { get; set; }
-		public MouseButtonCycleAction SideButton2CycleAction { get; set; }
-		public MouseButtonCycleAction MiddleButtonCycleAction { get; set; }
 		public bool HideCaptionOnClients { get; set; }
 		public AnimationStyle WindowsAnimationStyle { get; set; }
 		public bool ShowThumbnailsAlwaysOnTop { get; set; }

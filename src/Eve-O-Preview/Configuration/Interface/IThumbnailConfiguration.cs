@@ -43,10 +43,6 @@ namespace EveOPreview.Configuration
 		bool HideActiveClientThumbnail { get; set; }
 		bool HideLoginClientThumbnail { get; set; }
 		bool MinimizeInactiveClients { get; set; }
-		bool EnableSideMouseButtonCycle { get; set; }
-		MouseButtonCycleAction SideButton1CycleAction { get; set; }
-		MouseButtonCycleAction SideButton2CycleAction { get; set; }
-		MouseButtonCycleAction MiddleButtonCycleAction { get; set; }
 		bool HideCaptionOnClients { get; set; }
 		AnimationStyle WindowsAnimationStyle { get; set; }
 		bool ShowThumbnailsAlwaysOnTop { get; set; }

@@ -1,5 +1,6 @@
 using EveOPreview.Configuration;
 using EveOPreview.Properties;
+using EveOPreview.UI.Hotkeys;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -24,7 +25,22 @@ namespace EveOPreview.View
 		private Size _minimumSize;
 		private Size _maximumSize;
 		private string _iconName;
+#if !LINUX
+		private readonly InputBindingCapture _inputBindingCapture;
+		private CycleBindingCaptureTarget _captureTarget;
+		private string _cycleForwardBinding;
+		private string _cycleBackwardBinding;
+#endif
 		#endregion
+
+#if !LINUX
+		private enum CycleBindingCaptureTarget
+		{
+			None,
+			Forward,
+			Backward
+		}
+#endif
 
 		public MainForm(ApplicationContext context)
 		{
@@ -40,8 +56,11 @@ namespace EveOPreview.View
 			InitializeComponent();
 
 #if LINUX
-			this.EnableSideMouseButtonCycleCheckBox.Visible = false;
-			this.MouseButtonCycleGroupBox.Visible = false;
+			this.ClientCycleBindingsGroupBox.Visible = false;
+#else
+			this._inputBindingCapture = new InputBindingCapture();
+			this._inputBindingCapture.Captured += this.InputBindingCapture_Captured;
+			this._inputBindingCapture.CaptureCancelled += this.InputBindingCapture_Cancelled;
 #endif
 
 			this.ThumbnailsList.DisplayMember = "Title";
@@ -50,10 +69,9 @@ namespace EveOPreview.View
 			this.InitOverlayLabelMap();
 			this.InitCycleGroupIndicatorMap();
 			this.InitFormSize();
-			this.InitMouseButtonCycleCombos();
 
 			this.AnimationStyleCombo.DataSource = Enum.GetValues(typeof(AnimationStyle));
-			this.RefreshMouseButtonCycleSettings();
+			this.RefreshCycleBindingCaptureState();
 		}
 
 		public bool MinimizeToTray
@@ -136,26 +154,41 @@ namespace EveOPreview.View
 			get => this.MinimizeInactiveClientsCheckBox.Checked;
 			set => this.MinimizeInactiveClientsCheckBox.Checked = value;
 		}
-		public bool EnableSideMouseButtonCycle
+#if !LINUX
+		public string CycleForwardBinding
 		{
-			get => this.EnableSideMouseButtonCycleCheckBox.Checked;
-			set => this.EnableSideMouseButtonCycleCheckBox.Checked = value;
+			get => this._cycleForwardBinding ?? string.Empty;
+			set
+			{
+				this._cycleForwardBinding = value ?? string.Empty;
+				this.CycleForwardBindingTextBox.Text = InputBindingHelper.ToDisplayString(this._cycleForwardBinding);
+			}
 		}
-		public MouseButtonCycleAction SideButton1CycleAction
+
+		public string CycleBackwardBinding
 		{
-			get => (MouseButtonCycleAction)this.SideButton1CycleActionCombo.SelectedItem;
-			set => this.SideButton1CycleActionCombo.SelectedItem = value;
+			get => this._cycleBackwardBinding ?? string.Empty;
+			set
+			{
+				this._cycleBackwardBinding = value ?? string.Empty;
+				this.CycleBackwardBindingTextBox.Text = InputBindingHelper.ToDisplayString(this._cycleBackwardBinding);
+			}
 		}
-		public MouseButtonCycleAction SideButton2CycleAction
+#endif
+#if LINUX
+		public string CycleForwardBinding
 		{
-			get => (MouseButtonCycleAction)this.SideButton2CycleActionCombo.SelectedItem;
-			set => this.SideButton2CycleActionCombo.SelectedItem = value;
+			get => string.Empty;
+			set { }
 		}
-		public MouseButtonCycleAction MiddleButtonCycleAction
+
+		public string CycleBackwardBinding
 		{
-			get => (MouseButtonCycleAction)this.MiddleButtonCycleActionCombo.SelectedItem;
-			set => this.MiddleButtonCycleActionCombo.SelectedItem = value;
+			get => string.Empty;
+			set { }
 		}
+#endif
+
 		public bool HideCaptionOnClients
 		{
 			get => this.HideCaptionOnClientsCheckBox.Checked;
@@ -452,54 +485,94 @@ namespace EveOPreview.View
 			this.ZoomAnchorPanel.Enabled = enableControls;
 		}
 
-		public void RefreshMouseButtonCycleSettings()
+		public void RefreshCycleBindingCaptureState()
 		{
-			bool enableControls = this.EnableSideMouseButtonCycle;
-			this.MouseButtonCycleGroupBox.Enabled = enableControls;
+#if !LINUX
+			bool isCapturing = this._inputBindingCapture.IsCapturing;
+			this.CycleForwardRecordButton.Enabled = !isCapturing || this._captureTarget == CycleBindingCaptureTarget.Forward;
+			this.CycleBackwardRecordButton.Enabled = !isCapturing || this._captureTarget == CycleBindingCaptureTarget.Backward;
+			this.CycleForwardBindingTextBox.BackColor = this._captureTarget == CycleBindingCaptureTarget.Forward
+				? Color.LightGoldenrodYellow
+				: SystemColors.Window;
+			this.CycleBackwardBindingTextBox.BackColor = this._captureTarget == CycleBindingCaptureTarget.Backward
+				? Color.LightGoldenrodYellow
+				: SystemColors.Window;
+			this.CycleForwardRecordButton.BackColor = this._captureTarget == CycleBindingCaptureTarget.Forward
+				? Color.LightGoldenrodYellow
+				: SystemColors.Control;
+			this.CycleBackwardRecordButton.BackColor = this._captureTarget == CycleBindingCaptureTarget.Backward
+				? Color.LightGoldenrodYellow
+				: SystemColors.Control;
+#endif
 		}
 
-		private void InitMouseButtonCycleCombos()
+#if !LINUX
+		private void CycleForwardRecordButton_Click(object sender, EventArgs e)
 		{
-			MouseButtonCycleAction[] options = (MouseButtonCycleAction[])Enum.GetValues(typeof(MouseButtonCycleAction));
+			this.StartBindingCapture(CycleBindingCaptureTarget.Forward);
+		}
 
-			foreach (System.Windows.Forms.ComboBox comboBox in new[]
+		private void CycleBackwardRecordButton_Click(object sender, EventArgs e)
+		{
+			this.StartBindingCapture(CycleBindingCaptureTarget.Backward);
+		}
+
+		private void StartBindingCapture(CycleBindingCaptureTarget target)
+		{
+			if (this._inputBindingCapture.IsCapturing && this._captureTarget == target)
 			{
-				this.SideButton1CycleActionCombo,
-				this.SideButton2CycleActionCombo,
-				this.MiddleButtonCycleActionCombo
-			})
-			{
-				comboBox.DataSource = options;
-				comboBox.Format += this.MouseButtonCycleActionCombo_Format;
+				this.StopBindingCapture();
+				return;
 			}
+
+			this._captureTarget = target;
+			System.Windows.Forms.TextBox targetTextBox = target == CycleBindingCaptureTarget.Forward
+				? this.CycleForwardBindingTextBox
+				: this.CycleBackwardBindingTextBox;
+			targetTextBox.Text = "Press a key, combo, or mouse button...";
+
+			this._inputBindingCapture.Start();
+			this.RefreshCycleBindingCaptureState();
 		}
 
-		private void MouseButtonCycleActionCombo_Format(object sender, ListControlConvertEventArgs e)
+		private void StopBindingCapture()
 		{
-			if (e.Value is MouseButtonCycleAction action)
+			this._inputBindingCapture.Stop();
+			this._captureTarget = CycleBindingCaptureTarget.None;
+			this.RefreshCycleBindingCaptureState();
+		}
+
+		private void InputBindingCapture_Captured(object sender, string binding)
+		{
+			if (this._captureTarget == CycleBindingCaptureTarget.Forward)
 			{
-				e.Value = this.FormatMouseButtonCycleAction(action);
+				this.CycleForwardBinding = binding;
 			}
-		}
-
-		private string FormatMouseButtonCycleAction(MouseButtonCycleAction action)
-		{
-			switch (action)
+			else if (this._captureTarget == CycleBindingCaptureTarget.Backward)
 			{
-				case MouseButtonCycleAction.CycleForward:
-					return "Cycle to next client";
-				case MouseButtonCycleAction.CycleBackward:
-					return "Cycle to previous client";
-				default:
-					return "Do nothing";
+				this.CycleBackwardBinding = binding;
 			}
+
+			this._captureTarget = CycleBindingCaptureTarget.None;
+			this.RefreshCycleBindingCaptureState();
+			this.OptionChanged_Handler(this, EventArgs.Empty);
 		}
 
-		private void MouseButtonCycleEnabledChanged_Handler(object sender, EventArgs e)
+		private void InputBindingCapture_Cancelled(object sender, EventArgs e)
 		{
-			this.RefreshMouseButtonCycleSettings();
-			this.OptionChanged_Handler(sender, e);
+			if (this._captureTarget == CycleBindingCaptureTarget.Forward)
+			{
+				this.CycleForwardBinding = this._cycleForwardBinding;
+			}
+			else if (this._captureTarget == CycleBindingCaptureTarget.Backward)
+			{
+				this.CycleBackwardBinding = this._cycleBackwardBinding;
+			}
+
+			this._captureTarget = CycleBindingCaptureTarget.None;
+			this.RefreshCycleBindingCaptureState();
 		}
+#endif
 
 		public Action ApplicationExitRequested { get; set; }
 
@@ -633,6 +706,11 @@ namespace EveOPreview.View
 
 		private void MainFormClosing_Handler(object sender, FormClosingEventArgs e)
 		{
+#if !LINUX
+			this.StopBindingCapture();
+			this._inputBindingCapture.Dispose();
+#endif
+
 			ViewCloseRequest request = new ViewCloseRequest();
 
 			this.FormCloseRequested?.Invoke(request);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using EveOPreview.Configuration;
 using EveOPreview.Mediator.Messages;
 using EveOPreview.View;
@@ -109,10 +110,10 @@ namespace EveOPreview.Presenters
 			this.View.EnableClientLayoutTracking = this._configuration.EnableClientLayoutTracking;
 			this.View.HideActiveClientThumbnail = this._configuration.HideActiveClientThumbnail;
 			this.View.MinimizeInactiveClients = this._configuration.MinimizeInactiveClients;
-			this.View.EnableSideMouseButtonCycle = this._configuration.EnableSideMouseButtonCycle;
-			this.View.SideButton1CycleAction = this._configuration.SideButton1CycleAction;
-			this.View.SideButton2CycleAction = this._configuration.SideButton2CycleAction;
-			this.View.MiddleButtonCycleAction = this._configuration.MiddleButtonCycleAction;
+#if !LINUX
+			this.View.CycleForwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys);
+			this.View.CycleBackwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1BackwardHotkeys);
+#endif
 			this.View.HideCaptionOnClients = this._configuration.HideCaptionOnClients;
 			this.View.WindowsAnimationStyle = ViewAnimationStyleConverter.Convert(this._configuration.WindowsAnimationStyle);
 			this.View.ShowThumbnailsAlwaysOnTop = this._configuration.ShowThumbnailsAlwaysOnTop;
@@ -144,7 +145,7 @@ namespace EveOPreview.Presenters
 
 
 			this.View.IconName = this._configuration.IconName;
-			this.View.RefreshMouseButtonCycleSettings();
+			this.View.RefreshCycleBindingCaptureState();
 		}
 
 		private async void SaveApplicationSettings()
@@ -156,10 +157,17 @@ namespace EveOPreview.Presenters
 			this._configuration.EnableClientLayoutTracking = this.View.EnableClientLayoutTracking;
 			this._configuration.HideActiveClientThumbnail = this.View.HideActiveClientThumbnail;
 			this._configuration.MinimizeInactiveClients = this.View.MinimizeInactiveClients;
-			this._configuration.EnableSideMouseButtonCycle = this.View.EnableSideMouseButtonCycle;
-			this._configuration.SideButton1CycleAction = this.View.SideButton1CycleAction;
-			this._configuration.SideButton2CycleAction = this.View.SideButton2CycleAction;
-			this._configuration.MiddleButtonCycleAction = this.View.MiddleButtonCycleAction;
+#if !LINUX
+			string previousForwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys);
+			string previousBackwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1BackwardHotkeys);
+			string forwardBinding = this.View.CycleForwardBinding ?? string.Empty;
+			string backwardBinding = this.View.CycleBackwardBinding ?? string.Empty;
+			bool cycleBindingsChanged = !string.Equals(previousForwardBinding, forwardBinding, StringComparison.OrdinalIgnoreCase)
+				|| !string.Equals(previousBackwardBinding, backwardBinding, StringComparison.OrdinalIgnoreCase);
+
+			SetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys, forwardBinding);
+			SetPrimaryCycleBinding(this._configuration.CycleGroup1BackwardHotkeys, backwardBinding);
+#endif
 
 			if (this._configuration.HideCaptionOnClients != this.View.HideCaptionOnClients ) {
 				this._configuration.HideCaptionOnClients = this.View.HideCaptionOnClients;
@@ -219,10 +227,39 @@ namespace EveOPreview.Presenters
 			this._configurationStorage.Save();
 
 			this.View.RefreshZoomSettings();
-			this.View.RefreshMouseButtonCycleSettings();
+			this.View.RefreshCycleBindingCaptureState();
+
+#if !LINUX
+			if (cycleBindingsChanged)
+			{
+				await this._mediator.Publish(new CycleBindingsUpdated());
+			}
+#endif
 
 			await this._mediator.Send(new SaveConfiguration());
 		}
+
+#if !LINUX
+		private static string GetPrimaryCycleBinding(List<string> bindings)
+		{
+			return bindings?.FirstOrDefault(binding => !string.IsNullOrWhiteSpace(binding)) ?? string.Empty;
+		}
+
+		private static void SetPrimaryCycleBinding(List<string> bindings, string value)
+		{
+			if (bindings == null)
+			{
+				return;
+			}
+
+			bindings.Clear();
+
+			if (!string.IsNullOrWhiteSpace(value))
+			{
+				bindings.Add(value.Trim());
+			}
+		}
+#endif
 
 
 		public void AddThumbnails(IList<string> thumbnailTitles)

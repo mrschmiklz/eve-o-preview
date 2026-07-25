@@ -63,15 +63,14 @@ namespace EveOPreview.View
 			HideCaptionOnClientsCheckBox = new CheckBox();
 			AnimationStyleCombo = new ComboBox();
 			MinimizeInactiveClientsCheckBox = new CheckBox();
-			EnableSideMouseButtonCycleCheckBox = new CheckBox();
-			MouseButtonCycleGroupBox = new GroupBox();
-			MouseButtonCycleHintLabel = new Label();
-			SideButton1CycleActionLabel = new Label();
-			SideButton1CycleActionCombo = new ComboBox();
-			SideButton2CycleActionLabel = new Label();
-			SideButton2CycleActionCombo = new ComboBox();
-			MiddleButtonCycleActionLabel = new Label();
-			MiddleButtonCycleActionCombo = new ComboBox();
+			ClientCycleBindingsGroupBox = new GroupBox();
+			ClientCycleBindingHintLabel = new Label();
+			CycleForwardBindingLabel = new Label();
+			CycleForwardRecordButton = new Button();
+			CycleForwardBindingTextBox = new TextBox();
+			CycleBackwardBindingLabel = new Label();
+			CycleBackwardRecordButton = new Button();
+			CycleBackwardBindingTextBox = new TextBox();
 			EnableClientLayoutTrackingCheckBox = new CheckBox();
 			HideActiveClientThumbnailCheckBox = new CheckBox();
 			ShowThumbnailsAlwaysOnTopCheckBox = new CheckBox();
@@ -255,8 +254,7 @@ namespace EveOPreview.View
 			// 
 			GeneralSettingsPanel.AutoScroll = true;
 			GeneralSettingsPanel.BorderStyle = BorderStyle.FixedSingle;
-			GeneralSettingsPanel.Controls.Add(MouseButtonCycleGroupBox);
-			GeneralSettingsPanel.Controls.Add(EnableSideMouseButtonCycleCheckBox);
+			GeneralSettingsPanel.Controls.Add(ClientCycleBindingsGroupBox);
 			GeneralSettingsPanel.Controls.Add(HideCaptionOnClientsCheckBox);
 			GeneralSettingsPanel.Controls.Add(label4);
 			GeneralSettingsPanel.Controls.Add(AnimationStyleCombo);
@@ -319,108 +317,95 @@ namespace EveOPreview.View
 			MinimizeInactiveClientsCheckBox.UseVisualStyleBackColor = true;
 			MinimizeInactiveClientsCheckBox.CheckedChanged += OptionChanged_Handler;
 			// 
-			// EnableSideMouseButtonCycleCheckBox
+			// ClientCycleBindingsGroupBox
 			// 
-			EnableSideMouseButtonCycleCheckBox.AutoSize = true;
-			EnableSideMouseButtonCycleCheckBox.Location = new Point(9, 207);
-			EnableSideMouseButtonCycleCheckBox.Margin = new Padding(4);
-			EnableSideMouseButtonCycleCheckBox.Name = "EnableSideMouseButtonCycleCheckBox";
-			EnableSideMouseButtonCycleCheckBox.Size = new Size(240, 19);
-			EnableSideMouseButtonCycleCheckBox.TabIndex = 29;
-			EnableSideMouseButtonCycleCheckBox.Text = "Enable mouse button client cycling";
-			EnableSideMouseButtonCycleCheckBox.UseVisualStyleBackColor = true;
-			EnableSideMouseButtonCycleCheckBox.CheckedChanged += MouseButtonCycleEnabledChanged_Handler;
+			ClientCycleBindingsGroupBox.Controls.Add(CycleBackwardBindingTextBox);
+			ClientCycleBindingsGroupBox.Controls.Add(CycleBackwardRecordButton);
+			ClientCycleBindingsGroupBox.Controls.Add(CycleBackwardBindingLabel);
+			ClientCycleBindingsGroupBox.Controls.Add(CycleForwardBindingTextBox);
+			ClientCycleBindingsGroupBox.Controls.Add(CycleForwardRecordButton);
+			ClientCycleBindingsGroupBox.Controls.Add(CycleForwardBindingLabel);
+			ClientCycleBindingsGroupBox.Controls.Add(ClientCycleBindingHintLabel);
+			ClientCycleBindingsGroupBox.Location = new Point(9, 207);
+			ClientCycleBindingsGroupBox.Margin = new Padding(4);
+			ClientCycleBindingsGroupBox.Name = "ClientCycleBindingsGroupBox";
+			ClientCycleBindingsGroupBox.Padding = new Padding(4);
+			ClientCycleBindingsGroupBox.Size = new Size(300, 132);
+			ClientCycleBindingsGroupBox.TabIndex = 30;
+			ClientCycleBindingsGroupBox.TabStop = false;
+			ClientCycleBindingsGroupBox.Text = "Cycle client bindings";
 			// 
-			// MouseButtonCycleGroupBox
+			// ClientCycleBindingHintLabel
 			// 
-			MouseButtonCycleGroupBox.Controls.Add(MiddleButtonCycleActionCombo);
-			MouseButtonCycleGroupBox.Controls.Add(MiddleButtonCycleActionLabel);
-			MouseButtonCycleGroupBox.Controls.Add(SideButton2CycleActionCombo);
-			MouseButtonCycleGroupBox.Controls.Add(SideButton2CycleActionLabel);
-			MouseButtonCycleGroupBox.Controls.Add(SideButton1CycleActionCombo);
-			MouseButtonCycleGroupBox.Controls.Add(SideButton1CycleActionLabel);
-			MouseButtonCycleGroupBox.Controls.Add(MouseButtonCycleHintLabel);
-			MouseButtonCycleGroupBox.Location = new Point(9, 229);
-			MouseButtonCycleGroupBox.Margin = new Padding(4);
-			MouseButtonCycleGroupBox.Name = "MouseButtonCycleGroupBox";
-			MouseButtonCycleGroupBox.Padding = new Padding(4);
-			MouseButtonCycleGroupBox.Size = new Size(300, 152);
-			MouseButtonCycleGroupBox.TabIndex = 30;
-			MouseButtonCycleGroupBox.TabStop = false;
-			MouseButtonCycleGroupBox.Text = "Mouse button mapping";
+			ClientCycleBindingHintLabel.AutoSize = true;
+			ClientCycleBindingHintLabel.Location = new Point(8, 22);
+			ClientCycleBindingHintLabel.Margin = new Padding(4, 0, 4, 0);
+			ClientCycleBindingHintLabel.Name = "ClientCycleBindingHintLabel";
+			ClientCycleBindingHintLabel.Size = new Size(276, 30);
+			ClientCycleBindingHintLabel.TabIndex = 0;
+			ClientCycleBindingHintLabel.Text = "Click the box, then press a key combo or mouse button. Esc cancels.";
 			// 
-			// MouseButtonCycleHintLabel
+			// CycleForwardBindingLabel
 			// 
-			MouseButtonCycleHintLabel.AutoSize = true;
-			MouseButtonCycleHintLabel.Location = new Point(8, 22);
-			MouseButtonCycleHintLabel.Margin = new Padding(4, 0, 4, 0);
-			MouseButtonCycleHintLabel.Name = "MouseButtonCycleHintLabel";
-			MouseButtonCycleHintLabel.Size = new Size(276, 30);
-			MouseButtonCycleHintLabel.TabIndex = 0;
-			MouseButtonCycleHintLabel.Text = "G203 and most mice: rear side = Button 4, front side = Button 5.";
+			CycleForwardBindingLabel.AutoSize = true;
+			CycleForwardBindingLabel.Location = new Point(8, 58);
+			CycleForwardBindingLabel.Margin = new Padding(4, 0, 4, 0);
+			CycleForwardBindingLabel.Name = "CycleForwardBindingLabel";
+			CycleForwardBindingLabel.Size = new Size(118, 15);
+			CycleForwardBindingLabel.TabIndex = 1;
+			CycleForwardBindingLabel.Text = "Cycle to next client";
 			// 
-			// SideButton1CycleActionLabel
+			// CycleForwardRecordButton
 			// 
-			SideButton1CycleActionLabel.AutoSize = true;
-			SideButton1CycleActionLabel.Location = new Point(8, 58);
-			SideButton1CycleActionLabel.Margin = new Padding(4, 0, 4, 0);
-			SideButton1CycleActionLabel.Name = "SideButton1CycleActionLabel";
-			SideButton1CycleActionLabel.Size = new Size(145, 15);
-			SideButton1CycleActionLabel.TabIndex = 1;
-			SideButton1CycleActionLabel.Text = "Rear side button (Button 4)";
+			CycleForwardRecordButton.Location = new Point(135, 54);
+			CycleForwardRecordButton.Margin = new Padding(4);
+			CycleForwardRecordButton.Name = "CycleForwardRecordButton";
+			CycleForwardRecordButton.Size = new Size(24, 24);
+			CycleForwardRecordButton.TabIndex = 2;
+			CycleForwardRecordButton.FlatStyle = FlatStyle.System;
+			CycleForwardRecordButton.Text = string.Empty;
+			CycleForwardRecordButton.Click += CycleForwardRecordButton_Click;
 			// 
-			// SideButton1CycleActionCombo
+			// CycleForwardBindingTextBox
 			// 
-			SideButton1CycleActionCombo.DropDownStyle = ComboBoxStyle.DropDownList;
-			SideButton1CycleActionCombo.FormattingEnabled = true;
-			SideButton1CycleActionCombo.Location = new Point(165, 55);
-			SideButton1CycleActionCombo.Margin = new Padding(4);
-			SideButton1CycleActionCombo.Name = "SideButton1CycleActionCombo";
-			SideButton1CycleActionCombo.Size = new Size(127, 23);
-			SideButton1CycleActionCombo.TabIndex = 2;
-			SideButton1CycleActionCombo.SelectedIndexChanged += OptionChanged_Handler;
+			CycleForwardBindingTextBox.Location = new Point(167, 55);
+			CycleForwardBindingTextBox.Margin = new Padding(4);
+			CycleForwardBindingTextBox.Name = "CycleForwardBindingTextBox";
+			CycleForwardBindingTextBox.ReadOnly = true;
+			CycleForwardBindingTextBox.Size = new Size(125, 23);
+			CycleForwardBindingTextBox.TabIndex = 3;
+			CycleForwardBindingTextBox.TabStop = false;
 			// 
-			// SideButton2CycleActionLabel
+			// CycleBackwardBindingLabel
 			// 
-			SideButton2CycleActionLabel.AutoSize = true;
-			SideButton2CycleActionLabel.Location = new Point(8, 88);
-			SideButton2CycleActionLabel.Margin = new Padding(4, 0, 4, 0);
-			SideButton2CycleActionLabel.Name = "SideButton2CycleActionLabel";
-			SideButton2CycleActionLabel.Size = new Size(149, 15);
-			SideButton2CycleActionLabel.TabIndex = 3;
-			SideButton2CycleActionLabel.Text = "Front side button (Button 5)";
+			CycleBackwardBindingLabel.AutoSize = true;
+			CycleBackwardBindingLabel.Location = new Point(8, 90);
+			CycleBackwardBindingLabel.Margin = new Padding(4, 0, 4, 0);
+			CycleBackwardBindingLabel.Name = "CycleBackwardBindingLabel";
+			CycleBackwardBindingLabel.Size = new Size(134, 15);
+			CycleBackwardBindingLabel.TabIndex = 4;
+			CycleBackwardBindingLabel.Text = "Cycle to previous client";
 			// 
-			// SideButton2CycleActionCombo
+			// CycleBackwardRecordButton
 			// 
-			SideButton2CycleActionCombo.DropDownStyle = ComboBoxStyle.DropDownList;
-			SideButton2CycleActionCombo.FormattingEnabled = true;
-			SideButton2CycleActionCombo.Location = new Point(165, 85);
-			SideButton2CycleActionCombo.Margin = new Padding(4);
-			SideButton2CycleActionCombo.Name = "SideButton2CycleActionCombo";
-			SideButton2CycleActionCombo.Size = new Size(127, 23);
-			SideButton2CycleActionCombo.TabIndex = 4;
-			SideButton2CycleActionCombo.SelectedIndexChanged += OptionChanged_Handler;
+			CycleBackwardRecordButton.Location = new Point(135, 86);
+			CycleBackwardRecordButton.Margin = new Padding(4);
+			CycleBackwardRecordButton.Name = "CycleBackwardRecordButton";
+			CycleBackwardRecordButton.Size = new Size(24, 24);
+			CycleBackwardRecordButton.TabIndex = 5;
+			CycleBackwardRecordButton.FlatStyle = FlatStyle.System;
+			CycleBackwardRecordButton.Text = string.Empty;
+			CycleBackwardRecordButton.Click += CycleBackwardRecordButton_Click;
 			// 
-			// MiddleButtonCycleActionLabel
+			// CycleBackwardBindingTextBox
 			// 
-			MiddleButtonCycleActionLabel.AutoSize = true;
-			MiddleButtonCycleActionLabel.Location = new Point(8, 118);
-			MiddleButtonCycleActionLabel.Margin = new Padding(4, 0, 4, 0);
-			MiddleButtonCycleActionLabel.Name = "MiddleButtonCycleActionLabel";
-			MiddleButtonCycleActionLabel.Size = new Size(75, 15);
-			MiddleButtonCycleActionLabel.TabIndex = 5;
-			MiddleButtonCycleActionLabel.Text = "Middle click";
-			// 
-			// MiddleButtonCycleActionCombo
-			// 
-			MiddleButtonCycleActionCombo.DropDownStyle = ComboBoxStyle.DropDownList;
-			MiddleButtonCycleActionCombo.FormattingEnabled = true;
-			MiddleButtonCycleActionCombo.Location = new Point(165, 115);
-			MiddleButtonCycleActionCombo.Margin = new Padding(4);
-			MiddleButtonCycleActionCombo.Name = "MiddleButtonCycleActionCombo";
-			MiddleButtonCycleActionCombo.Size = new Size(127, 23);
-			MiddleButtonCycleActionCombo.TabIndex = 6;
-			MiddleButtonCycleActionCombo.SelectedIndexChanged += OptionChanged_Handler;
+			CycleBackwardBindingTextBox.Location = new Point(167, 87);
+			CycleBackwardBindingTextBox.Margin = new Padding(4);
+			CycleBackwardBindingTextBox.Name = "CycleBackwardBindingTextBox";
+			CycleBackwardBindingTextBox.ReadOnly = true;
+			CycleBackwardBindingTextBox.Size = new Size(125, 23);
+			CycleBackwardBindingTextBox.TabIndex = 6;
+			CycleBackwardBindingTextBox.TabStop = false;
 			// 
 			// EnableClientLayoutTrackingCheckBox
 			// 
@@ -1499,9 +1484,10 @@ namespace EveOPreview.View
 			BackColor = SystemColors.Control;
 			ClientSize = new Size(455, 251);
 			Controls.Add(ContentTabControl);
-			FormBorderStyle = FormBorderStyle.FixedSingle;
+			FormBorderStyle = FormBorderStyle.Sizable;
 			Icon = (Icon)resources.GetObject("$this.Icon");
 			Margin = new Padding(0);
+			MinimumSize = new Size(380, 260);
 			MaximizeBox = false;
 			Name = "MainForm";
 			Text = "EVE-O-Preview";
@@ -1579,15 +1565,14 @@ namespace EveOPreview.View
 		private LinkLabel DocumentationLink;
 		private Label VersionLabel;
 		private CheckBox MinimizeInactiveClientsCheckBox;
-		private CheckBox EnableSideMouseButtonCycleCheckBox;
-		private GroupBox MouseButtonCycleGroupBox;
-		private Label MouseButtonCycleHintLabel;
-		private Label SideButton1CycleActionLabel;
-		private ComboBox SideButton1CycleActionCombo;
-		private Label SideButton2CycleActionLabel;
-		private ComboBox SideButton2CycleActionCombo;
-		private Label MiddleButtonCycleActionLabel;
-		private ComboBox MiddleButtonCycleActionCombo;
+		private GroupBox ClientCycleBindingsGroupBox;
+		private Label ClientCycleBindingHintLabel;
+		private Label CycleForwardBindingLabel;
+		private Button CycleForwardRecordButton;
+		private TextBox CycleForwardBindingTextBox;
+		private Label CycleBackwardBindingLabel;
+		private Button CycleBackwardRecordButton;
+		private TextBox CycleBackwardBindingTextBox;
         private CheckBox LockThumbnailLocationCheckbox;
         private NumericUpDown ThumbnailSnapToGridSizeYNumericEdit;
         private Label SnapYLabel;

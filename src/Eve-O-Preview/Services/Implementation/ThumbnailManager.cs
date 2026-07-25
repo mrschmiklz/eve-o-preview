@@ -53,7 +53,9 @@ namespace EveOPreview.Services
 
 		private List<HotkeyHandler> _cycleClientHotkeyHandlers = new List<HotkeyHandler>();
 #if !LINUX
-		private readonly SideMouseButtonHandler _sideMouseButtonHandler;
+		private readonly GlobalMouseInputHandler _globalMouseInputHandler;
+		private readonly CycleInputBinding _primaryForwardCycleBinding = new CycleInputBinding();
+		private readonly CycleInputBinding _primaryBackwardCycleBinding = new CycleInputBinding();
 #endif
 		#endregion
 
@@ -83,8 +85,10 @@ namespace EveOPreview.Services
 
 			this._hideThumbnailsDelay = this._configuration.HideThumbnailsDelay;
 
-			RegisterCycleClientHotkey(this._configuration.CycleGroup1ForwardHotkeys?.Select(x => this._configuration.StringToKey(x)), true, this._configuration.CycleGroup1ClientsOrder);
-			RegisterCycleClientHotkey(this._configuration.CycleGroup1BackwardHotkeys?.Select(x => this._configuration.StringToKey(x)), false, this._configuration.CycleGroup1ClientsOrder);
+#if !LINUX
+			this._globalMouseInputHandler = new GlobalMouseInputHandler();
+			this.UpdatePrimaryCycleBindings();
+#endif
 
 			RegisterCycleClientHotkey(this._configuration.CycleGroup2ForwardHotkeys?.Select(x => this._configuration.StringToKey(x)), true, this._configuration.CycleGroup2ClientsOrder);
 			RegisterCycleClientHotkey(this._configuration.CycleGroup2BackwardHotkeys?.Select(x => this._configuration.StringToKey(x)), false, this._configuration.CycleGroup2ClientsOrder);
@@ -99,12 +103,50 @@ namespace EveOPreview.Services
 			RegisterCycleClientHotkey(this._configuration.CycleGroup5BackwardHotkeys?.Select(x => this._configuration.StringToKey(x)), false, this._configuration.CycleGroup5ClientsOrder);
 
 			RegisterMinimizeAllClientsHotkey(this._configuration.MinimizeAllClientsHotkeys?.Select(x => this._configuration.StringToKey(x)));
+		}
 
+		public void UpdatePrimaryCycleBindings()
+		{
 #if !LINUX
-			this._sideMouseButtonHandler = new SideMouseButtonHandler();
-			this._sideMouseButtonHandler.SideButtonPressed += this.OnSideMouseButtonPressed;
+			string forwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys);
+			string backwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1BackwardHotkeys);
+
+			this._primaryForwardCycleBinding.Register(forwardBinding, () => this.InvokePrimaryCycle(true), this._globalMouseInputHandler);
+			this._primaryBackwardCycleBinding.Register(backwardBinding, () => this.InvokePrimaryCycle(false), this._globalMouseInputHandler);
 #endif
 		}
+
+#if !LINUX
+		private static string GetPrimaryCycleBinding(List<string> bindings)
+		{
+			return bindings?.FirstOrDefault(binding => !string.IsNullOrWhiteSpace(binding)) ?? string.Empty;
+		}
+
+		private void InvokePrimaryCycle(bool isForwards)
+		{
+			if (this._thumbnailViews.Count == 0)
+			{
+				return;
+			}
+
+			IntPtr foregroundWindowHandle = this._windowManager.GetForegroundWindowHandle();
+			if (!this.IsClientWindowActive(foregroundWindowHandle))
+			{
+				return;
+			}
+
+			Action cycle = () => this.CycleNextClient(isForwards, this._configuration.CycleGroup1ClientsOrder);
+
+			if (Application.OpenForms.Count > 0)
+			{
+				Application.OpenForms[0].BeginInvoke(cycle);
+			}
+			else
+			{
+				cycle();
+			}
+		}
+#endif
 
 		public IThumbnailView GetClientByTitle(string title)
 		{
@@ -297,83 +339,24 @@ namespace EveOPreview.Services
 		public void Start()
 		{
 			this._thumbnailUpdateTimer.Start();
-
-#if !LINUX
-			this._sideMouseButtonHandler.Register();
-#endif
-
 			this.RefreshThumbnails();
 		}
 
 		public void Stop()
 		{
-#if !LINUX
-			this._sideMouseButtonHandler.Unregister();
-#endif
-
 			this._thumbnailUpdateTimer.Stop();
+
+#if !LINUX
+			this._primaryForwardCycleBinding.Unregister(this._globalMouseInputHandler);
+			this._primaryBackwardCycleBinding.Unregister(this._globalMouseInputHandler);
+			this._globalMouseInputHandler.Clear();
+#endif
 
 			foreach (HotkeyHandler handler in this._cycleClientHotkeyHandlers)
 			{
 				handler.Dispose();
 			}
 		}
-
-#if !LINUX
-		private void OnSideMouseButtonPressed(object sender, SideMouseButtonEventArgs eventArgs)
-		{
-			if (!this._configuration.EnableSideMouseButtonCycle)
-			{
-				return;
-			}
-
-			if (this._thumbnailViews.Count == 0)
-			{
-				return;
-			}
-
-			IntPtr foregroundWindowHandle = this._windowManager.GetForegroundWindowHandle();
-			if (!this.IsClientWindowActive(foregroundWindowHandle))
-			{
-				return;
-			}
-
-			MouseButtonCycleAction cycleAction = this.GetConfiguredMouseButtonCycleAction(eventArgs.Button);
-			if (cycleAction == MouseButtonCycleAction.None)
-			{
-				return;
-			}
-
-			eventArgs.Handled = true;
-
-			bool isForwards = cycleAction == MouseButtonCycleAction.CycleForward;
-			Action cycle = () => this.CycleNextClient(isForwards, this._configuration.CycleGroup1ClientsOrder);
-
-			if (Application.OpenForms.Count > 0)
-			{
-				Application.OpenForms[0].BeginInvoke(cycle);
-			}
-			else
-			{
-				cycle();
-			}
-		}
-
-		private MouseButtonCycleAction GetConfiguredMouseButtonCycleAction(MappedMouseButton button)
-		{
-			switch (button)
-			{
-				case MappedMouseButton.SideButton1:
-					return this._configuration.SideButton1CycleAction;
-				case MappedMouseButton.SideButton2:
-					return this._configuration.SideButton2CycleAction;
-				case MappedMouseButton.MiddleButton:
-					return this._configuration.MiddleButtonCycleAction;
-				default:
-					return MouseButtonCycleAction.None;
-			}
-		}
-#endif
 
 		private async void ThumbnailUpdateTimerTick(object sender, EventArgs e)
 		{
