@@ -54,8 +54,8 @@ namespace EveOPreview.Services
 		private List<HotkeyHandler> _cycleClientHotkeyHandlers = new List<HotkeyHandler>();
 #if !LINUX
 		private readonly GlobalMouseInputHandler _globalMouseInputHandler;
-		private readonly CycleInputBinding _primaryForwardCycleBinding = new CycleInputBinding();
-		private readonly CycleInputBinding _primaryBackwardCycleBinding = new CycleInputBinding();
+		private readonly List<HotkeyHandler> _primaryCycleHotkeyHandlers = new List<HotkeyHandler>();
+		private readonly List<string> _primaryCycleMouseBindings = new List<string>();
 #endif
 		#endregion
 
@@ -108,59 +108,99 @@ namespace EveOPreview.Services
 		public void UpdatePrimaryCycleBindings()
 		{
 #if !LINUX
-			string forwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys);
-			string backwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1BackwardHotkeys);
+			void updateCore()
+			{
+				this.ClearPrimaryCycleBindings();
+				this.RegisterPrimaryCycleBindingList(this._configuration.CycleGroup1ForwardHotkeys, true);
+				this.RegisterPrimaryCycleBindingList(this._configuration.CycleGroup1BackwardHotkeys, false);
+			}
 
-			this._primaryForwardCycleBinding.Register(
-				forwardBinding,
-				() => this.InvokePrimaryCycle(true, forwardBinding),
-				this._globalMouseInputHandler,
-				this._configuration.StringToKey);
-			this._primaryBackwardCycleBinding.Register(
-				backwardBinding,
-				() => this.InvokePrimaryCycle(false, backwardBinding),
-				this._globalMouseInputHandler,
-				this._configuration.StringToKey);
+			if (Application.OpenForms.Count > 0 && Application.OpenForms[0].InvokeRequired)
+			{
+				Application.OpenForms[0].BeginInvoke((Action)updateCore);
+			}
+			else
+			{
+				updateCore();
+			}
 #endif
 		}
 
 #if !LINUX
-		private static string GetPrimaryCycleBinding(List<string> bindings)
+		private void ClearPrimaryCycleBindings()
 		{
-			return bindings?.FirstOrDefault(binding => !string.IsNullOrWhiteSpace(binding)) ?? string.Empty;
+			foreach (HotkeyHandler handler in this._primaryCycleHotkeyHandlers)
+			{
+				handler.Dispose();
+			}
+
+			this._primaryCycleHotkeyHandlers.Clear();
+
+			foreach (string binding in this._primaryCycleMouseBindings)
+			{
+				this._globalMouseInputHandler.Unregister(binding);
+			}
+
+			this._primaryCycleMouseBindings.Clear();
 		}
 
-		private void InvokePrimaryCycle(bool isForwards, string binding)
+		private void RegisterPrimaryCycleBindingList(List<string> bindings, bool isForwards)
+		{
+			if (bindings == null)
+			{
+				return;
+			}
+
+			foreach (string binding in bindings)
+			{
+				if (string.IsNullOrWhiteSpace(binding))
+				{
+					continue;
+				}
+
+				string trimmedBinding = binding.Trim();
+				if (InputBindingHelper.GetKind(trimmedBinding) == InputBindingKind.Keyboard)
+				{
+					Keys key = this._configuration.StringToKey(trimmedBinding);
+					if (key == Keys.None)
+					{
+						continue;
+					}
+
+					HotkeyHandler handler = new HotkeyHandler(default(IntPtr), key);
+					handler.Pressed += (object sender, HandledEventArgs eventArgs) =>
+					{
+						this.CycleNextClient(isForwards, this._configuration.CycleGroup1ClientsOrder);
+						eventArgs.Handled = true;
+					};
+
+					if (handler.Register())
+					{
+						this._primaryCycleHotkeyHandlers.Add(handler);
+					}
+				}
+				else
+				{
+					this._globalMouseInputHandler.Register(trimmedBinding, () => this.InvokePrimaryMouseCycle(isForwards));
+					this._primaryCycleMouseBindings.Add(trimmedBinding);
+				}
+			}
+		}
+
+		private void InvokePrimaryMouseCycle(bool isForwards)
 		{
 			if (this._thumbnailViews.Count == 0)
 			{
 				return;
 			}
 
-			if (InputBindingHelper.GetKind(binding) == InputBindingKind.Mouse)
+			IntPtr foregroundWindowHandle = this._windowManager.GetForegroundWindowHandle();
+			if (!this.IsClientWindowActive(foregroundWindowHandle))
 			{
-				IntPtr foregroundWindowHandle = this._windowManager.GetForegroundWindowHandle();
-				if (!this.IsClientWindowActive(foregroundWindowHandle))
-				{
-					return;
-				}
+				return;
 			}
 
-			this.EnqueuePrimaryCycle(isForwards);
-		}
-
-		private void EnqueuePrimaryCycle(bool isForwards)
-		{
-			Action cycle = () => this.CycleNextClient(isForwards, this._configuration.CycleGroup1ClientsOrder);
-
-			if (Application.OpenForms.Count > 0)
-			{
-				Application.OpenForms[0].BeginInvoke(cycle);
-			}
-			else
-			{
-				cycle();
-			}
+			this.CycleNextClient(isForwards, this._configuration.CycleGroup1ClientsOrder);
 		}
 #endif
 
@@ -203,15 +243,11 @@ namespace EveOPreview.Services
 		public void CycleNextClient(bool isForwards, Dictionary<string, int> cycleOrder)
 		{
 			IOrderedEnumerable<KeyValuePair<string, int>> clientOrder;
-			Dictionary<string, int> _cycleOrder = new Dictionary<string, int>(cycleOrder);
+			Dictionary<string, int> _cycleOrder = this.ResolveCycleOrder(cycleOrder);
 
-			if ( _cycleOrder.Count == 0 ) 
+			if (_cycleOrder.Count == 0)
 			{
-				int order = 0;
-				foreach( var x in _thumbnailViews )
-				{
-					_cycleOrder.Add(x.Value.Title, order++);
-				}
+				return;
 			}
 
 			if (isForwards)
@@ -301,6 +337,42 @@ namespace EveOPreview.Services
 			return;
 		}
 
+		private Dictionary<string, int> ResolveCycleOrder(Dictionary<string, int> cycleOrder)
+		{
+			Dictionary<string, int> configuredOrder = cycleOrder != null
+				? new Dictionary<string, int>(cycleOrder)
+				: new Dictionary<string, int>();
+
+			if (configuredOrder.Count == 0)
+			{
+				return this.BuildCycleOrderFromThumbnails();
+			}
+
+			bool hasLiveClient = this._thumbnailViews.Values.Any(view => configuredOrder.ContainsKey(view.Title));
+			if (!hasLiveClient)
+			{
+				return this.BuildCycleOrderFromThumbnails();
+			}
+
+			return configuredOrder;
+		}
+
+		private Dictionary<string, int> BuildCycleOrderFromThumbnails()
+		{
+			Dictionary<string, int> resolvedOrder = new Dictionary<string, int>();
+			int order = 0;
+
+			foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews.OrderBy(x => x.Value.Id.ToInt64()))
+			{
+				if (!entry.Value.IsExcludedFromCycleGroup)
+				{
+					resolvedOrder[entry.Value.Title] = order++;
+				}
+			}
+
+			return resolvedOrder;
+		}
+
 		public void RegisterCycleClientHotkey(IEnumerable<Keys> keys, bool isForwards, Dictionary<string, int> cycleOrder)
 		{
 			if (keys == null)
@@ -366,8 +438,7 @@ namespace EveOPreview.Services
 			this._thumbnailUpdateTimer.Stop();
 
 #if !LINUX
-			this._primaryForwardCycleBinding.Unregister(this._globalMouseInputHandler);
-			this._primaryBackwardCycleBinding.Unregister(this._globalMouseInputHandler);
+			this.ClearPrimaryCycleBindings();
 			this._globalMouseInputHandler.Clear();
 #endif
 

@@ -20,12 +20,7 @@ namespace EveOPreview.Configuration.Implementation
 
 			this.CycleGroup1ForwardHotkeys = new List<string> { "F14", "Control+F14" };
 			this.CycleGroup1BackwardHotkeys = new List<string> { "F13", "Control+F13" };
-			this.CycleGroup1ClientsOrder = new Dictionary<string, int>
-			{
-				{ "EVE - Example DPS Toon 1", 1 },
-				{ "EVE - Example DPS Toon 2", 2 },
-				{ "EVE - Example DPS Toon 3", 3 }
-			};
+			this.CycleGroup1ClientsOrder = new Dictionary<string, int>();
 
 			this.CycleGroup2ForwardHotkeys = new List<string> { "F16", "Control+F16" };
 			this.CycleGroup2BackwardHotkeys = new List<string> { "F15", "Control+F15" };
