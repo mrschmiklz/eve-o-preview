@@ -56,6 +56,8 @@ namespace EveOPreview.Services
 		private readonly GlobalMouseInputHandler _globalMouseInputHandler;
 		private readonly List<HotkeyHandler> _primaryCycleHotkeyHandlers = new List<HotkeyHandler>();
 		private readonly List<string> _primaryCycleMouseBindings = new List<string>();
+		private readonly List<HotkeyHandler> _minimizeAllHotkeyHandlers = new List<HotkeyHandler>();
+		private readonly List<string> _minimizeAllMouseBindings = new List<string>();
 #endif
 		#endregion
 
@@ -87,7 +89,6 @@ namespace EveOPreview.Services
 
 #if !LINUX
 			this._globalMouseInputHandler = new GlobalMouseInputHandler();
-			this.UpdatePrimaryCycleBindings();
 #endif
 
 			RegisterCycleClientHotkey(this._configuration.CycleGroup2ForwardHotkeys?.Select(x => this._configuration.StringToKey(x)), true, this._configuration.CycleGroup2ClientsOrder);
@@ -101,18 +102,16 @@ namespace EveOPreview.Services
 
 			RegisterCycleClientHotkey(this._configuration.CycleGroup5ForwardHotkeys?.Select(x => this._configuration.StringToKey(x)), true, this._configuration.CycleGroup5ClientsOrder);
 			RegisterCycleClientHotkey(this._configuration.CycleGroup5BackwardHotkeys?.Select(x => this._configuration.StringToKey(x)), false, this._configuration.CycleGroup5ClientsOrder);
-
-			RegisterMinimizeAllClientsHotkey(this._configuration.MinimizeAllClientsHotkeys?.Select(x => this._configuration.StringToKey(x)));
 		}
 
-		public void UpdatePrimaryCycleBindings()
+		public void UpdateActionBindings()
 		{
 #if !LINUX
 			void updateCore()
 			{
-				this.ClearPrimaryCycleBindings();
+				this.ClearActionBindings();
 				this.RegisterPrimaryCycleBindingList(this._configuration.CycleGroup1ForwardHotkeys, true);
-				this.RegisterPrimaryCycleBindingList(this._configuration.CycleGroup1BackwardHotkeys, false);
+				this.RegisterMinimizeAllBindingList(this._configuration.MinimizeAllClientsHotkeys);
 			}
 
 			if (Application.OpenForms.Count > 0 && Application.OpenForms[0].InvokeRequired)
@@ -126,8 +125,13 @@ namespace EveOPreview.Services
 #endif
 		}
 
+		public void UpdatePrimaryCycleBindings()
+		{
+			this.UpdateActionBindings();
+		}
+
 #if !LINUX
-		private void ClearPrimaryCycleBindings()
+		private void ClearActionBindings()
 		{
 			foreach (HotkeyHandler handler in this._primaryCycleHotkeyHandlers)
 			{
@@ -136,12 +140,31 @@ namespace EveOPreview.Services
 
 			this._primaryCycleHotkeyHandlers.Clear();
 
+			foreach (HotkeyHandler handler in this._minimizeAllHotkeyHandlers)
+			{
+				handler.Dispose();
+			}
+
+			this._minimizeAllHotkeyHandlers.Clear();
+
 			foreach (string binding in this._primaryCycleMouseBindings)
 			{
 				this._globalMouseInputHandler.Unregister(binding);
 			}
 
 			this._primaryCycleMouseBindings.Clear();
+
+			foreach (string binding in this._minimizeAllMouseBindings)
+			{
+				this._globalMouseInputHandler.Unregister(binding);
+			}
+
+			this._minimizeAllMouseBindings.Clear();
+		}
+
+		private void ClearPrimaryCycleBindings()
+		{
+			this.ClearActionBindings();
 		}
 
 		private void RegisterPrimaryCycleBindingList(List<string> bindings, bool isForwards)
@@ -170,6 +193,7 @@ namespace EveOPreview.Services
 					HotkeyHandler handler = new HotkeyHandler(default(IntPtr), key);
 					handler.Pressed += (object sender, HandledEventArgs eventArgs) =>
 					{
+						this.SyncActiveClientFromForeground();
 						this.CycleNextClient(isForwards, this._configuration.CycleGroup1ClientsOrder);
 						eventArgs.Handled = true;
 					};
@@ -187,6 +211,49 @@ namespace EveOPreview.Services
 			}
 		}
 
+		private void RegisterMinimizeAllBindingList(List<string> bindings)
+		{
+			if (bindings == null)
+			{
+				return;
+			}
+
+			foreach (string binding in bindings)
+			{
+				if (string.IsNullOrWhiteSpace(binding))
+				{
+					continue;
+				}
+
+				string trimmedBinding = binding.Trim();
+				if (InputBindingHelper.GetKind(trimmedBinding) == InputBindingKind.Keyboard)
+				{
+					Keys key = this._configuration.StringToKey(trimmedBinding);
+					if (key == Keys.None)
+					{
+						continue;
+					}
+
+					HotkeyHandler handler = new HotkeyHandler(default(IntPtr), key);
+					handler.Pressed += (object sender, HandledEventArgs eventArgs) =>
+					{
+						this.MinimizeAllClients();
+						eventArgs.Handled = true;
+					};
+
+					if (handler.Register())
+					{
+						this._minimizeAllHotkeyHandlers.Add(handler);
+					}
+				}
+				else
+				{
+					this._globalMouseInputHandler.Register(trimmedBinding, this.MinimizeAllClients);
+					this._minimizeAllMouseBindings.Add(trimmedBinding);
+				}
+			}
+		}
+
 		private void InvokePrimaryMouseCycle(bool isForwards)
 		{
 			if (this._thumbnailViews.Count == 0)
@@ -194,15 +261,34 @@ namespace EveOPreview.Services
 				return;
 			}
 
+			this.SyncActiveClientFromForeground();
+			this.CycleNextClient(isForwards, this._configuration.CycleGroup1ClientsOrder);
+		}
+#endif
+
+		private void SyncActiveClientFromForeground()
+		{
 			IntPtr foregroundWindowHandle = this._windowManager.GetForegroundWindowHandle();
-			if (!this.IsClientWindowActive(foregroundWindowHandle))
+			if (foregroundWindowHandle == IntPtr.Zero)
 			{
 				return;
 			}
 
-			this.CycleNextClient(isForwards, this._configuration.CycleGroup1ClientsOrder);
+			if (this._thumbnailViews.TryGetValue(foregroundWindowHandle, out IThumbnailView foregroundView))
+			{
+				this._activeClient = (foregroundWindowHandle, foregroundView.Title);
+				return;
+			}
+
+			foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews)
+			{
+				if (entry.Value.IsKnownHandle(foregroundWindowHandle))
+				{
+					this._activeClient = (entry.Key, entry.Value.Title);
+					return;
+				}
+			}
 		}
-#endif
 
 		public IThumbnailView GetClientByTitle(string title)
 		{
@@ -242,6 +328,13 @@ namespace EveOPreview.Services
 		}
 		public void CycleNextClient(bool isForwards, Dictionary<string, int> cycleOrder)
 		{
+			if (this._thumbnailViews.Count == 0)
+			{
+				return;
+			}
+
+			this.SyncActiveClientFromForeground();
+
 			IOrderedEnumerable<KeyValuePair<string, int>> clientOrder;
 			Dictionary<string, int> _cycleOrder = this.ResolveCycleOrder(cycleOrder);
 
@@ -429,7 +522,7 @@ namespace EveOPreview.Services
 			this._thumbnailUpdateTimer.Start();
 			this.RefreshThumbnails();
 #if !LINUX
-			this.UpdatePrimaryCycleBindings();
+			this.UpdateActionBindings();
 #endif
 		}
 
@@ -438,7 +531,7 @@ namespace EveOPreview.Services
 			this._thumbnailUpdateTimer.Stop();
 
 #if !LINUX
-			this.ClearPrimaryCycleBindings();
+			this.ClearActionBindings();
 			this._globalMouseInputHandler.Clear();
 #endif
 

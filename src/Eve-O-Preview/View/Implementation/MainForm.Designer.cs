@@ -333,7 +333,7 @@ namespace EveOPreview.View
 			ClientCycleBindingsGroupBox.Size = new Size(300, 132);
 			ClientCycleBindingsGroupBox.TabIndex = 30;
 			ClientCycleBindingsGroupBox.TabStop = false;
-			ClientCycleBindingsGroupBox.Text = "Cycle client bindings";
+			ClientCycleBindingsGroupBox.Text = "Client action bindings";
 			// 
 			// ClientCycleBindingHintLabel
 			// 
@@ -343,7 +343,7 @@ namespace EveOPreview.View
 			ClientCycleBindingHintLabel.Name = "ClientCycleBindingHintLabel";
 			ClientCycleBindingHintLabel.Size = new Size(276, 30);
 			ClientCycleBindingHintLabel.TabIndex = 0;
-			ClientCycleBindingHintLabel.Text = "Click the box, then press a key combo or mouse button. Esc cancels.";
+			ClientCycleBindingHintLabel.Text = "Click the box, then press a key or mouse button. Defaults: Mouse 4 = next client, Mouse 5 = minimize all.";
 			// 
 			// CycleForwardBindingLabel
 			// 
@@ -384,7 +384,7 @@ namespace EveOPreview.View
 			CycleBackwardBindingLabel.Name = "CycleBackwardBindingLabel";
 			CycleBackwardBindingLabel.Size = new Size(134, 15);
 			CycleBackwardBindingLabel.TabIndex = 4;
-			CycleBackwardBindingLabel.Text = "Cycle to previous client";
+			CycleBackwardBindingLabel.Text = "Minimize all clients";
 			// 
 			// CycleBackwardRecordButton
 			// 

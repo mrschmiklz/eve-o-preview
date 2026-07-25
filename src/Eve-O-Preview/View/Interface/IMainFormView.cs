@@ -20,7 +20,7 @@ namespace EveOPreview.View
 		bool MinimizeInactiveClients { get; set; }
 #if !LINUX
 		string CycleForwardBinding { get; set; }
-		string CycleBackwardBinding { get; set; }
+		string MinimizeAllBinding { get; set; }
 #endif
 		bool HideCaptionOnClients { get; set; }
 		ViewAnimationStyle WindowsAnimationStyle { get; set; }

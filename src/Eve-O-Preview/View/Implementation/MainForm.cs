@@ -29,7 +29,7 @@ namespace EveOPreview.View
 		private readonly InputBindingCapture _inputBindingCapture;
 		private CycleBindingCaptureTarget _captureTarget;
 		private string _cycleForwardBinding;
-		private string _cycleBackwardBinding;
+		private string _minimizeAllBinding;
 #endif
 		#endregion
 
@@ -38,7 +38,7 @@ namespace EveOPreview.View
 		{
 			None,
 			Forward,
-			Backward
+			MinimizeAll
 		}
 #endif
 
@@ -165,13 +165,13 @@ namespace EveOPreview.View
 			}
 		}
 
-		public string CycleBackwardBinding
+		public string MinimizeAllBinding
 		{
-			get => this._cycleBackwardBinding ?? string.Empty;
+			get => this._minimizeAllBinding ?? string.Empty;
 			set
 			{
-				this._cycleBackwardBinding = value ?? string.Empty;
-				this.CycleBackwardBindingTextBox.Text = InputBindingHelper.ToDisplayString(this._cycleBackwardBinding);
+				this._minimizeAllBinding = value ?? string.Empty;
+				this.CycleBackwardBindingTextBox.Text = InputBindingHelper.ToDisplayString(this._minimizeAllBinding);
 			}
 		}
 #endif
@@ -182,7 +182,7 @@ namespace EveOPreview.View
 			set { }
 		}
 
-		public string CycleBackwardBinding
+		public string MinimizeAllBinding
 		{
 			get => string.Empty;
 			set { }
@@ -490,17 +490,17 @@ namespace EveOPreview.View
 #if !LINUX
 			bool isCapturing = this._inputBindingCapture.IsCapturing;
 			this.CycleForwardRecordButton.Enabled = !isCapturing || this._captureTarget == CycleBindingCaptureTarget.Forward;
-			this.CycleBackwardRecordButton.Enabled = !isCapturing || this._captureTarget == CycleBindingCaptureTarget.Backward;
+			this.CycleBackwardRecordButton.Enabled = !isCapturing || this._captureTarget == CycleBindingCaptureTarget.MinimizeAll;
 			this.CycleForwardBindingTextBox.BackColor = this._captureTarget == CycleBindingCaptureTarget.Forward
 				? Color.LightGoldenrodYellow
 				: SystemColors.Window;
-			this.CycleBackwardBindingTextBox.BackColor = this._captureTarget == CycleBindingCaptureTarget.Backward
+			this.CycleBackwardBindingTextBox.BackColor = this._captureTarget == CycleBindingCaptureTarget.MinimizeAll
 				? Color.LightGoldenrodYellow
 				: SystemColors.Window;
 			this.CycleForwardRecordButton.BackColor = this._captureTarget == CycleBindingCaptureTarget.Forward
 				? Color.LightGoldenrodYellow
 				: SystemColors.Control;
-			this.CycleBackwardRecordButton.BackColor = this._captureTarget == CycleBindingCaptureTarget.Backward
+			this.CycleBackwardRecordButton.BackColor = this._captureTarget == CycleBindingCaptureTarget.MinimizeAll
 				? Color.LightGoldenrodYellow
 				: SystemColors.Control;
 #endif
@@ -514,7 +514,7 @@ namespace EveOPreview.View
 
 		private void CycleBackwardRecordButton_Click(object sender, EventArgs e)
 		{
-			this.StartBindingCapture(CycleBindingCaptureTarget.Backward);
+			this.StartBindingCapture(CycleBindingCaptureTarget.MinimizeAll);
 		}
 
 		private void StartBindingCapture(CycleBindingCaptureTarget target)
@@ -548,9 +548,9 @@ namespace EveOPreview.View
 			{
 				this.CycleForwardBinding = binding;
 			}
-			else if (this._captureTarget == CycleBindingCaptureTarget.Backward)
+			else if (this._captureTarget == CycleBindingCaptureTarget.MinimizeAll)
 			{
-				this.CycleBackwardBinding = binding;
+				this.MinimizeAllBinding = binding;
 			}
 
 			this._captureTarget = CycleBindingCaptureTarget.None;
@@ -564,9 +564,9 @@ namespace EveOPreview.View
 			{
 				this.CycleForwardBinding = this._cycleForwardBinding;
 			}
-			else if (this._captureTarget == CycleBindingCaptureTarget.Backward)
+			else if (this._captureTarget == CycleBindingCaptureTarget.MinimizeAll)
 			{
-				this.CycleBackwardBinding = this._cycleBackwardBinding;
+				this.MinimizeAllBinding = this._minimizeAllBinding;
 			}
 
 			this._captureTarget = CycleBindingCaptureTarget.None;

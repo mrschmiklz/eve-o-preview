@@ -112,7 +112,7 @@ namespace EveOPreview.Presenters
 			this.View.MinimizeInactiveClients = this._configuration.MinimizeInactiveClients;
 #if !LINUX
 			this.View.CycleForwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys);
-			this.View.CycleBackwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1BackwardHotkeys);
+			this.View.MinimizeAllBinding = GetPrimaryCycleBinding(this._configuration.MinimizeAllClientsHotkeys);
 #endif
 			this.View.HideCaptionOnClients = this._configuration.HideCaptionOnClients;
 			this.View.WindowsAnimationStyle = ViewAnimationStyleConverter.Convert(this._configuration.WindowsAnimationStyle);
@@ -162,10 +162,10 @@ namespace EveOPreview.Presenters
 			this._configuration.MinimizeInactiveClients = this.View.MinimizeInactiveClients;
 #if !LINUX
 			string forwardBinding = this.View.CycleForwardBinding ?? string.Empty;
-			string backwardBinding = this.View.CycleBackwardBinding ?? string.Empty;
+			string minimizeAllBinding = this.View.MinimizeAllBinding ?? string.Empty;
 
 			SetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys, forwardBinding);
-			SetPrimaryCycleBinding(this._configuration.CycleGroup1BackwardHotkeys, backwardBinding);
+			SetPrimaryCycleBinding(this._configuration.MinimizeAllClientsHotkeys, minimizeAllBinding);
 #endif
 
 			if (this._configuration.HideCaptionOnClients != this.View.HideCaptionOnClients ) {

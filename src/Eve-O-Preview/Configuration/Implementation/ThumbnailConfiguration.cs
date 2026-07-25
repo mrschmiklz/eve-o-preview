@@ -18,7 +18,7 @@ namespace EveOPreview.Configuration.Implementation
 		{
 			this.ConfigVersion = 1;
 
-			this.CycleGroup1ForwardHotkeys = new List<string> { "F14", "Control+F14" };
+			this.CycleGroup1ForwardHotkeys = new List<string> { "F14", "MouseXButton1" };
 			this.CycleGroup1BackwardHotkeys = new List<string> { "F13", "Control+F13" };
 			this.CycleGroup1ClientsOrder = new Dictionary<string, int>();
 
@@ -82,7 +82,7 @@ namespace EveOPreview.Configuration.Implementation
 			this.FlatLayout = new Dictionary<string, Point>();
 			this.ClientLayout = new Dictionary<string, ClientLayout>();
 			this.ClientHotkey = new Dictionary<string, string>();
-			this.MinimizeAllClientsHotkeys = new List<string> { "Control+F22" };
+			this.MinimizeAllClientsHotkeys = new List<string> { "MouseXButton2" };
 			this.DisableThumbnail = new Dictionary<string, bool>();
 			this.PriorityClients = new List<string>();
 
@@ -103,7 +103,7 @@ namespace EveOPreview.Configuration.Implementation
 			this.EnableClientLayoutTracking = false;
 			this.HideActiveClientThumbnail = false;
 			this.HideLoginClientThumbnail = false;
-			this.MinimizeInactiveClients = false;
+			this.MinimizeInactiveClients = true;
 			this.HideCaptionOnClients = false;
 			this.WindowsAnimationStyle = AnimationStyle.NoAnimation;
 			this.ShowThumbnailsAlwaysOnTop = true;

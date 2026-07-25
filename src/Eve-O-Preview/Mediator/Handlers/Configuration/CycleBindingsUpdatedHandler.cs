@@ -17,7 +17,7 @@ namespace EveOPreview.Mediator.Handlers.Configuration
 
 		public Task Handle(CycleBindingsUpdated notification, CancellationToken cancellationToken)
 		{
-			this._manager.UpdatePrimaryCycleBindings();
+			this._manager.UpdateActionBindings();
 
 			return Task.CompletedTask;
 		}
