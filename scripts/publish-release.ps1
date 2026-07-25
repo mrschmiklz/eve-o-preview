@@ -7,7 +7,10 @@
   Workflow:
     1. Push your code changes to GitHub (this script checks the branch is pushed).
     2. Run this script with a version tag.
-    3. GitHub Actions builds Windows + Linux zips and attaches them to the release.
+    3. Builds Release-<tag>-Windows.zip locally and uploads it to the GitHub release.
+
+  GitHub Actions may also build assets on upstream; on this fork the local zip upload
+  is the reliable path for Windows test builds.
 
   Download from: https://github.com/mrschmiklz/eve-o-preview/releases
 
@@ -102,17 +105,43 @@ if ($Prerelease) {
 
 gh @releaseArgs
 
+if (-not $SkipLocalBuild) {
+    Write-Step "Publishing Windows release zip"
+    $outDir = Join-Path $RepoRoot "dist\Eve-O-Preview-$Tag-Windows"
+    $zipPath = Join-Path $RepoRoot "dist\Release-$Tag-Windows.zip"
+
+    if (Test-Path $outDir) {
+        Remove-Item -Recurse -Force $outDir
+    }
+    if (Test-Path $zipPath) {
+        Remove-Item -Force $zipPath
+    }
+    New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+
+    dotnet publish "src\Eve-O-Preview\Eve-O-Preview.csproj" `
+        -c Release `
+        -o $outDir `
+        -p:EVEOTARGET="Windows" `
+        -p:AssemblyVersion="$Tag" `
+        -p:FileVersion="$Tag" `
+        --self-contained false
+    if ($LASTEXITCODE -ne 0) {
+        throw "dotnet publish failed."
+    }
+
+    Compress-Archive -Path (Join-Path $outDir "*") -DestinationPath $zipPath -Force
+
+    gh release upload $Tag $zipPath --repo "mrschmiklz/eve-o-preview" --clobber
+    Write-Host "Uploaded Release-$Tag-Windows.zip" -ForegroundColor Green
+}
+
 Write-Step "Done"
 Write-Host @"
 
 Release created: https://github.com/mrschmiklz/eve-o-preview/releases/tag/$Tag
 
-GitHub Actions is building:
+Windows asset:
   - Release-$Tag-Windows.zip
-  - Release-$Tag-Linux.zip
-
-Watch progress:
-  https://github.com/mrschmiklz/eve-o-preview/actions
 
 On your other PC:
   1. Open the release URL above

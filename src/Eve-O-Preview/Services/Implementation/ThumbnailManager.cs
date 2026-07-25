@@ -111,8 +111,16 @@ namespace EveOPreview.Services
 			string forwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys);
 			string backwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1BackwardHotkeys);
 
-			this._primaryForwardCycleBinding.Register(forwardBinding, () => this.InvokePrimaryCycle(true), this._globalMouseInputHandler);
-			this._primaryBackwardCycleBinding.Register(backwardBinding, () => this.InvokePrimaryCycle(false), this._globalMouseInputHandler);
+			this._primaryForwardCycleBinding.Register(
+				forwardBinding,
+				() => this.InvokePrimaryCycle(true, forwardBinding),
+				this._globalMouseInputHandler,
+				this._configuration.StringToKey);
+			this._primaryBackwardCycleBinding.Register(
+				backwardBinding,
+				() => this.InvokePrimaryCycle(false, backwardBinding),
+				this._globalMouseInputHandler,
+				this._configuration.StringToKey);
 #endif
 		}
 
@@ -122,19 +130,27 @@ namespace EveOPreview.Services
 			return bindings?.FirstOrDefault(binding => !string.IsNullOrWhiteSpace(binding)) ?? string.Empty;
 		}
 
-		private void InvokePrimaryCycle(bool isForwards)
+		private void InvokePrimaryCycle(bool isForwards, string binding)
 		{
 			if (this._thumbnailViews.Count == 0)
 			{
 				return;
 			}
 
-			IntPtr foregroundWindowHandle = this._windowManager.GetForegroundWindowHandle();
-			if (!this.IsClientWindowActive(foregroundWindowHandle))
+			if (InputBindingHelper.GetKind(binding) == InputBindingKind.Mouse)
 			{
-				return;
+				IntPtr foregroundWindowHandle = this._windowManager.GetForegroundWindowHandle();
+				if (!this.IsClientWindowActive(foregroundWindowHandle))
+				{
+					return;
+				}
 			}
 
+			this.EnqueuePrimaryCycle(isForwards);
+		}
+
+		private void EnqueuePrimaryCycle(bool isForwards)
+		{
 			Action cycle = () => this.CycleNextClient(isForwards, this._configuration.CycleGroup1ClientsOrder);
 
 			if (Application.OpenForms.Count > 0)
@@ -340,6 +356,9 @@ namespace EveOPreview.Services
 		{
 			this._thumbnailUpdateTimer.Start();
 			this.RefreshThumbnails();
+#if !LINUX
+			this.UpdatePrimaryCycleBindings();
+#endif
 		}
 
 		public void Stop()

@@ -146,6 +146,9 @@ namespace EveOPreview.Presenters
 
 			this.View.IconName = this._configuration.IconName;
 			this.View.RefreshCycleBindingCaptureState();
+#if !LINUX
+			this._mediator.Publish(new CycleBindingsUpdated()).GetAwaiter().GetResult();
+#endif
 		}
 
 		private async void SaveApplicationSettings()
@@ -158,12 +161,8 @@ namespace EveOPreview.Presenters
 			this._configuration.HideActiveClientThumbnail = this.View.HideActiveClientThumbnail;
 			this._configuration.MinimizeInactiveClients = this.View.MinimizeInactiveClients;
 #if !LINUX
-			string previousForwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys);
-			string previousBackwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1BackwardHotkeys);
 			string forwardBinding = this.View.CycleForwardBinding ?? string.Empty;
 			string backwardBinding = this.View.CycleBackwardBinding ?? string.Empty;
-			bool cycleBindingsChanged = !string.Equals(previousForwardBinding, forwardBinding, StringComparison.OrdinalIgnoreCase)
-				|| !string.Equals(previousBackwardBinding, backwardBinding, StringComparison.OrdinalIgnoreCase);
 
 			SetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys, forwardBinding);
 			SetPrimaryCycleBinding(this._configuration.CycleGroup1BackwardHotkeys, backwardBinding);
@@ -230,10 +229,7 @@ namespace EveOPreview.Presenters
 			this.View.RefreshCycleBindingCaptureState();
 
 #if !LINUX
-			if (cycleBindingsChanged)
-			{
-				await this._mediator.Publish(new CycleBindingsUpdated());
-			}
+			await this._mediator.Publish(new CycleBindingsUpdated());
 #endif
 
 			await this._mediator.Send(new SaveConfiguration());

@@ -11,7 +11,7 @@ namespace EveOPreview.UI.Hotkeys
 
 		public string Binding => this._binding;
 
-		public void Register(string binding, Action onPressed, GlobalMouseInputHandler mouseInputHandler)
+		public void Register(string binding, Action onPressed, GlobalMouseInputHandler mouseInputHandler, Func<string, Keys> parseKeyboardBinding)
 		{
 			this.Unregister(mouseInputHandler);
 
@@ -24,7 +24,9 @@ namespace EveOPreview.UI.Hotkeys
 			switch (InputBindingHelper.GetKind(binding))
 			{
 				case InputBindingKind.Keyboard:
-					Keys key = InputBindingHelper.ParseKeyboardBinding(binding);
+					Keys key = parseKeyboardBinding != null
+						? parseKeyboardBinding(binding)
+						: InputBindingHelper.ParseKeyboardBinding(binding);
 					if (key == Keys.None)
 					{
 						return;
