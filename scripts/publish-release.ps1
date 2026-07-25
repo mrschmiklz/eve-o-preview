@@ -78,7 +78,6 @@ if (-not $SkipLocalBuild) {
     Write-Step "Local Windows build check"
     dotnet build "src\Eve-O-Preview\Eve-O-Preview.csproj" `
         -c Release `
-        -p:EVEOTARGET="Windows" `
         -p:AssemblyVersion="$Tag" `
         -p:FileVersion="$Tag" `
         --verbosity minimal
@@ -121,7 +120,6 @@ if (-not $SkipLocalBuild) {
     dotnet publish "src\Eve-O-Preview\Eve-O-Preview.csproj" `
         -c Release `
         -o $outDir `
-        -p:EVEOTARGET="Windows" `
         -p:AssemblyVersion="$Tag" `
         -p:FileVersion="$Tag" `
         --self-contained false

@@ -1,5 +1,4 @@
-﻿using MediatR;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace EveOPreview.Services.Interop
 {

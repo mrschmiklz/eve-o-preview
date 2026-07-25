@@ -1,11 +1,10 @@
-﻿using EveOPreview.Configuration;
-using EveOPreview.Mediator.Messages;
+﻿using System;
+using System.Collections.Generic;
+using EveOPreview.Configuration;
+using EveOPreview.Presenters;
 using EveOPreview.Services.Interop;
 using EveOPreview.UI.Hotkeys;
 using EveOPreview.View;
-using MediatR;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -30,7 +29,8 @@ namespace EveOPreview.Services
 		#endregion
 
 		#region Private fields
-		private readonly IMediator _mediator;
+		private readonly IConfigurationStorage _configurationStorage;
+		private IMainFormPresenter _viewNotifier;
 		private readonly IProcessMonitor _processMonitor;
 		private readonly IWindowManager _windowManager;
 		private readonly IThumbnailConfiguration _configuration;
@@ -51,19 +51,16 @@ namespace EveOPreview.Services
 		private int _hideThumbnailsDelay;
 		private bool _isThumbnailUpdateInProgress;
 
-		private List<HotkeyHandler> _cycleClientHotkeyHandlers = new List<HotkeyHandler>();
-#if !LINUX
 		private readonly GlobalMouseInputHandler _globalMouseInputHandler;
 		private readonly List<HotkeyHandler> _primaryCycleHotkeyHandlers = new List<HotkeyHandler>();
 		private readonly List<string> _primaryCycleMouseBindings = new List<string>();
 		private readonly List<HotkeyHandler> _minimizeAllHotkeyHandlers = new List<HotkeyHandler>();
 		private readonly List<string> _minimizeAllMouseBindings = new List<string>();
-#endif
 		#endregion
 
-		public ThumbnailManager(IMediator mediator, IThumbnailConfiguration configuration, IProcessMonitor processMonitor, IWindowManager windowManager, IThumbnailViewFactory factory)
+		public ThumbnailManager(IConfigurationStorage configurationStorage, IThumbnailConfiguration configuration, IProcessMonitor processMonitor, IWindowManager windowManager, IThumbnailViewFactory factory)
 		{
-			this._mediator = mediator;
+			this._configurationStorage = configurationStorage;
 			this._processMonitor = processMonitor;
 			this._windowManager = windowManager;
 			this._configuration = configuration;
@@ -86,27 +83,16 @@ namespace EveOPreview.Services
 			this._thumbnailUpdateTimer.Interval = new TimeSpan(0, 0, 0, 0, configuration.ThumbnailRefreshPeriod);
 
 			this._hideThumbnailsDelay = this._configuration.HideThumbnailsDelay;
-
-#if !LINUX
 			this._globalMouseInputHandler = new GlobalMouseInputHandler();
-#endif
+		}
 
-			RegisterCycleClientHotkey(this._configuration.CycleGroup2ForwardHotkeys?.Select(x => this._configuration.StringToKey(x)), true, this._configuration.CycleGroup2ClientsOrder);
-			RegisterCycleClientHotkey(this._configuration.CycleGroup2BackwardHotkeys?.Select(x => this._configuration.StringToKey(x)), false, this._configuration.CycleGroup2ClientsOrder);
-
-			RegisterCycleClientHotkey(this._configuration.CycleGroup3ForwardHotkeys?.Select(x => this._configuration.StringToKey(x)), true, this._configuration.CycleGroup3ClientsOrder);
-			RegisterCycleClientHotkey(this._configuration.CycleGroup3BackwardHotkeys?.Select(x => this._configuration.StringToKey(x)), false, this._configuration.CycleGroup3ClientsOrder);
-
-			RegisterCycleClientHotkey(this._configuration.CycleGroup4ForwardHotkeys?.Select(x => this._configuration.StringToKey(x)), true, this._configuration.CycleGroup4ClientsOrder);
-			RegisterCycleClientHotkey(this._configuration.CycleGroup4BackwardHotkeys?.Select(x => this._configuration.StringToKey(x)), false, this._configuration.CycleGroup4ClientsOrder);
-
-			RegisterCycleClientHotkey(this._configuration.CycleGroup5ForwardHotkeys?.Select(x => this._configuration.StringToKey(x)), true, this._configuration.CycleGroup5ClientsOrder);
-			RegisterCycleClientHotkey(this._configuration.CycleGroup5BackwardHotkeys?.Select(x => this._configuration.StringToKey(x)), false, this._configuration.CycleGroup5ClientsOrder);
+		public void AttachPresenter(IMainFormPresenter presenter)
+		{
+			this._viewNotifier = presenter;
 		}
 
 		public void UpdateActionBindings()
 		{
-#if !LINUX
 			void updateCore()
 			{
 				this.ClearActionBindings();
@@ -122,15 +108,8 @@ namespace EveOPreview.Services
 			{
 				updateCore();
 			}
-#endif
 		}
 
-		public void UpdatePrimaryCycleBindings()
-		{
-			this.UpdateActionBindings();
-		}
-
-#if !LINUX
 		private void ClearActionBindings()
 		{
 			foreach (HotkeyHandler handler in this._primaryCycleHotkeyHandlers)
@@ -160,11 +139,6 @@ namespace EveOPreview.Services
 			}
 
 			this._minimizeAllMouseBindings.Clear();
-		}
-
-		private void ClearPrimaryCycleBindings()
-		{
-			this.ClearActionBindings();
 		}
 
 		private void RegisterPrimaryCycleBindingList(List<string> bindings, bool isForwards)
@@ -283,7 +257,6 @@ namespace EveOPreview.Services
 				action();
 			}
 		}
-#endif
 
 		private IntPtr GetHotkeyTarget()
 		{
@@ -332,11 +305,7 @@ namespace EveOPreview.Services
 		public void SetActive(KeyValuePair<IntPtr, IThumbnailView> newClient)
 		{
 			this.GetActiveClient()?.ClearBorder();
-#if LINUX
-			bool activated = this._windowManager.ActivateWindow(newClient.Key, newClient.Value.Title);
-#else
 			bool activated = this._windowManager.ActivateWindow(newClient.Key, this._configuration.WindowsAnimationStyle);
-#endif
 			if (!activated)
 			{
 				return;
@@ -396,230 +365,18 @@ namespace EveOPreview.Services
 			this.SetActive(clients[nextIndex]);
 		}
 
-		public void CycleNextClient(bool isForwards, Dictionary<string, int> cycleOrder)
-		{
-			if (this._thumbnailViews.Count == 0)
-			{
-				return;
-			}
-
-			this.SyncActiveClientFromForeground();
-
-			IOrderedEnumerable<KeyValuePair<string, int>> clientOrder;
-			Dictionary<string, int> _cycleOrder = this.ResolveCycleOrder(cycleOrder);
-
-			if (_cycleOrder.Count == 0)
-			{
-				return;
-			}
-
-			if (isForwards)
-			{
-				clientOrder = _cycleOrder.OrderBy(x => x.Value);
-			}
-			else
-			{
-				clientOrder = _cycleOrder.OrderByDescending(x => x.Value);
-			}
-
-			bool setNextClient = false;
-			IThumbnailView lastClient = null;
-
-			foreach (var t in clientOrder)
-			{
-				if (t.Key == _activeClient.Title && t.Key != DEFAULT_CLIENT_TITLE)
-				{
-					setNextClient = true;
-					lastClient = _thumbnailViews.FirstOrDefault(x => x.Value.Title == t.Key).Value;
-					continue;
-				}
-
-				// cycle through login screens ?
-				if (t.Key == _activeClient.Title && t.Key == DEFAULT_CLIENT_TITLE)
-				{
-					lastClient = _thumbnailViews.FirstOrDefault(x => x.Value.Title == t.Key && x.Value.Id == _activeClient.Handle).Value;
-					if (lastClient == null)
-					{
-						setNextClient = true;
-						continue;
-					}
-					var possibleClients = (isForwards ? _thumbnailViews.OrderBy(x => x.Value.Id.ToInt64()) : _thumbnailViews.OrderByDescending(x => x.Value.Id.ToInt64())).Where(x => x.Value.Title == t.Key && ! x.Value.IsExcludedFromCycleGroup);
-					foreach (var pc in possibleClients)
-					{
-						if ( pc.Value.Id.Equals(lastClient.Id) )
-						{
-							setNextClient = true;
-							continue;
-						}
-
-						if (!setNextClient)
-						{
-							continue;
-						}
-
-						// this is the next client (at login screen)
-						SetActive(pc);
-						return;
-					}
-
-					// rolled off top of list - back to first (if any there!)
-					// set next client ?
-					continue;
-				}
-
-				if (!setNextClient)
-				{
-					continue;
-				}
-
-				if (_thumbnailViews.Any(x => x.Value.Title == t.Key && !x.Value.IsExcludedFromCycleGroup))
-				{
-					var ptr = t.Key.Equals(DEFAULT_CLIENT_TITLE) ? 
-						(isForwards ? _thumbnailViews.OrderBy(x => x.Value.Id.ToInt64()) : _thumbnailViews.OrderByDescending(x => x.Value.Id.ToInt64())).FirstOrDefault(x => x.Value.Title == t.Key && ! x.Value.IsExcludedFromCycleGroup)
-						: _thumbnailViews.First(x => x.Value.Title == t.Key && !x.Value.IsExcludedFromCycleGroup);
-					SetActive(ptr);
-					return;
-				}
-			}
-
-			// we didn't get a next one. just get the first one from the start.
-			foreach (var t in clientOrder)
-			{
-				if (_thumbnailViews.Any(x => x.Value.Title == t.Key && !x.Value.IsExcludedFromCycleGroup))
-				{
-					var ptr = t.Key.Equals(DEFAULT_CLIENT_TITLE) ?
-						(isForwards ? _thumbnailViews.OrderBy(x => x.Value.Id.ToInt64()) : _thumbnailViews.OrderByDescending(x => x.Value.Id.ToInt64())).FirstOrDefault(x => x.Value.Title == t.Key && !x.Value.IsExcludedFromCycleGroup)
-						: _thumbnailViews.First(x => x.Value.Title == t.Key && !x.Value.IsExcludedFromCycleGroup);
-					SetActive(ptr);
-					_activeClient = (ptr.Key, t.Key);
-					return;
-				}
-			}
-
-			// unable to select anything !
-			return;
-		}
-
-		private Dictionary<string, int> ResolveCycleOrder(Dictionary<string, int> cycleOrder)
-		{
-			Dictionary<string, int> configuredOrder = cycleOrder != null
-				? new Dictionary<string, int>(cycleOrder)
-				: new Dictionary<string, int>();
-
-			if (configuredOrder.Count == 0)
-			{
-				return this.BuildCycleOrderFromThumbnails();
-			}
-
-			bool hasLiveClient = this._thumbnailViews.Values.Any(view => configuredOrder.ContainsKey(view.Title));
-			if (!hasLiveClient)
-			{
-				return this.BuildCycleOrderFromThumbnails();
-			}
-
-			return configuredOrder;
-		}
-
-		private Dictionary<string, int> BuildCycleOrderFromThumbnails()
-		{
-			Dictionary<string, int> resolvedOrder = new Dictionary<string, int>();
-			bool hasLoggedInClients = this._thumbnailViews.Values.Any(view => this.IsManageableThumbnail(view));
-			int order = 0;
-
-			foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews.OrderBy(x => x.Value.Id.ToInt64()))
-			{
-				if (entry.Value.IsExcludedFromCycleGroup)
-				{
-					continue;
-				}
-
-				if (hasLoggedInClients && entry.Value.Title == ThumbnailManager.DEFAULT_CLIENT_TITLE)
-				{
-					continue;
-				}
-
-				if (!resolvedOrder.ContainsKey(entry.Value.Title))
-				{
-					resolvedOrder[entry.Value.Title] = order++;
-				}
-			}
-
-			return resolvedOrder;
-		}
-
-		public void RegisterCycleClientHotkey(IEnumerable<Keys> keys, bool isForwards, Dictionary<string, int> cycleOrder)
-		{
-			if (keys == null)
-			{
-				return;
-			}
-
-			foreach (var hotkey in keys)
-			{
-				if (hotkey == Keys.None)
-				{
-					continue;
-				}
-
-				var newHandler = new HotkeyHandler(this.GetHotkeyTarget(), hotkey);
-				newHandler.Pressed += (object s, HandledEventArgs e) =>
-				{
-					this.CycleNextClient(isForwards, cycleOrder);
-					e.Handled = true;
-				};
-
-				newHandler.Register();
-				this._cycleClientHotkeyHandlers.Add(newHandler);
-			}
-		}
-		public void RegisterMinimizeAllClientsHotkey(IEnumerable<Keys> keys)
-		{
-			if (keys == null)
-			{
-				return;
-			}
-
-			foreach (var hotkey in keys)
-			{
-				if (hotkey == Keys.None)
-				{
-					continue;
-				}
-
-				var newHandler = new HotkeyHandler(this.GetHotkeyTarget(), hotkey);
-				newHandler.Pressed += (object s, HandledEventArgs e) =>
-				{
-					this.MinimizeAllClients();
-					e.Handled = true;
-				};
-
-				newHandler.Register();
-				this._cycleClientHotkeyHandlers.Add(newHandler);
-			}
-		}
-
 		public void Start()
 		{
 			this._thumbnailUpdateTimer.Start();
 			this.RefreshThumbnails();
-#if !LINUX
 			this.UpdateActionBindings();
-#endif
 		}
 
 		public void Stop()
 		{
 			this._thumbnailUpdateTimer.Stop();
-
-#if !LINUX
 			this.ClearActionBindings();
 			this._globalMouseInputHandler.Clear();
-#endif
-
-			foreach (HotkeyHandler handler in this._cycleClientHotkeyHandlers)
-			{
-				handler.Dispose();
-			}
 		}
 
 		private async void ThumbnailUpdateTimerTick(object sender, EventArgs e)
@@ -650,9 +407,10 @@ namespace EveOPreview.Services
 
 			foreach (IProcessInfo process in addedProcesses)
 			{
-				Size initialSize = this._configuration.PerClientThumbnailSize.TryGetValue(process.Title, out Size perClientSize)
+				Size configuredSize = this._configuration.PerClientThumbnailSize.TryGetValue(process.Title, out Size perClientSize)
 					? perClientSize
 					: this._configuration.ThumbnailSize;
+				Size initialSize = this.GetAspectMatchedThumbnailSize(process.Handle, configuredSize);
 
 				IThumbnailView view = this._thumbnailViewFactory.Create(process.Handle, process.Title, initialSize);
 				view.IsOverlayEnabled = this._configuration.ShowThumbnailOverlays;
@@ -737,7 +495,15 @@ namespace EveOPreview.Services
 
 			if ((viewsAdded.Count > 0) || (viewsRemoved.Count > 0))
 			{
-				await this._mediator.Publish(new ThumbnailListUpdated(viewsAdded, viewsRemoved));
+				if (viewsAdded.Count > 0)
+				{
+					this._viewNotifier?.AddThumbnails(viewsAdded);
+				}
+
+				if (viewsRemoved.Count > 0)
+				{
+					this._viewNotifier?.RemoveThumbnails(viewsRemoved);
+				}
 			}
 		}
 
@@ -971,11 +737,7 @@ namespace EveOPreview.Services
 				&& !this._configuration.IsPriorityClient(this._activeClient.Title))
 			{
 				this._windowManager.MinimizeWindow(this._activeClient.Handle, this._configuration.WindowsAnimationStyle, false);
-#if LINUX
-   			    this._windowManager.ActivateWindow(foregroundClientHandle, foregroundClientTitle);
-#else
 				this._windowManager.ActivateWindow(foregroundClientHandle, this._configuration.WindowsAnimationStyle);
-#endif
 			}
 
 			this._activeClient = (foregroundClientHandle, foregroundClientTitle);
@@ -1026,11 +788,7 @@ namespace EveOPreview.Services
 
 			Task.Run(() =>
 				{
-#if LINUX
-					this._windowManager.ActivateWindow(view.Id, view.Title);
-#else
 					this._windowManager.ActivateWindow(view.Id, this._configuration.WindowsAnimationStyle);
-#endif
 				})
 				.ContinueWith((task) =>
 				{
@@ -1045,11 +803,7 @@ namespace EveOPreview.Services
 		{
 			if (switchOut)
 			{
-#if LINUX
-				this._windowManager.ActivateWindow(this._externalApplication, null);
-#else
 				this._windowManager.ActivateWindow(this._externalApplication, this._configuration.WindowsAnimationStyle);
-#endif
 			}
 			else
 			{
@@ -1089,7 +843,7 @@ namespace EveOPreview.Services
 
 			view.Refresh(false);
 
-			await this._mediator.Publish(new ThumbnailActiveSizeUpdated(view.ThumbnailSize));
+			this._viewNotifier?.UpdateThumbnailSize(view.ThumbnailSize);
 		}
 
 		private void ThumbnailViewMoved(IntPtr id)
@@ -1376,14 +1130,14 @@ namespace EveOPreview.Services
 			}
 		}
 
-		private async void RaiseThumbnailLocationUpdatedNotification(string title)
+		private void RaiseThumbnailLocationUpdatedNotification(string title)
 		{
 			if (string.IsNullOrEmpty(title) || (title == ThumbnailManager.DEFAULT_CLIENT_TITLE))
 			{
 				return;
 			}
 
-			await this._mediator.Send(new SaveConfiguration());
+			this._configurationStorage.Save();
 		}
 
 		// We shouldn't manage some thumbnails (like thumbnail of the EVE client sitting on the login screen)
@@ -1394,6 +1148,26 @@ namespace EveOPreview.Services
 		}
 
 		// Quick sanity check that the window is not minimized
+		private Size GetAspectMatchedThumbnailSize(IntPtr handle, Size configuredSize)
+		{
+			Size clientSize = this._windowManager.GetClientAreaSize(handle);
+			if (clientSize.Width < ThumbnailManager.WINDOW_SIZE_THRESHOLD || clientSize.Height < ThumbnailManager.WINDOW_SIZE_THRESHOLD)
+			{
+				return configuredSize;
+			}
+
+			int width = configuredSize.Width;
+			int height = (int)Math.Round(width * (double)clientSize.Height / clientSize.Width);
+
+			Size minimumSize = this._configuration.ThumbnailMinimumSize;
+			Size maximumSize = this._configuration.ThumbnailMaximumSize;
+
+			width = Math.Min(Math.Max(width, minimumSize.Width), maximumSize.Width);
+			height = Math.Min(Math.Max(height, minimumSize.Height), maximumSize.Height);
+
+			return new Size(width, height);
+		}
+
 		private bool IsValidWindowPosition(int left, int top, int width, int height)
 		{
 			return (left > ThumbnailManager.WINDOW_POSITION_THRESHOLD_LOW) && (left < ThumbnailManager.WINDOW_POSITION_THRESHOLD_HIGH)

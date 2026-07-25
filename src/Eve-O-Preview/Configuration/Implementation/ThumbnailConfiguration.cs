@@ -16,67 +16,15 @@ namespace EveOPreview.Configuration.Implementation
 
 		public ThumbnailConfiguration()
 		{
-			this.ConfigVersion = 2;
+			this.ConfigVersion = 3;
 
 			this.CycleGroup1ForwardHotkeys = new List<string> { "F14", "MouseXButton1" };
-			this.CycleGroup1BackwardHotkeys = new List<string> { "F13", "Control+F13" };
-			this.CycleGroup1ClientsOrder = new Dictionary<string, int>();
 
-			this.CycleGroup2ForwardHotkeys = new List<string> { "F16", "Control+F16" };
-			this.CycleGroup2BackwardHotkeys = new List<string> { "F15", "Control+F15" };
-			this.CycleGroup2ClientsOrder = new Dictionary<string, int>
-			{
-				{ "EVE - Example Logi Toon 1", 1 },
-				{ "EVE - Example Scout Toon 2", 2 },
-				{ "EVE - Example Tackle Toon 3", 3 }
-			};
-
-			this.CycleGroup3ForwardHotkeys = new List<string> { "" };
-			this.CycleGroup3BackwardHotkeys = new List<string> { "" };
-			this.CycleGroup3ClientsOrder = new Dictionary<string, int>
-			{
-				{ "EVE - cycle group 3", 1 },
-			};
-			this.CycleGroup4ForwardHotkeys = new List<string> { "" };
-			this.CycleGroup4BackwardHotkeys = new List<string> { "" };
-			this.CycleGroup4ClientsOrder = new Dictionary<string, int>
-			{
-				{ "EVE - cycle group 4", 1 },
-			};
-			this.CycleGroup5ForwardHotkeys = new List<string> { "" };
-			this.CycleGroup5BackwardHotkeys = new List<string> { "" };
-			this.CycleGroup5ClientsOrder = new Dictionary<string, int>
-			{
-				{ "EVE - cycle group 5", 1 },
-			};
-
-			this.PerClientActiveClientHighlightColor = new Dictionary<string, Color>
-			{
-				{"EVE - Example Toon 1", Color.Red},
-				{"EVE - Example Toon 2", Color.Green}
-			};
-			this.PerClientPreventPreviewColor = new Dictionary<string, Color>
-			{
-				{"EVE - Example Toon 1", Color.Red},
-				{"EVE - Example Toon 2", Color.Green}
-			};
-			this.PerClientPreventPreviews = new Dictionary<string, bool>
-			{
-				{"EVE - Example Toon 1", false},
-				{"EVE - Example Toon 2", true}
-			};
-
-			this.PerClientThumbnailSize = new Dictionary<string, Size>
-			{
-				{"EVE - Example Toon 1", new Size(200, 200)},
-				{"EVE - Example Toon 2", new Size(200, 200)}
-			};
-
-			this.PerClientZoomAnchor = new Dictionary<string, ZoomAnchor>
-			{
-				{"EVE - Example Toon 1", ZoomAnchor.N },
-				{"EVE - Example Toon 2", ZoomAnchor.S}
-			};
+			this.PerClientActiveClientHighlightColor = new Dictionary<string, Color>();
+			this.PerClientPreventPreviewColor = new Dictionary<string, Color>();
+			this.PerClientPreventPreviews = new Dictionary<string, bool>();
+			this.PerClientThumbnailSize = new Dictionary<string, Size>();
+			this.PerClientZoomAnchor = new Dictionary<string, ZoomAnchor>();
 
 			this.PerClientLayout = new Dictionary<string, Dictionary<string, Point>>();
 			this.FlatLayout = new Dictionary<string, Point>();
@@ -92,16 +40,10 @@ namespace EveOPreview.Configuration.Implementation
 			this.ThumbnailRefreshPeriod = 500;
 			this.ThumbnailResizeTimeoutPeriod = 500;
 
-#if LINUX
-			this.EnableWineCompatibilityMode = true;
-#else
-			this.EnableWineCompatibilityMode = false;
-#endif
-
 			this.ThumbnailOpacity = 0.5;
 
 			this.EnableClientLayoutTracking = false;
-			this.HideActiveClientThumbnail = false;
+			this.HideActiveClientThumbnail = true;
 			this.HideLoginClientThumbnail = false;
 			this.MinimizeInactiveClients = true;
 			this.HideCaptionOnClients = false;
@@ -133,7 +75,7 @@ namespace EveOPreview.Configuration.Implementation
 			this.ThumbnailSnapToGridSizeX = 100;
 			this.ThumbnailSnapToGridSizeY = 50;
 
-            this.EnableActiveClientHighlight = false;
+            this.EnableActiveClientHighlight = true;
 			this.ActiveClientHighlightColor = Color.GreenYellow;
 			this.PreventPreviewColor = Color.Purple;
 			this.ActiveClientHighlightThickness = 3;
@@ -150,53 +92,8 @@ namespace EveOPreview.Configuration.Implementation
 		[JsonProperty("ConfigVersion")]
 		public int ConfigVersion { get; set; }
 
-		[JsonIgnore]
-		public Dictionary<string, bool> CycleGroupExclusions { get; set; }
-
 		[JsonProperty("CycleGroup1ForwardHotkeys")]
 		public List<string> CycleGroup1ForwardHotkeys { get; set; }
-
-		[JsonProperty("CycleGroup1BackwardHotkeys")]
-		public List<string> CycleGroup1BackwardHotkeys { get; set; }
-
-		[JsonProperty("CycleGroup1ClientsOrder")]
-		public Dictionary<string, int> CycleGroup1ClientsOrder { get; set; }
-
-		[JsonProperty("CycleGroup2ForwardHotkeys")]
-		public List<string> CycleGroup2ForwardHotkeys { get; set; }
-
-		[JsonProperty("CycleGroup2BackwardHotkeys")]
-		public List<string> CycleGroup2BackwardHotkeys { get; set; }
-
-		[JsonProperty("CycleGroup2ClientsOrder")]
-		public Dictionary<string, int> CycleGroup2ClientsOrder { get; set; }
-
-		[JsonProperty("CycleGroup3ForwardHotkeys")]
-		public List<string> CycleGroup3ForwardHotkeys { get; set; }
-
-		[JsonProperty("CycleGroup3BackwardHotkeys")]
-		public List<string> CycleGroup3BackwardHotkeys { get; set; }
-
-		[JsonProperty("CycleGroup3ClientsOrder")]
-		public Dictionary<string, int> CycleGroup3ClientsOrder { get; set; }
-
-		[JsonProperty("CycleGroup4ForwardHotkeys")]
-		public List<string> CycleGroup4ForwardHotkeys { get; set; }
-
-		[JsonProperty("CycleGroup4BackwardHotkeys")]
-		public List<string> CycleGroup4BackwardHotkeys { get; set; }
-
-		[JsonProperty("CycleGroup4ClientsOrder")]
-		public Dictionary<string, int> CycleGroup4ClientsOrder { get; set; }
-
-		[JsonProperty("CycleGroup5ForwardHotkeys")]
-		public List<string> CycleGroup5ForwardHotkeys { get; set; }
-
-		[JsonProperty("CycleGroup5BackwardHotkeys")]
-		public List<string> CycleGroup5BackwardHotkeys { get; set; }
-
-		[JsonProperty("CycleGroup5ClientsOrder")]
-		public Dictionary<string, int> CycleGroup5ClientsOrder { get; set; }
 
 		[JsonProperty("PerClientPreventPreviewColor")]
 		public Dictionary<string, Color> PerClientPreventPreviewColor { get; set; }
@@ -215,9 +112,6 @@ namespace EveOPreview.Configuration.Implementation
 		public bool MinimizeToTray { get; set; }
 		public int ThumbnailRefreshPeriod { get; set; }
 		public int ThumbnailResizeTimeoutPeriod { get; set; }
-
-		[JsonProperty("WineCompatibilityMode")]
-		public bool EnableWineCompatibilityMode { get; set; }
 
 		[JsonProperty("ThumbnailsOpacity")]
 		public double ThumbnailOpacity { get; set; }
@@ -442,11 +336,17 @@ namespace EveOPreview.Configuration.Implementation
 				this.ConfigVersion = 2;
 			}
 
-#if LINUX
-			this.ThumbnailRefreshPeriod = ThumbnailConfiguration.ApplyRestrictions(this.ThumbnailRefreshPeriod, 10, 1000);
-#else
+			if (this.ConfigVersion < 3)
+			{
+				this.MinimizeInactiveClients = true;
+				this.WindowsAnimationStyle = AnimationStyle.NoAnimation;
+				this.HideActiveClientThumbnail = true;
+				this.EnableActiveClientHighlight = true;
+				this.ConfigVersion = 3;
+			}
+
+			this.EnsureDefaultMouseActionBindings();
 			this.ThumbnailRefreshPeriod = ThumbnailConfiguration.ApplyRestrictions(this.ThumbnailRefreshPeriod, 300, 1000);
-#endif
 			this.ThumbnailResizeTimeoutPeriod = ThumbnailConfiguration.ApplyRestrictions(this.ThumbnailResizeTimeoutPeriod, 200, 5000);
 			this.ThumbnailSize = new Size(ThumbnailConfiguration.ApplyRestrictions(this.ThumbnailSize.Width, this.ThumbnailMinimumSize.Width, this.ThumbnailMaximumSize.Width),
 				ThumbnailConfiguration.ApplyRestrictions(this.ThumbnailSize.Height, this.ThumbnailMinimumSize.Height, this.ThumbnailMaximumSize.Height));
@@ -468,6 +368,27 @@ namespace EveOPreview.Configuration.Implementation
 			}
 
 			return value;
+		}
+
+		private void EnsureDefaultMouseActionBindings()
+		{
+			if (this.CycleGroup1ForwardHotkeys != null
+				&& !this.CycleGroup1ForwardHotkeys.Any(ThumbnailConfiguration.IsMouseBinding))
+			{
+				this.CycleGroup1ForwardHotkeys.Add("MouseXButton1");
+			}
+
+			if (this.MinimizeAllClientsHotkeys != null
+				&& !this.MinimizeAllClientsHotkeys.Any(ThumbnailConfiguration.IsMouseBinding))
+			{
+				this.MinimizeAllClientsHotkeys.Add("MouseXButton2");
+			}
+		}
+
+		private static bool IsMouseBinding(string binding)
+		{
+			return !string.IsNullOrWhiteSpace(binding)
+				&& binding.Trim().StartsWith("Mouse", StringComparison.OrdinalIgnoreCase);
 		}
 	}
 }

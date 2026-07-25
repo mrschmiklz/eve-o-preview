@@ -1,9 +1,12 @@
-﻿using EveOPreview.View;
+﻿using EveOPreview.Presenters;
+using EveOPreview.View;
 
 namespace EveOPreview.Services
 {
 	public interface IThumbnailManager
 	{
+		void AttachPresenter(IMainFormPresenter presenter);
+
 		void Start();
 		void Stop();
 

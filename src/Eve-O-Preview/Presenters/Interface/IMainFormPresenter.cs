@@ -3,7 +3,7 @@ using System.Drawing;
 
 namespace EveOPreview.Presenters
 {
-	interface IMainFormPresenter
+	public interface IMainFormPresenter
 	{
 		void AddThumbnails(IList<string> thumbnailTitles);
 		void RemoveThumbnails(IList<string> thumbnailTitles);

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.IO;
 using System.Runtime.InteropServices;
 using EveOPreview.Configuration;
 using EveOPreview.Services.Interop;
@@ -14,64 +13,19 @@ namespace EveOPreview.Services.Implementation
 		private const int NO_ANIMATION = 0;
 		#endregion
 
-		#region Private fields
-		private readonly bool _enableWineCompatabilityMode;
-		private string _bashLocation;
-		private string _wmctrlLocation;
 		private const string EXCEPTION_DUMP_FILE_NAME = "EVE-O-Preview.log";
-		#endregion
-
-
-		public WindowManager(IThumbnailConfiguration configuration)
-		{
-#if LINUX
-			this._enableWineCompatabilityMode = configuration.EnableWineCompatibilityMode;
-			this._bashLocation = FindLinuxBinLocation("bash");
-			this._wmctrlLocation = FindLinuxBinLocation("wmctrl");
-#endif
-			// Composition is always enabled for Windows 8+
-			this.IsCompositionEnabled = 
-				((Environment.OSVersion.Version.Major == 6) && (Environment.OSVersion.Version.Minor >= 2)) // Win 8 and Win 8.1
-				|| (Environment.OSVersion.Version.Major >= 10) // Win 10
-				|| DwmNativeMethods.DwmIsCompositionEnabled(); // In case of Win 7 an API call is requiredWin 7
-			_animationParam.cbSize = (System.UInt32)Marshal.SizeOf(typeof(ANIMATIONINFO));
-		}
-#if LINUX
-		private string FindLinuxBinLocation(string command)
-		{
-			// Check common paths for command
-			string[] paths = { "/run/host/usr/bin", "/bin", "/usr/bin" };
-			foreach (var path in paths)
-			{
-			    string locationToCheck = $"{path}/{command}";
-				if (System.IO.File.Exists(locationToCheck))
-				{
-					string binLocation = System.IO.Path.GetDirectoryName(locationToCheck);
-					string binLocationUnixStyle = binLocation.Replace("\\", "/");
-
-					return binLocationUnixStyle;
-				}
-			}
-
-			WriteToLog($"[{DateTime.Now}] Error: {command} not found in expected locations.");
-			return null;
-		}
-#endif
-
-		private void WriteToLog(string message)
-		{
-			try
-			{
-				System.IO.File.AppendAllText(EXCEPTION_DUMP_FILE_NAME, message + Environment.NewLine);
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"Failed to write to log file: {ex.Message}");
-			}
-		}
 
 		private int? _currentAnimationSetting = null;
 		private ANIMATIONINFO _animationParam = new ANIMATIONINFO();
+
+		public WindowManager(IThumbnailConfiguration configuration)
+		{
+			this.IsCompositionEnabled =
+				((Environment.OSVersion.Version.Major == 6) && (Environment.OSVersion.Version.Minor >= 2))
+				|| (Environment.OSVersion.Version.Major >= 10)
+				|| DwmNativeMethods.DwmIsCompositionEnabled();
+			_animationParam.cbSize = (UInt32)Marshal.SizeOf(typeof(ANIMATIONINFO));
+		}
 
 		public bool IsCompositionEnabled { get; }
 
@@ -82,125 +36,29 @@ namespace EveOPreview.Services.Implementation
 
 		public void TurnOffAnimation()
 		{
-			var currentAnimationSetup = User32NativeMethods.SystemParametersInfo(User32NativeMethods.SPI_GETANIMATION, (System.Int32)Marshal.SizeOf(typeof(ANIMATIONINFO)), ref _animationParam, 0);
+			var currentAnimationSetup = User32NativeMethods.SystemParametersInfo(User32NativeMethods.SPI_GETANIMATION, (Int32)Marshal.SizeOf(typeof(ANIMATIONINFO)), ref _animationParam, 0);
 			if (_currentAnimationSetting == null)
 			{
-				// Store the current Animation Setting
 				_currentAnimationSetting = _animationParam.iMinAnimate;
 			}
 
 			if (currentAnimationSetup != NO_ANIMATION)
 			{
-				// Turn off Animation
 				_animationParam.iMinAnimate = NO_ANIMATION;
-				var animationOffReturn = User32NativeMethods.SystemParametersInfo(User32NativeMethods.SPI_SETANIMATION, (System.Int32)Marshal.SizeOf(typeof(ANIMATIONINFO)), ref _animationParam, 0);
+				User32NativeMethods.SystemParametersInfo(User32NativeMethods.SPI_SETANIMATION, (Int32)Marshal.SizeOf(typeof(ANIMATIONINFO)), ref _animationParam, 0);
 			}
 		}
 
 		public void RestoreAnimation()
 		{
-			var currentAnimationSetup = User32NativeMethods.SystemParametersInfo(User32NativeMethods.SPI_GETANIMATION, (System.Int32)Marshal.SizeOf(typeof(ANIMATIONINFO)), ref _animationParam, 0);
-			// Restore current Animation Settings
+			User32NativeMethods.SystemParametersInfo(User32NativeMethods.SPI_GETANIMATION, (Int32)Marshal.SizeOf(typeof(ANIMATIONINFO)), ref _animationParam, 0);
 			if (_animationParam.iMinAnimate != (int)_currentAnimationSetting)
 			{
 				_animationParam.iMinAnimate = (int)_currentAnimationSetting;
-				var animationResetReturn = User32NativeMethods.SystemParametersInfo(User32NativeMethods.SPI_SETANIMATION, (System.Int32)Marshal.SizeOf(typeof(ANIMATIONINFO)), ref _animationParam, 0);
+				User32NativeMethods.SystemParametersInfo(User32NativeMethods.SPI_SETANIMATION, (Int32)Marshal.SizeOf(typeof(ANIMATIONINFO)), ref _animationParam, 0);
 			}
 		}
 
-		// if building for LINUX the window handling is slightly different
-#if LINUX
-		private bool WindowsActivateWindow(IntPtr handle)
-		{
-			if (handle == IntPtr.Zero)
-			{
-				return false;
-			}
-
-			this.RestoreWindowIfMinimized(handle, AnimationStyle.NoAnimation);
-			this.ForceForegroundWindow(handle);
-
-			if (User32NativeMethods.GetForegroundWindow() == handle)
-			{
-				return true;
-			}
-
-			return !User32NativeMethods.IsIconic(handle);
-		}
-
-		private void WineActivateWindow(string windowName)
-		{
-			// On Wine it is not possible to manipulate windows directly.
-			// They are managed by native Window Manager
-			// So a separate command-line utility is used
-			if (string.IsNullOrEmpty(windowName))
-			{
-				return;
-			}
-
-            string cmd = "";
-			try
-			{
-                // If we are in a flatpak, then use flatpak-spawn to run wmctrl outside the sandbox
-                if (Environment.GetEnvironmentVariable("container") == "flatpak")
-                {
-                    cmd = $"-c \"flatpak-spawn --host wmctrl -a \"\"" + windowName + "\"\"\"";
-                } 
-                else 
-                {
-                    cmd = $"-c \"{this._wmctrlLocation}/wmctrl -a \"\"" + windowName + "\"\"\"";
-                }
-
-				// Configure and start the process
-				var processStartInfo = new System.Diagnostics.ProcessStartInfo
-				{
-					FileName = $"{this._bashLocation}/bash",
-					Arguments = cmd,
-					UseShellExecute = false,
-					CreateNoWindow = false
-				};
-
-				using (var process = System.Diagnostics.Process.Start(processStartInfo))
-				{
-					process.WaitForExit();
-				}
-			}
-			catch (Exception ex)
-			{
-				WriteToLog($"[{DateTime.Now}] executing wmctrl - Exception: {ex.Message}");
-			}
-		}
-
-        public bool ActivateWindow(IntPtr handle, string windowName)
-        {
-            if (this._enableWineCompatabilityMode)
-            {
-                this.WineActivateWindow(windowName);
-                return true;
-            }
-
-            return this.WindowsActivateWindow(handle);
-        }
-
-        public void MinimizeWindow(IntPtr handle, bool enableAnimation)
-		{
-			if (enableAnimation)
-			{
-				User32NativeMethods.SendMessage(handle, InteropConstants.WM_SYSCOMMAND, InteropConstants.SC_MINIMIZE, 0);
-			}
-			else
-			{
-				WINDOWPLACEMENT param = new WINDOWPLACEMENT();
-				param.length = Marshal.SizeOf(typeof(WINDOWPLACEMENT));
-				User32NativeMethods.GetWindowPlacement(handle, ref param);
-				param.showCmd = WINDOWPLACEMENT.SW_MINIMIZE;
-				User32NativeMethods.SetWindowPlacement(handle, ref param);
-			}
-		}
-
-#endif
-
-#if WINDOWS
 		public bool ActivateWindow(IntPtr handle, AnimationStyle animation)
 		{
 			if (handle == IntPtr.Zero)
@@ -216,7 +74,6 @@ namespace EveOPreview.Services.Implementation
 				return true;
 			}
 
-			// A restored window may lag foreground; avoid minimizing the current client if restore succeeded.
 			return !User32NativeMethods.IsIconic(handle);
 		}
 
@@ -289,9 +146,9 @@ namespace EveOPreview.Services.Implementation
 						User32NativeMethods.SendMessage(handle, InteropConstants.WM_SYSCOMMAND, InteropConstants.SC_MINIMIZE, 0);
 						break;
 					case AnimationStyle.NoAnimation:
-						TurnOffAnimation();
+						this.TurnOffAnimation();
 						User32NativeMethods.SendMessage(handle, InteropConstants.WM_SYSCOMMAND, InteropConstants.SC_MINIMIZE, 0);
-						RestoreAnimation();
+						this.RestoreAnimation();
 						break;
 				}
 			}
@@ -307,14 +164,13 @@ namespace EveOPreview.Services.Implementation
 						User32NativeMethods.SetWindowPlacement(handle, ref param);
 						break;
 					case AnimationStyle.NoAnimation:
-						TurnOffAnimation();
+						this.TurnOffAnimation();
 						User32NativeMethods.SendMessage(handle, InteropConstants.WM_SYSCOMMAND, InteropConstants.SC_MINIMIZE, 0);
-						RestoreAnimation();
+						this.RestoreAnimation();
 						break;
 				}
 			}
 		}
-#endif
 
 		public void MoveWindow(IntPtr handle, int left, int top, int width, int height)
 		{
@@ -324,13 +180,25 @@ namespace EveOPreview.Services.Implementation
 		public void MaximizeWindow(IntPtr handle)
 		{
 			User32NativeMethods.ShowWindowAsync(handle, InteropConstants.SW_SHOWMAXIMIZED);
-        }
+		}
 
 		public (int Left, int Top, int Right, int Bottom) GetWindowPosition(IntPtr handle)
 		{
 			User32NativeMethods.GetWindowRect(handle, out RECT windowRectangle);
 
 			return (windowRectangle.Left, windowRectangle.Top, windowRectangle.Right, windowRectangle.Bottom);
+		}
+
+		public Size GetClientAreaSize(IntPtr handle)
+		{
+			if (handle == IntPtr.Zero || !User32NativeMethods.GetClientRect(handle, out RECT clientRectangle))
+			{
+				return Size.Empty;
+			}
+
+			return new Size(
+				clientRectangle.Right - clientRectangle.Left,
+				clientRectangle.Bottom - clientRectangle.Top);
 		}
 
 		public bool IsWindowMaximized(IntPtr handle)
@@ -360,12 +228,11 @@ namespace EveOPreview.Services.Implementation
 			var width = windowRect.Right - windowRect.Left;
 			var height = windowRect.Bottom - windowRect.Top;
 
-			// Check if there is anything to make thumbnail of
 			if ((width < WINDOW_SIZE_THRESHOLD) || (height < WINDOW_SIZE_THRESHOLD))
 			{
-                User32NativeMethods.ReleaseDC(source, sourceContext);
+				User32NativeMethods.ReleaseDC(source, sourceContext);
 
-                return null;
+				return null;
 			}
 
 			var destContext = Gdi32NativeMethods.CreateCompatibleDC(sourceContext);

@@ -38,16 +38,25 @@ Support:
 * Discord: https://discord.gg/xYt8R9AFXB
 
 ## Development Details
-We have migrated to a unified source code where Windows and Linux share the same code base. When doing do we also implemented the ability to build the source using Github Actions. If you would like to make changed to the code for yourself, fork this repo, make changes to the code as you see fit and actions will build the .exe files. If you would like to share your code changes with the community open a PR for approval.
+
+This fork is **Windows-only** (.NET 8). Build locally or use GitHub Actions when you publish a release tag.
+
+```powershell
+dotnet build src\Eve-O-Preview\Eve-O-Preview.csproj -c Release
+```
+
+Fork-specific releases: [mrschmiklz/eve-o-preview releases](https://github.com/mrschmiklz/eve-o-preview/releases). See [CHANGELOG.md](CHANGELOG.md) for version history.
+
+Example config with fork defaults: [config/EVE-O-Preview.example.json](config/EVE-O-Preview.example.json).
 
 ### This fork (`mrschmiklz/eve-o-preview`)
 
-This fork adds GUI-configurable **client action bindings** (cycle next / minimize all), default mouse side-button shortcuts, and several client-cycling fixes. See [CHANGELOG.md](CHANGELOG.md) for version history and [Releases](https://github.com/mrschmiklz/eve-o-preview/releases) for Windows builds.
+This fork adds GUI-configurable **client action bindings** (cycle next / minimize all), default mouse side-button shortcuts, Windows-only simplification, and several client-cycling fixes.
 
 ## System Requirements
 
-* Windows 7, Windows 8/8.1, Windows 10, Windows 11, Linux Wine
-* Microsoft .NET Framework 4.8+
+* Windows 10 or Windows 11 (Windows 7/8 may work)
+* [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
 * EVE clients Display Mode should be set to **Fixed Window** or **Window Mode**. **Fullscreen** mode is not supported.
 
 <div style="page-break-after: always;"></div>
@@ -134,7 +143,7 @@ Mouse gestures are applied to the thumbnail window currently being hovered over.
 | --- | --- |
 | Activate the EVE Online client and bring it to front  | Click the thumbnail |
 | Minimize the EVE Online client | Hold Control key and click the thumbnail |
-| Toggle the EVE Online client inclusion in the configured cycle groups[| Hold Shift key and click the thumbnail |
+| Toggle the EVE Online client inclusion in cycle group 1 | Hold Shift key and click the thumbnail |
 | Switch to the last used application that is not an EVE Online client | Hold Control + Shift keys and click any thumbnail |
 | Move thumbnail to a new position | Press right mouse button and move the mouse |
 | Adjust thumbnail height | Press both left and right mouse buttons and move the mouse up or down |
@@ -151,14 +160,14 @@ Some of the application options are not exposed in the GUI. They can be adjusted
 | Option | Description |
 | --- | --- |
 | **ActiveClientHighlightThickness** | <div style="font-size: small">Thickness of the border used to highlight the active client's thumbnail.<br />Allowed values are **1**...**6**.<br />The default value is **3**<br />For example: **"ActiveClientHighlightThickness": 3**</div> |
-| **CompatibilityMode** | <div style="font-size: small">Enables the alternative render mode (see below)<br />The default value is **false**<br />For example: **"CompatibilityMode": true**</div> |
+| **ConfigVersion** | <div style="font-size: small">Internal migration version. Upgraded automatically on load; do not edit unless you know what you are doing.<br />Current fork version is **3**.</div> |
 | **EnableThumbnailSnap** | <div style="font-size: small">Allows to disable thumbnails snap feature by setting its value to **false**<br />The default value is **true**<br />For example: **"EnableThumbnailSnap": true**</div> |
 | **HideThumbnailsDelay** | <div style="font-size: small">Delay before thumbnails are hidden if the **General** -> **Hide previews when EVE client is not active** option is enabled<br />The delay is measured in thumbnail refresh periods<br />The default value is **2** (corresponds to 1 second delay)<br />For example: **"HideThumbnailsDelay": 2**</div> |
 | **HideLoginClientThumbnail** | <div style="font-size: small">Hide EVE login window clients. If an Eve online client is sat at character selection screen - hide the preview window for this client<br />The default value is **false**<br />For example: **"HideLoginClientThumbnail": false**</div> |
 | **PriorityClients** | <div style="font-size: small">Allows to set a list of clients that are not auto-minimized on inactivity even if the **Minimize inactive EVE clients** option is enabled. Listed clients still can be minimized using Windows hotkeys or via _Ctrl+Click_ on the corresponding thumbnail<br />The default value is empty list **[]**<br />For example: **"PriorityClients": [ "EVE - Phrynohyas Tig-Rah", "EVE - Ondatra Patrouette" ]**</div> |
 | **ThumbnailMinimumSize** | <div style="font-size: small">Minimum thumbnail size that can be set either via GUI or by resizing a thumbnail window. Value is written in the form "width, height"<br />The default value is **"100, 80"**.<br />For example: **"ThumbnailMinimumSize": "100, 80"**</div> |
 | **ThumbnailMaximumSize** | <div style="font-size: small">Maximum thumbnail size that can be set either via GUI or by resizing a thumbnail window. Value is written in the form "width, height"<br />The default value is **"640, 400"**.<br />For example: **"ThumbnailMaximumSize": "640, 400"**</div> |
-| **ThumbnailRefreshPeriod** | <div style="font-size: small">Thumbnail refresh period in milliseconds. This option accepts values between **300** and **1000** only.<br />The default value is **500** milliseconds. For LINUX build this can go down to **10**<br />For example: **"ThumbnailRefreshPeriod": 500**</div> |
+| **ThumbnailRefreshPeriod** | <div style="font-size: small">Thumbnail refresh period in milliseconds. This option accepts values between **300** and **1000** only.<br />The default value is **500** milliseconds.<br />For example: **"ThumbnailRefreshPeriod": 500**</div> |
 | **ThumbnailResizeTimeoutPeriod** | <div style="font-size: small">Thumbnail Resize Timeout period in milliseconds. This option accepts values between **200** and **5000** only.<br />The default value is **500** milliseconds.<br />For example: **"ThumbnailResizeTimeoutPeriod": 500**. If you are having the preview windows resize incorrectly on startup increase this value.</div> |
 | **ExecutablesToPreview** | <div style="font-size: small">List of executables to display preview windows for. List of strings.<br />The default value is **"exefile"**.<br />For example: **"ExecutablesToPreview": ["exefile","wow","Diablo IV"]**. If you are having the preview windows resize incorrectly on startup increase this value.</div> |
 | **IconName** | <div style="font-size: small">The icon you wish to use for Eve-O-Preview.<br />The default value is **""** which would equate to **IconOriginal**.<br />If an invalid or empty value is used, **IconOriginal** will be used.<br />Valid values are : **IconOriginal**, **IconDefault**, **IconAmber**, **IconBlue**, **IconCherry**, **IconDal**, **IconDark**, **IconMint**, **IconPurple** and **IconUrns**</div> |
@@ -197,71 +206,31 @@ The following hotkey is described as `modifier+key` where `modifier` can be **Co
 
 ### Cycle Clients with Hotkey Setup
 
-**Cycle to next client** (cycle group 1 forward) can be set on the **General** tab under **Client action bindings**. Use the record button and press your key or mouse button.
+**Cycle to next client** and **Minimize all clients** can be set on the **General** tab under **Client action bindings**. Use the record button and press your key or mouse button.
 
-For additional cycle groups (2–5), backward cycling, or custom client order, edit the configuration file directly. Don't forget to make a backup copy of the file before editing it.
+Defaults in this fork:
 
-If you have not run EVE-O Preview before, or since this feature was added then it is recommended to quickly open and close EVE-O Preview once to trigger the config to update with some sample values. 
+- **F14** and **Mouse 4** (XButton1) → cycle to next client
+- **Mouse 5** (XButton2) → minimize all clients
 
-**Note**: Don't forget to make a backup copy of the file before editing it.
+Cycling uses all logged-in EVE clients in window order. Legacy config keys for cycle groups 2–5, backward cycling, and custom client order are ignored.
 
-Open the file using any text editor. find the entries **CycleGroup1ForwardHotkeys** and **CycleGroup1BackwardHotkeys**. Most probably it will look like
+You can still add extra keyboard bindings in `EVE-O-Preview.json`:
 
     "CycleGroup1ForwardHotkeys": [
       "F14",
+      "MouseXButton1",
       "Control+F14"
     ],
-    "CycleGroup1BackwardHotkeys": [
-      "F13",
-      "Control+F13"
+    "MinimizeAllClientsHotkeys": [
+      "MouseXButton2"
     ]
 
-**Note**: It is highly recommended to leave the Hotkey values as default and bind them with a gaming device if you can support it.
-
-Next find the entry **CycleGroup1ForwardHotkeys**. Most probably it will look like
-
-    "CycleGroup1ClientsOrder": {
-      "EVE - Example DPS Toon 1": 1,
-      "EVE - Example DPS Toon 2": 2,
-      "EVE - Example DPS Toon 3": 3
-    }
-
-You should modify this entry with a list of each of your clients replacing "Example DPS Toon 1", etc with the name of your character. The numbers on the right are used to force the order in which they cycle.
-If a character appears in the list but is not currently logged in, then it will simply be skipped.
-If a character does not appear in the list, then they will never become active when cycling clients.
-If "EVE" is used instead of a character name - then this is taken to mean active clients with no active character (ie on character selection screen). This would allow you to setup a cycle group to go through clients at character selection screen. EVE-O Preview will cycle through all clients in this state.
-If no clients defined here but Hotkeys are defined then ALL active clients will be cycled through with those hotkeys.
-
-By now you may have noticed that there are multiple groups. The above configuration can be followed for a second group by using the values **CycleGroup2ForwardHotkeys**, **CycleGroup2BackwardHotkeys**, and **CycleGroup2ForwardHotkeys**
-This may provide useful if you want to have one HotKey to cycle through a group of DPS characters, while another HotKey cycles through support roles such as gate scouts, or a group of logi. Cyclegroups are numbered 1 through 5.
-
-Alternatively you may not want to use any of these HotKeys. Please note that deleting the values in their entirety will simply result in them being automatically re-generated.
-Should you wish to remove these HotKeys completely, Simply set the values to empty, such as the example below:
-
-    "CycleGroup1ForwardHotkeys": [],
-	  "CycleGroup1BackwardHotkeys": [],
-	  "CycleGroup1ClientsOrder": {},
-	  "CycleGroup2ForwardHotkeys": [],
-	  "CycleGroup2BackwardHotkeys": [],
-	  "CycleGroup2ClientsOrder": {},
-	  "CycleGroup3ForwardHotkeys": [],
-	  "CycleGroup3BackwardHotkeys": [],
-	  "CycleGroup3ClientsOrder": {},
-	  "CycleGroup4ForwardHotkeys": [],
-	  "CycleGroup4BackwardHotkeys": [],
-	  "CycleGroup4ClientsOrder": {},
-	  "CycleGroup5ForwardHotkeys": [],
-	  "CycleGroup5BackwardHotkeys": [],
-	  "CycleGroup5ClientsOrder": {}
+**Note**: It is recommended to use unusual keys (e.g. F14) bound from a gaming mouse or keyboard, rather than keys EVE uses in-game.
 
 ### Minimize All Clients with Hotkey Setup
 
-**Minimize all clients** can be set on the **General** tab under **Client action bindings** (default: **Mouse 5**). You can also configure it in the configuration file:
-
-  "MinimizeAllClientsHotkeys": [
-    "MouseXButton2"
-  ],
-
+**Minimize all clients** can be set on the **General** tab under **Client action bindings** (default: **Mouse 5**). You can also configure it in the configuration file as shown above.
 
 **Hints** 
 * Minimise the use of modifiers or standard keys to minimise issues with the client playing up. In the default example unusual Function keys (e.g. F14) are used which are then bound to a game pad or gaming mouse.
@@ -359,22 +328,15 @@ You should modify this entry with a list of each of your clients replacing "Exam
 
 If a client does not appear in this list, then it will use the global Prevent Preview Color by default.
 
-### Compatibility Mode
-
-This setting allows to enable an alternate thumbnail render. This render doesn't use advanced DWM API to create live previews. Instead it is a screenshot-based render with the following pros and cons:
-* `+`  Should work even in remote desktop environments
-* `-`  Consumes significantly more memory. In the testing environment EVE-O Preview did consume around 180 MB to manage 3 thumbnails using this render. At the same time the primary render did consume around 50 MB when run in the same environment.
-* `-`  Thumbnail images are refreshed at 1 FPS rate
-* `-`  Possible short mouse cursor freezes
-
 ### Release build
 
-Release builds are generated using github actions when a release is created from tag. If you wish to build locally the variable EVEOTARGET controls Linux or Windows source inclusion.
+Release builds are generated by GitHub Actions when a release is published from a tag. To build locally:
 
-You can build using : 
+```powershell
+dotnet publish src\Eve-O-Preview\Eve-O-Preview.csproj -c Release -o publish
+```
 
-* dotnet build src\\Eve-O-Preview\\Eve-O-Preview.csproj --configuration Release -p:EVEOTARGET="Linux" -p:AssemblyVersion="8.0.2.0"
-* dotnet build src\\Eve-O-Preview\\Eve-O-Preview.csproj --configuration Release   -p:EVEOTARGET="Windows" -p:AssemblyVersion="8.0.2.0"
+Or use `scripts/publish-release.ps1` to tag, build, and upload a Windows zip to GitHub Releases.
 
 <div style="page-break-after: always;"></div>
 

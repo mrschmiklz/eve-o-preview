@@ -1,5 +1,4 @@
-#if !LINUX
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -160,4 +159,3 @@ namespace EveOPreview.UI.Hotkeys
 		public static extern IntPtr GetModuleHandle(string lpModuleName);
 	}
 }
-#endif

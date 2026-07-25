@@ -25,22 +25,18 @@ namespace EveOPreview.View
 		private Size _minimumSize;
 		private Size _maximumSize;
 		private string _iconName;
-#if !LINUX
 		private readonly InputBindingCapture _inputBindingCapture;
 		private CycleBindingCaptureTarget _captureTarget;
 		private string _cycleForwardBinding;
 		private string _minimizeAllBinding;
-#endif
 		#endregion
 
-#if !LINUX
 		private enum CycleBindingCaptureTarget
 		{
 			None,
 			Forward,
 			MinimizeAll
 		}
-#endif
 
 		public MainForm(ApplicationContext context)
 		{
@@ -55,13 +51,9 @@ namespace EveOPreview.View
 
 			InitializeComponent();
 
-#if LINUX
-			this.ClientCycleBindingsGroupBox.Visible = false;
-#else
 			this._inputBindingCapture = new InputBindingCapture();
 			this._inputBindingCapture.Captured += this.InputBindingCapture_Captured;
 			this._inputBindingCapture.CaptureCancelled += this.InputBindingCapture_Cancelled;
-#endif
 
 			this.ThumbnailsList.DisplayMember = "Title";
 
@@ -154,7 +146,6 @@ namespace EveOPreview.View
 			get => this.MinimizeInactiveClientsCheckBox.Checked;
 			set => this.MinimizeInactiveClientsCheckBox.Checked = value;
 		}
-#if !LINUX
 		public string CycleForwardBinding
 		{
 			get => this._cycleForwardBinding ?? string.Empty;
@@ -174,20 +165,6 @@ namespace EveOPreview.View
 				this.CycleBackwardBindingTextBox.Text = InputBindingHelper.ToDisplayString(this._minimizeAllBinding);
 			}
 		}
-#endif
-#if LINUX
-		public string CycleForwardBinding
-		{
-			get => string.Empty;
-			set { }
-		}
-
-		public string MinimizeAllBinding
-		{
-			get => string.Empty;
-			set { }
-		}
-#endif
 
 		public bool HideCaptionOnClients
 		{
@@ -487,7 +464,6 @@ namespace EveOPreview.View
 
 		public void RefreshCycleBindingCaptureState()
 		{
-#if !LINUX
 			bool isCapturing = this._inputBindingCapture.IsCapturing;
 			this.CycleForwardRecordButton.Enabled = !isCapturing || this._captureTarget == CycleBindingCaptureTarget.Forward;
 			this.CycleBackwardRecordButton.Enabled = !isCapturing || this._captureTarget == CycleBindingCaptureTarget.MinimizeAll;
@@ -503,10 +479,8 @@ namespace EveOPreview.View
 			this.CycleBackwardRecordButton.BackColor = this._captureTarget == CycleBindingCaptureTarget.MinimizeAll
 				? Color.LightGoldenrodYellow
 				: SystemColors.Control;
-#endif
 		}
 
-#if !LINUX
 		private void CycleForwardRecordButton_Click(object sender, EventArgs e)
 		{
 			this.StartBindingCapture(CycleBindingCaptureTarget.Forward);
@@ -572,7 +546,6 @@ namespace EveOPreview.View
 			this._captureTarget = CycleBindingCaptureTarget.None;
 			this.RefreshCycleBindingCaptureState();
 		}
-#endif
 
 		public Action ApplicationExitRequested { get; set; }
 
@@ -706,10 +679,8 @@ namespace EveOPreview.View
 
 		private void MainFormClosing_Handler(object sender, FormClosingEventArgs e)
 		{
-#if !LINUX
 			this.StopBindingCapture();
 			this._inputBindingCapture.Dispose();
-#endif
 
 			ViewCloseRequest request = new ViewCloseRequest();
 
@@ -772,16 +743,21 @@ namespace EveOPreview.View
 		private void InitFormSize()
 		{
 			const int BUFFER_PIXEL_AMOUNT = 8;
-			// resize form height based on tabbed control item height
+			const int MIN_CONTENT_HEIGHT = 360;
+
 			var tabControl = (System.Windows.Forms.TabControl)this.Controls.Find("ContentTabControl", false).First();
-			if (tabControl != null)
+			if (tabControl == null)
 			{
-				var furnitureSize = this.Height - tabControl.Height;
-				var calculatedHeight = (tabControl.ItemSize.Width * tabControl.Controls.Count) + furnitureSize + BUFFER_PIXEL_AMOUNT;
-				if (this.Height < calculatedHeight)
-				{
-					this.Height = calculatedHeight;
-				}
+				return;
+			}
+
+			int furnitureSize = this.ClientSize.Height - tabControl.Height;
+			int tabStripHeight = (tabControl.ItemSize.Height * tabControl.Controls.Count) + BUFFER_PIXEL_AMOUNT;
+			int targetHeight = Math.Max(tabStripHeight, MIN_CONTENT_HEIGHT + furnitureSize + BUFFER_PIXEL_AMOUNT);
+
+			if (this.ClientSize.Height < targetHeight)
+			{
+				this.ClientSize = new Size(this.ClientSize.Width, targetHeight);
 			}
 		}
 

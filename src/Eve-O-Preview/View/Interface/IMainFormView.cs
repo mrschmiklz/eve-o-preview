@@ -18,10 +18,8 @@ namespace EveOPreview.View
 		bool EnableClientLayoutTracking { get; set; }
 		bool HideActiveClientThumbnail { get; set; }
 		bool MinimizeInactiveClients { get; set; }
-#if !LINUX
 		string CycleForwardBinding { get; set; }
 		string MinimizeAllBinding { get; set; }
-#endif
 		bool HideCaptionOnClients { get; set; }
 		ViewAnimationStyle WindowsAnimationStyle { get; set; }
         bool ShowThumbnailsAlwaysOnTop { get; set; }

@@ -1,0 +1,18 @@
+{
+  "ConfigVersion": 3,
+  "CycleGroup1ForwardHotkeys": [
+    "F14",
+    "MouseXButton1"
+  ],
+  "MinimizeAllClientsHotkeys": [
+    "MouseXButton2"
+  ],
+  "MinimizeInactiveClients": true,
+  "HideActiveClientThumbnail": true,
+  "EnableActiveClientHighlight": true,
+  "WindowsAnimationStyle": 1,
+  "ClientHotkey": {},
+  "ExecutablesToPreview": [
+    "exefile"
+  ]
+}

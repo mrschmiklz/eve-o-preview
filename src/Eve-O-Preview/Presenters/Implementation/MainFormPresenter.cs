@@ -4,9 +4,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using EveOPreview.Configuration;
-using EveOPreview.Mediator.Messages;
+using EveOPreview.Services;
 using EveOPreview.View;
-using MediatR;
 
 namespace EveOPreview.Presenters
 {
@@ -17,7 +16,7 @@ namespace EveOPreview.Presenters
 		#endregion
 
 		#region Private fields
-		private readonly IMediator _mediator;
+		private readonly IThumbnailManager _thumbnailManager;
 		private readonly IThumbnailConfiguration _configuration;
 		private readonly IConfigurationStorage _configurationStorage;
 		private readonly IDictionary<string, IThumbnailDescription> _descriptionsCache;
@@ -26,10 +25,15 @@ namespace EveOPreview.Presenters
 		private bool _exitApplication;
 		#endregion
 
-		public MainFormPresenter(IApplicationController controller, IMainFormView view, IMediator mediator, IThumbnailConfiguration configuration, IConfigurationStorage configurationStorage)
+		public MainFormPresenter(
+			IApplicationController controller,
+			IMainFormView view,
+			IThumbnailManager thumbnailManager,
+			IThumbnailConfiguration configuration,
+			IConfigurationStorage configurationStorage)
 			: base(controller, view)
 		{
-			this._mediator = mediator;
+			this._thumbnailManager = thumbnailManager;
 			this._configuration = configuration;
 			this._configurationStorage = configurationStorage;
 
@@ -61,7 +65,8 @@ namespace EveOPreview.Presenters
 				this.View.Minimize();
 			}
 
-			this._mediator.Send(new StartService());
+			this._thumbnailManager.AttachPresenter(this);
+			this._thumbnailManager.Start();
 			this._suppressSizeNotifications = false;
 		}
 
@@ -79,8 +84,7 @@ namespace EveOPreview.Presenters
 		{
 			if (this._exitApplication || !this.View.MinimizeToTray)
 			{
-				this._mediator.Send(new StopService()).Wait();
-
+				this._thumbnailManager.Stop();
 				this._configurationStorage.Save();
 				request.Allow = true;
 				return;
@@ -90,12 +94,12 @@ namespace EveOPreview.Presenters
 			this.View.Minimize();
 		}
 
-		private async void UpdateThumbnailsSize()
+		private void UpdateThumbnailsSize()
 		{
 			if (!this._suppressSizeNotifications)
 			{
 				this.SaveApplicationSettings();
-				await this._mediator.Publish(new ThumbnailConfiguredSizeUpdated());
+				this._thumbnailManager.UpdateThumbnailsSize();
 			}
 		}
 
@@ -110,10 +114,8 @@ namespace EveOPreview.Presenters
 			this.View.EnableClientLayoutTracking = this._configuration.EnableClientLayoutTracking;
 			this.View.HideActiveClientThumbnail = this._configuration.HideActiveClientThumbnail;
 			this.View.MinimizeInactiveClients = this._configuration.MinimizeInactiveClients;
-#if !LINUX
 			this.View.CycleForwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys);
 			this.View.MinimizeAllBinding = GetPrimaryCycleBinding(this._configuration.MinimizeAllClientsHotkeys);
-#endif
 			this.View.HideCaptionOnClients = this._configuration.HideCaptionOnClients;
 			this.View.WindowsAnimationStyle = ViewAnimationStyleConverter.Convert(this._configuration.WindowsAnimationStyle);
 			this.View.ShowThumbnailsAlwaysOnTop = this._configuration.ShowThumbnailsAlwaysOnTop;
@@ -143,15 +145,12 @@ namespace EveOPreview.Presenters
 			this.View.OverlayLabelColor = this._configuration.OverlayLabelColor;
 			this.View.OverlayLabelFont = this._configuration.OverlayLabelFont;
 
-
 			this.View.IconName = this._configuration.IconName;
 			this.View.RefreshCycleBindingCaptureState();
-#if !LINUX
-			this._mediator.Publish(new CycleBindingsUpdated()).GetAwaiter().GetResult();
-#endif
+			this._thumbnailManager.UpdateActionBindings();
 		}
 
-		private async void SaveApplicationSettings()
+		private void SaveApplicationSettings()
 		{
 			this._configuration.MinimizeToTray = this.View.MinimizeToTray;
 
@@ -160,25 +159,26 @@ namespace EveOPreview.Presenters
 			this._configuration.EnableClientLayoutTracking = this.View.EnableClientLayoutTracking;
 			this._configuration.HideActiveClientThumbnail = this.View.HideActiveClientThumbnail;
 			this._configuration.MinimizeInactiveClients = this.View.MinimizeInactiveClients;
-#if !LINUX
+
 			string forwardBinding = this.View.CycleForwardBinding ?? string.Empty;
 			string minimizeAllBinding = this.View.MinimizeAllBinding ?? string.Empty;
 
 			SetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys, forwardBinding);
 			SetPrimaryCycleBinding(this._configuration.MinimizeAllClientsHotkeys, minimizeAllBinding);
-#endif
 
-			if (this._configuration.HideCaptionOnClients != this.View.HideCaptionOnClients ) {
+			if (this._configuration.HideCaptionOnClients != this.View.HideCaptionOnClients)
+			{
 				this._configuration.HideCaptionOnClients = this.View.HideCaptionOnClients;
-				await this._mediator.Publish(new ThumbnailFrameSettingsUpdated());
+				this._thumbnailManager.UpdateThumbnailFrames();
 			}
-			this._configuration.WindowsAnimationStyle = ViewAnimationStyleConverter.Convert(this.View.WindowsAnimationStyle); 
-            this._configuration.ShowThumbnailsAlwaysOnTop = this.View.ShowThumbnailsAlwaysOnTop;
+
+			this._configuration.WindowsAnimationStyle = ViewAnimationStyleConverter.Convert(this.View.WindowsAnimationStyle);
+			this._configuration.ShowThumbnailsAlwaysOnTop = this.View.ShowThumbnailsAlwaysOnTop;
 
 			if (this._configuration.PreventPreviews != this.View.PreventPreviews)
 			{
 				this._configuration.PreventPreviews = this.View.PreventPreviews;
-				await this._mediator.Publish(new ThumbnailFrameSettingsUpdated());
+				this._thumbnailManager.UpdateThumbnailFrames();
 			}
 
 			this._configuration.HideThumbnailsOnLostFocus = this.View.HideThumbnailsOnLostFocus;
@@ -194,28 +194,28 @@ namespace EveOPreview.Presenters
 			if (this._configuration.CycleGroupIndicatorAnchor != ViewZoomAnchorConverter.Convert(this.View.CycleGroupIndicatorAnchor))
 			{
 				this._configuration.CycleGroupIndicatorAnchor = ViewZoomAnchorConverter.Convert(this.View.CycleGroupIndicatorAnchor);
-				await this._mediator.Publish(new ThumbnailCycleGroupIndicatorUpdated());
+				this._thumbnailManager.UpdateCycleGroupIndicator();
 			}
 
 			this._configuration.ShowThumbnailOverlays = this.View.ShowThumbnailOverlays;
 			if (this._configuration.ShowThumbnailFrames != this.View.ShowThumbnailFrames)
 			{
 				this._configuration.ShowThumbnailFrames = this.View.ShowThumbnailFrames;
-				await this._mediator.Publish(new ThumbnailFrameSettingsUpdated());
+				this._thumbnailManager.UpdateThumbnailFrames();
 			}
 
-            this._configuration.LockThumbnailLocation = this.View.LockThumbnailLocation;
+			this._configuration.LockThumbnailLocation = this.View.LockThumbnailLocation;
 			this._configuration.ThumbnailSnapToGrid = this.View.ThumbnailSnapToGrid;
 			this._configuration.ThumbnailSnapToGridSizeX = this.View.ThumbnailSnapToGridSizeX;
-            this._configuration.ThumbnailSnapToGridSizeY = this.View.ThumbnailSnapToGridSizeY;
+			this._configuration.ThumbnailSnapToGridSizeY = this.View.ThumbnailSnapToGridSizeY;
 
-            this._configuration.EnableActiveClientHighlight = this.View.EnableActiveClientHighlight;
+			this._configuration.EnableActiveClientHighlight = this.View.EnableActiveClientHighlight;
 			this._configuration.ActiveClientHighlightColor = this.View.ActiveClientHighlightColor;
 
 			if (this._configuration.PreventPreviewColor != this.View.PreventPreviewColor)
 			{
 				this._configuration.PreventPreviewColor = this.View.PreventPreviewColor;
-				await this._mediator.Publish(new ThumbnailFrameSettingsUpdated());
+				this._thumbnailManager.UpdateThumbnailFrames();
 			}
 
 			this._configuration.OverlayLabelColor = this.View.OverlayLabelColor;
@@ -227,18 +227,23 @@ namespace EveOPreview.Presenters
 
 			this.View.RefreshZoomSettings();
 			this.View.RefreshCycleBindingCaptureState();
-
-#if !LINUX
-			await this._mediator.Publish(new CycleBindingsUpdated());
-#endif
-
-			await this._mediator.Send(new SaveConfiguration());
+			this._thumbnailManager.UpdateActionBindings();
 		}
 
-#if !LINUX
 		private static string GetPrimaryCycleBinding(List<string> bindings)
 		{
-			return bindings?.FirstOrDefault(binding => !string.IsNullOrWhiteSpace(binding)) ?? string.Empty;
+			if (bindings == null || bindings.Count == 0)
+			{
+				return string.Empty;
+			}
+
+			string mouseBinding = bindings.FirstOrDefault(IsMouseBinding);
+			if (!string.IsNullOrWhiteSpace(mouseBinding))
+			{
+				return mouseBinding.Trim();
+			}
+
+			return bindings.FirstOrDefault(binding => !string.IsNullOrWhiteSpace(binding))?.Trim() ?? string.Empty;
 		}
 
 		private static void SetPrimaryCycleBinding(List<string> bindings, string value)
@@ -248,15 +253,29 @@ namespace EveOPreview.Presenters
 				return;
 			}
 
-			bindings.Clear();
+			bool isMouseBinding = IsMouseBinding(value);
+
+			bindings.RemoveAll(binding =>
+			{
+				if (string.IsNullOrWhiteSpace(binding))
+				{
+					return true;
+				}
+
+				return IsMouseBinding(binding) == isMouseBinding;
+			});
 
 			if (!string.IsNullOrWhiteSpace(value))
 			{
 				bindings.Add(value.Trim());
 			}
 		}
-#endif
 
+		private static bool IsMouseBinding(string binding)
+		{
+			return !string.IsNullOrWhiteSpace(binding)
+				&& binding.Trim().StartsWith("Mouse", StringComparison.OrdinalIgnoreCase);
+		}
 
 		public void AddThumbnails(IList<string> thumbnailTitles)
 		{
@@ -303,14 +322,14 @@ namespace EveOPreview.Presenters
 			return new ThumbnailDescription(title, isDisabled);
 		}
 
-		private async void UpdateThumbnailState(String title)
+		private void UpdateThumbnailState(String title)
 		{
 			if (this._descriptionsCache.TryGetValue(title, out IThumbnailDescription description))
 			{
 				this._configuration.ToggleThumbnail(title, description.IsDisabled);
 			}
 
-			await this._mediator.Send(new SaveConfiguration());
+			this._configurationStorage.Save();
 		}
 
 		public void UpdateThumbnailSize(Size size)
@@ -322,28 +341,15 @@ namespace EveOPreview.Presenters
 
 		private void OpenDocumentationLink()
 		{
-			// funtimes
-			// https://brockallen.com/2016/09/24/process-start-for-urls-on-net-core/
-			// https://github.com/dotnet/runtime/issues/17938
-
-			// TODO Move out to a separate service / presenter / message handler
-#if LINUX
-			Process.Start("xdg-open", new Uri(MainFormPresenter.FORUM_URL).AbsoluteUri);
-#else
 			ProcessStartInfo processStartInfo = new ProcessStartInfo(new Uri(MainFormPresenter.FORUM_URL).AbsoluteUri);
 			processStartInfo.UseShellExecute = true;
 			Process.Start(processStartInfo);
-#endif
 		}
 
 		private string GetApplicationVersion()
 		{
 			Version version = System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
-			string target = "Windows";
-#if LINUX
-  target = "Linux";
-#endif
-			return $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision} {target}";
+			return $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision} Windows";
 		}
 
 		private void ExitApplication()

@@ -7,35 +7,15 @@ namespace EveOPreview.Configuration
 	public interface IThumbnailConfiguration
 	{
 		List<string> CycleGroup1ForwardHotkeys { get; set; }
-		List<string> CycleGroup1BackwardHotkeys { get; set; }
-		Dictionary<string, int> CycleGroup1ClientsOrder { get; set; }
-
-		List<string> CycleGroup2ForwardHotkeys { get; set; }
-		List<string> CycleGroup2BackwardHotkeys { get; set; }
-		Dictionary<string, int> CycleGroup2ClientsOrder { get; set; }
-
-		List<string> CycleGroup3ForwardHotkeys { get; set; }
-		List<string> CycleGroup3BackwardHotkeys { get; set; }
-		Dictionary<string, int> CycleGroup3ClientsOrder { get; set; }
-
-		List<string> CycleGroup4ForwardHotkeys { get; set; }
-		List<string> CycleGroup4BackwardHotkeys { get; set; }
-		Dictionary<string, int> CycleGroup4ClientsOrder { get; set; }
-
-		List<string> CycleGroup5ForwardHotkeys { get; set; }
-		List<string> CycleGroup5BackwardHotkeys { get; set; }
-		Dictionary<string, int> CycleGroup5ClientsOrder { get; set; }
 
 		Dictionary<string, Color> PerClientActiveClientHighlightColor { get; set; }
 		Dictionary<string, Color> PerClientPreventPreviewColor { get; set; }
 		Dictionary<string, bool> PerClientPreventPreviews { get; set; }
 		Dictionary<string, Size> PerClientThumbnailSize { get; set; }
-		Dictionary<string, bool> CycleGroupExclusions { get; set; }
 
 		bool MinimizeToTray { get; set; }
 		int ThumbnailRefreshPeriod { get; set; }
 		int ThumbnailResizeTimeoutPeriod { get; set; }
-		bool EnableWineCompatibilityMode { get; set; }
 
 		double ThumbnailOpacity { get; set; }
 
@@ -67,7 +47,7 @@ namespace EveOPreview.Configuration
 		bool ShowThumbnailOverlays { get; set; }
 		bool ShowThumbnailFrames { get; set; }
 		bool LockThumbnailLocation { get; set; }
-		bool ThumbnailSnapToGrid {  get; set; }
+		bool ThumbnailSnapToGrid { get; set; }
 		int ThumbnailSnapToGridSizeX { get; set; }
 		int ThumbnailSnapToGridSizeY { get; set; }
 

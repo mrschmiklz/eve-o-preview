@@ -1,5 +1,4 @@
-#if !LINUX
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -243,4 +242,3 @@ namespace EveOPreview.UI.Hotkeys
 		public static extern short GetAsyncKeyState(int vKey);
 	}
 }
-#endif

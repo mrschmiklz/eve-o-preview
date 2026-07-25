@@ -1,5 +1,4 @@
-#if !LINUX
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace EveOPreview.UI.Hotkeys
@@ -86,4 +85,3 @@ namespace EveOPreview.UI.Hotkeys
 		}
 	}
 }
-#endif

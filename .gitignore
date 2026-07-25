@@ -10,3 +10,5 @@ src/*/.vs/
 *.DotSettings
 build/Fody*
 *.vs/
+EVE-O-Preview.json
+*.log

@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 Download builds from [GitHub Releases](https://github.com/mrschmiklz/eve-o-preview/releases).
 
+## [Unreleased]
+
+### Changed
+
+- Windows-only fork simplification: removed MediatR, Linux/Wine build paths, cycle groups 2–5, and duplicate hotkey registration paths.
+- Direct calls between presenter and thumbnail manager replace message-bus handlers.
+- Config schema trimmed; legacy cycle-group JSON keys are ignored on load.
+- GitHub Actions release workflow builds Windows only (no `EVEOTARGET`).
+- Version bumped to **8.0.5.0**.
+
+### Added
+
+- Config migration v3: fork-friendly defaults on upgrade (hide active thumbnail, highlight active client, no window animation, mouse binding defaults preserved).
+- Example config: `config/EVE-O-Preview.example.json`.
+
+### Removed
+
+- `WineCompatibilityMode` config property (unused in this Windows fork).
+
 ## [8.0.4.6] - 2026-07-25
 
 ### Fixed

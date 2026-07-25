@@ -32,8 +32,6 @@ namespace EveOPreview.Configuration.Implementation
 				ObjectCreationHandling = ObjectCreationHandling.Replace
 			};
 
-			// StageHotkeyArraysToAvoidDuplicates(rawData);
-
 			JsonConvert.PopulateObject(rawData, this._thumbnailConfiguration, jsonSerializerSettings);
 
 			// Validate data after loading it
