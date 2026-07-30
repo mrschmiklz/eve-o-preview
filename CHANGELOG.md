@@ -8,6 +8,12 @@ Download builds from [GitHub Releases](https://github.com/mrschmiklz/eve-o-previ
 
 ## [Unreleased]
 
+## [8.0.5.4] - 2026-07-30
+
+### Fixed
+
+- Crash in the EVE clients list (`CheckedListBox` visual-styles checkbox rendering failed under dark theme).
+
 ## [8.0.5.3] - 2026-07-30
 
 ### Fixed

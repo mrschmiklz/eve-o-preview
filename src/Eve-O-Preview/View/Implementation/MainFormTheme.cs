@@ -130,6 +130,9 @@ namespace EveOPreview.View
 					trackBar.BackColor = Surface;
 					DisableVisualTheme(trackBar);
 					break;
+				case CheckedListBox checkedListBox:
+					SetupCheckedListBox(checkedListBox);
+					break;
 				case ListBox listBox:
 					listBox.BackColor = Input;
 					listBox.ForeColor = Foreground;
@@ -184,6 +187,63 @@ namespace EveOPreview.View
 			comboBox.ForeColor = Foreground;
 			comboBox.FlatStyle = FlatStyle.Flat;
 			DisableVisualTheme(comboBox);
+		}
+
+		private static void SetupCheckedListBox(CheckedListBox checkedListBox)
+		{
+			checkedListBox.DrawMode = DrawMode.OwnerDrawFixed;
+			checkedListBox.ItemHeight = checkedListBox.Font.Height + 8;
+			checkedListBox.BackColor = Input;
+			checkedListBox.ForeColor = Foreground;
+			checkedListBox.BorderStyle = BorderStyle.FixedSingle;
+			checkedListBox.DrawItem += CheckedListBox_DrawItem;
+			DisableVisualTheme(checkedListBox);
+		}
+
+		private static void CheckedListBox_DrawItem(object sender, DrawItemEventArgs e)
+		{
+			if (e.Index < 0)
+			{
+				return;
+			}
+
+			CheckedListBox listBox = (CheckedListBox)sender;
+			bool isChecked = listBox.GetItemChecked(e.Index);
+			bool selected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+			Color backColor = selected ? TabSelected : Input;
+			Color textColor = Foreground;
+
+			using (Brush backBrush = new SolidBrush(backColor))
+			{
+				e.Graphics.FillRectangle(backBrush, e.Bounds);
+			}
+
+			const int boxSize = 16;
+			int boxY = e.Bounds.Top + ((e.Bounds.Height - boxSize) / 2);
+			Rectangle box = new Rectangle(e.Bounds.Left + 4, boxY, boxSize, boxSize);
+
+			using (Pen borderPen = new Pen(Border))
+			{
+				e.Graphics.DrawRectangle(borderPen, box.X, box.Y, box.Width - 1, box.Height - 1);
+
+				if (isChecked)
+				{
+					using (Brush fillBrush = new SolidBrush(Accent))
+					{
+						e.Graphics.FillRectangle(fillBrush, box.X + 3, box.Y + 3, box.Width - 6, box.Height - 6);
+					}
+				}
+			}
+
+			string text = listBox.Items[e.Index]?.ToString() ?? string.Empty;
+			Rectangle textBounds = new Rectangle(box.Right + 6, e.Bounds.Top, e.Bounds.Width - box.Right - 10, e.Bounds.Height);
+			TextRenderer.DrawText(
+				e.Graphics,
+				text,
+				listBox.Font,
+				textBounds,
+				textColor,
+				TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 		}
 
 		private static void SetupTabControl(TabControl tabControl)
