@@ -29,6 +29,7 @@ namespace EveOPreview.UI.Hotkeys
 		private IntPtr _keyboardHookId = IntPtr.Zero;
 		private IntPtr _mouseHookId = IntPtr.Zero;
 		private bool _isCapturing;
+		private bool _isDisposed;
 
 		public InputBindingCapture()
 		{
@@ -44,7 +45,7 @@ namespace EveOPreview.UI.Hotkeys
 
 		public void Start()
 		{
-			if (this._isCapturing)
+			if (this._isDisposed || this._isCapturing)
 			{
 				return;
 			}
@@ -79,6 +80,12 @@ namespace EveOPreview.UI.Hotkeys
 
 		public void Dispose()
 		{
+			if (this._isDisposed)
+			{
+				return;
+			}
+
+			this._isDisposed = true;
 			this.Stop();
 			GC.SuppressFinalize(this);
 		}

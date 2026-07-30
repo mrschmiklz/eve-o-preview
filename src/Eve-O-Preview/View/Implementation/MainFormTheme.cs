@@ -180,76 +180,10 @@ namespace EveOPreview.View
 
 		private static void SetupComboBox(ComboBox comboBox)
 		{
-			comboBox.DrawMode = DrawMode.OwnerDrawFixed;
-			comboBox.ItemHeight = comboBox.Font.Height + 6;
 			comboBox.BackColor = Input;
 			comboBox.ForeColor = Foreground;
 			comboBox.FlatStyle = FlatStyle.Flat;
-			comboBox.DrawItem += ComboBox_DrawItem;
-			comboBox.Paint += ComboBox_Paint;
 			DisableVisualTheme(comboBox);
-		}
-
-		private static void ComboBox_Paint(object sender, PaintEventArgs e)
-		{
-			ComboBox comboBox = (ComboBox)sender;
-			e.Graphics.Clear(Input);
-
-			Rectangle textBounds = new Rectangle(4, 0, comboBox.Width - 22, comboBox.Height);
-			string text = comboBox.SelectedItem?.ToString() ?? string.Empty;
-			TextRenderer.DrawText(
-				e.Graphics,
-				text,
-				comboBox.Font,
-				textBounds,
-				Foreground,
-				TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
-
-			int centerY = comboBox.Height / 2;
-			int arrowX = comboBox.Width - 14;
-			Point[] arrow =
-			{
-				new Point(arrowX, centerY - 2),
-				new Point(arrowX + 8, centerY - 2),
-				new Point(arrowX + 4, centerY + 3)
-			};
-
-			using (Brush arrowBrush = new SolidBrush(Foreground))
-			{
-				e.Graphics.FillPolygon(arrowBrush, arrow);
-			}
-
-			using (Pen borderPen = new Pen(Border))
-			{
-				e.Graphics.DrawRectangle(borderPen, 0, 0, comboBox.Width - 1, comboBox.Height - 1);
-			}
-		}
-
-		private static void ComboBox_DrawItem(object sender, DrawItemEventArgs e)
-		{
-			if (e.Index < 0)
-			{
-				return;
-			}
-
-			ComboBox comboBox = (ComboBox)sender;
-			bool selected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-			Color backColor = selected ? TabSelected : Input;
-			Color textColor = Foreground;
-
-			using (Brush backBrush = new SolidBrush(backColor))
-			{
-				e.Graphics.FillRectangle(backBrush, e.Bounds);
-			}
-
-			string text = comboBox.Items[e.Index]?.ToString() ?? string.Empty;
-			TextRenderer.DrawText(
-				e.Graphics,
-				text,
-				comboBox.Font,
-				e.Bounds,
-				textColor,
-				TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
 		}
 
 		private static void SetupTabControl(TabControl tabControl)

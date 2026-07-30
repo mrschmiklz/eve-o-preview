@@ -13,6 +13,7 @@ namespace EveOPreview
 	sealed class ExceptionHandler
 	{
 		private const string EXCEPTION_DUMP_FILE_NAME = "EVE-O-Preview.log";
+
 		private const string EXCEPTION_MESSAGE = "EVE-O-Preview has encountered a problem and needs to close. Additional information has been saved in the crash log file.";
 
 		public void SetupExceptionHandlers()
@@ -38,8 +39,11 @@ namespace EveOPreview
 		{
 			try
 			{
-				String exceptionMessage = exception.ToString();
-				File.WriteAllText(ExceptionHandler.EXCEPTION_DUMP_FILE_NAME, exceptionMessage);
+				if (exception != null)
+				{
+					string logPath = Path.Combine(this.GetLogDirectory(), ExceptionHandler.EXCEPTION_DUMP_FILE_NAME);
+					File.WriteAllText(logPath, exception.ToString());
+				}
 
 				MessageBox.Show(ExceptionHandler.EXCEPTION_MESSAGE, @"EVE-O-Preview", MessageBoxButtons.OK, MessageBoxIcon.Error);
 			}
@@ -50,6 +54,23 @@ namespace EveOPreview
 			}
 
 			System.Environment.Exit(1);
+		}
+
+		private string GetLogDirectory()
+		{
+			try
+			{
+				string executablePath = Application.ExecutablePath;
+				if (!string.IsNullOrWhiteSpace(executablePath))
+				{
+					return Path.GetDirectoryName(executablePath) ?? AppDomain.CurrentDomain.BaseDirectory;
+				}
+			}
+			catch
+			{
+			}
+
+			return AppDomain.CurrentDomain.BaseDirectory;
 		}
 	}
 }

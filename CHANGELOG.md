@@ -8,6 +8,15 @@ Download builds from [GitHub Releases](https://github.com/mrschmiklz/eve-o-previ
 
 ## [Unreleased]
 
+## [8.0.5.3] - 2026-07-30
+
+### Fixed
+
+- Crash when closing the settings window with minimize-to-tray enabled (input hooks disposed too early).
+- Unstable combo box custom painting removed; safer dark-theme styling instead.
+- Safer animation-style and version loading on startup.
+- Crash log now written next to the executable (`EVE-O-Preview.log`).
+
 ## [8.0.5.2] - 2026-07-30
 
 ### Changed

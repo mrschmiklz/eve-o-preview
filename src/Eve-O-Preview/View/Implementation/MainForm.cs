@@ -106,7 +106,7 @@ namespace EveOPreview.View
 					// Ignore missing icon resources.
 				}
 
-				if (value != "")
+				if (!string.IsNullOrEmpty(value) && !this._suppressEvents)
 				{
 					this.ApplicationSettingsChanged?.Invoke();
 				}
@@ -171,8 +171,23 @@ namespace EveOPreview.View
 
 		public ViewAnimationStyle WindowsAnimationStyle
 		{
-			get => (ViewAnimationStyle)this.AnimationStyleCombo.SelectedItem;
-			set => this.AnimationStyleCombo.SelectedIndex = (int)value;
+			get
+			{
+				if (this.AnimationStyleCombo.SelectedItem is ViewAnimationStyle style)
+				{
+					return style;
+				}
+
+				return ViewAnimationStyle.NoAnimation;
+			}
+			set
+			{
+				int index = (int)value;
+				if (index >= 0 && index < this.AnimationStyleCombo.Items.Count)
+				{
+					this.AnimationStyleCombo.SelectedIndex = index;
+				}
+			}
 		}
 
 		public bool ShowThumbnailsAlwaysOnTop
@@ -508,11 +523,16 @@ namespace EveOPreview.View
 		private void MainFormClosing_Handler(object sender, FormClosingEventArgs e)
 		{
 			this.StopBindingCapture();
-			this._inputBindingCapture.Dispose();
 
 			ViewCloseRequest request = new ViewCloseRequest();
 			this.FormCloseRequested?.Invoke(request);
 			e.Cancel = !request.Allow;
+		}
+
+		protected override void OnFormClosed(FormClosedEventArgs e)
+		{
+			this._inputBindingCapture.Dispose();
+			base.OnFormClosed(e);
 		}
 
 		private void RestoreMainForm_Handler(object sender, EventArgs e)

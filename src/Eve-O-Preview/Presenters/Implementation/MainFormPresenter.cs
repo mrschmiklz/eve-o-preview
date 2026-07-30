@@ -362,7 +362,18 @@ namespace EveOPreview.Presenters
 
 		private string GetApplicationVersion()
 		{
-			Version version = System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
+			System.Reflection.Assembly entryAssembly = System.Reflection.Assembly.GetEntryAssembly();
+			if (entryAssembly == null)
+			{
+				return "Unknown Windows";
+			}
+
+			Version version = entryAssembly.GetName().Version;
+			if (version == null)
+			{
+				return "Unknown Windows";
+			}
+
 			return $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision} Windows";
 		}
 
