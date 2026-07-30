@@ -72,6 +72,10 @@ namespace EveOPreview.Services.Implementation
 			{
 				// This exception is raised when DWM is not available for some reason
 			}
+			finally
+			{
+				this._handle = IntPtr.Zero;
+			}
 		}
 
 		public void Move(int left, int top, int right, int bottom)

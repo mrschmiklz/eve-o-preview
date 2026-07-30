@@ -65,11 +65,12 @@ namespace EveOPreview.View
 			this.AnimationStyleCombo.DataSource = Enum.GetValues(typeof(AnimationStyle));
 			this.RefreshCycleBindingCaptureState();
 			this.LockThumbnailLocationCheckbox.CheckedChanged += this.LockThumbnailLocationCheckbox_CheckedChanged;
+			this.RefreshThumbnailDisplayOptionsState();
 		}
 
 		private void LockThumbnailLocationCheckbox_CheckedChanged(object sender, EventArgs e)
 		{
-			this.RefreshClickThroughCheckboxState();
+			this.RefreshThumbnailDisplayOptionsState();
 		}
 
 		public bool MinimizeToTray
@@ -145,6 +146,12 @@ namespace EveOPreview.View
 		{
 			get => this.HideActiveClientThumbnailCheckBox.Checked;
 			set => this.HideActiveClientThumbnailCheckBox.Checked = value;
+		}
+
+		public bool ShowThumbnailPreviews
+		{
+			get => !this.ShowThumbnailPreviewsCheckBox.Checked;
+			set => this.ShowThumbnailPreviewsCheckBox.Checked = !value;
 		}
 
 		public bool MinimizeInactiveClients
@@ -354,6 +361,35 @@ namespace EveOPreview.View
 			{
 				this.ThumbnailClickThroughCheckbox.Checked = false;
 			}
+		}
+
+		public void RefreshThumbnailDisplayOptionsState()
+		{
+			bool hideAllThumbnailWindows = !this.ShowThumbnailPreviews;
+			bool previewControlsEnabled = !hideAllThumbnailWindows;
+
+			this.PreventPreviewsCheckBox.Enabled = previewControlsEnabled;
+			this.PreventPreviewColorButton.Enabled = previewControlsEnabled;
+			this.ThumbnailOpacityTrackBar.Enabled = previewControlsEnabled;
+			this.ThumbnailsWidthNumericEdit.Enabled = previewControlsEnabled;
+			this.ThumbnailsHeightNumericEdit.Enabled = previewControlsEnabled;
+			this.LockThumbnailLocationCheckbox.Enabled = previewControlsEnabled;
+			this.ThumbnailSnapToGridCheckBox.Enabled = previewControlsEnabled;
+			this.ThumbnailSnapToGridSizeXNumericEdit.Enabled = previewControlsEnabled;
+			this.ThumbnailSnapToGridSizeYNumericEdit.Enabled = previewControlsEnabled;
+
+			this.HideActiveClientThumbnailCheckBox.Enabled = previewControlsEnabled;
+			this.ShowThumbnailsAlwaysOnTopCheckBox.Enabled = previewControlsEnabled;
+			this.HideThumbnailsOnLostFocusCheckBox.Enabled = previewControlsEnabled;
+			this.EnablePerClientThumbnailsLayoutsCheckBox.Enabled = previewControlsEnabled;
+
+			this.RefreshClickThroughCheckboxState();
+		}
+
+		private void HideAllThumbnailWindowsChanged_Handler(object sender, EventArgs e)
+		{
+			this.RefreshThumbnailDisplayOptionsState();
+			this.OptionChanged_Handler(sender, e);
 		}
 
 		public bool ThumbnailSnapToGrid
@@ -769,15 +805,7 @@ namespace EveOPreview.View
 			const int BUFFER_PIXEL_AMOUNT = 8;
 			const int MIN_CONTENT_HEIGHT = 360;
 
-			var tabControl = (System.Windows.Forms.TabControl)this.Controls.Find("ContentTabControl", false).First();
-			if (tabControl == null)
-			{
-				return;
-			}
-
-			int furnitureSize = this.ClientSize.Height - tabControl.Height;
-			int tabStripHeight = (tabControl.ItemSize.Height * tabControl.Controls.Count) + BUFFER_PIXEL_AMOUNT;
-			int targetHeight = Math.Max(tabStripHeight, MIN_CONTENT_HEIGHT + furnitureSize + BUFFER_PIXEL_AMOUNT);
+			int targetHeight = MIN_CONTENT_HEIGHT + BUFFER_PIXEL_AMOUNT;
 
 			if (this.ClientSize.Height < targetHeight)
 			{

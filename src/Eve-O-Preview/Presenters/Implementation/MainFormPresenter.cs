@@ -113,6 +113,7 @@ namespace EveOPreview.Presenters
 
 			this.View.EnableClientLayoutTracking = this._configuration.EnableClientLayoutTracking;
 			this.View.HideActiveClientThumbnail = this._configuration.HideActiveClientThumbnail;
+			this.View.ShowThumbnailPreviews = this._configuration.ShowThumbnailPreviews;
 			this.View.MinimizeInactiveClients = this._configuration.MinimizeInactiveClients;
 			this.View.CycleForwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys);
 			this.View.MinimizeAllBinding = GetPrimaryCycleBinding(this._configuration.MinimizeAllClientsHotkeys);
@@ -137,6 +138,7 @@ namespace EveOPreview.Presenters
 			this.View.LockThumbnailLocation = this._configuration.LockThumbnailLocation;
 			this.View.ThumbnailClickThrough = this._configuration.ThumbnailClickThrough;
 			this.View.RefreshClickThroughCheckboxState();
+			this.View.RefreshThumbnailDisplayOptionsState();
 			this.View.ThumbnailSnapToGrid = this._configuration.ThumbnailSnapToGrid;
 			this.View.ThumbnailSnapToGridSizeX = this._configuration.ThumbnailSnapToGridSizeX;
 			this.View.ThumbnailSnapToGridSizeY = this._configuration.ThumbnailSnapToGridSizeY;
@@ -160,6 +162,13 @@ namespace EveOPreview.Presenters
 
 			this._configuration.EnableClientLayoutTracking = this.View.EnableClientLayoutTracking;
 			this._configuration.HideActiveClientThumbnail = this.View.HideActiveClientThumbnail;
+			bool showThumbnailPreviewsChanged = this._configuration.ShowThumbnailPreviews != this.View.ShowThumbnailPreviews;
+			this._configuration.ShowThumbnailPreviews = this.View.ShowThumbnailPreviews;
+			if (showThumbnailPreviewsChanged)
+			{
+				this._thumbnailManager.UpdateThumbnailVisibility();
+			}
+
 			this._configuration.MinimizeInactiveClients = this.View.MinimizeInactiveClients;
 
 			string forwardBinding = this.View.CycleForwardBinding ?? string.Empty;

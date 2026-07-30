@@ -50,6 +50,8 @@ namespace EveOPreview.Services
 		private int _refreshCycleCount;
 		private int _hideThumbnailsDelay;
 		private bool _isThumbnailUpdateInProgress;
+		private bool _isRefreshThumbnailsInProgress;
+		private bool _refreshThumbnailsPending;
 
 		private readonly GlobalMouseInputHandler _globalMouseInputHandler;
 		private readonly List<HotkeyHandler> _primaryCycleHotkeyHandlers = new List<HotkeyHandler>();
@@ -321,7 +323,7 @@ namespace EveOPreview.Services
 		{
 			foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews.Reverse())
 			{
-				if (!this.IsManageableThumbnail(entry.Value))
+				if (!this.IsCycleEligible(entry.Value))
 				{
 					continue;
 				}
@@ -333,7 +335,7 @@ namespace EveOPreview.Services
 		private void CycleNextClientByHandle(bool isForwards)
 		{
 			List<KeyValuePair<IntPtr, IThumbnailView>> clients = this._thumbnailViews
-				.Where(entry => this.IsManageableThumbnail(entry.Value) && !entry.Value.IsExcludedFromCycleGroup)
+				.Where(entry => this.IsCycleEligible(entry.Value))
 				.OrderBy(entry => entry.Value.Id.ToInt64())
 				.ToList();
 
@@ -350,8 +352,7 @@ namespace EveOPreview.Services
 
 			int currentIndex = clients.FindIndex(entry =>
 				entry.Key == this._activeClient.Handle
-				|| entry.Value.Id == this._activeClient.Handle
-				|| entry.Value.Title == this._activeClient.Title);
+				|| entry.Value.Id == this._activeClient.Handle);
 
 			if (currentIndex < 0)
 			{
@@ -368,7 +369,7 @@ namespace EveOPreview.Services
 		public void Start()
 		{
 			this._thumbnailUpdateTimer.Start();
-			this.RefreshThumbnails();
+			this.RequestRefreshThumbnails();
 			this.UpdateActionBindings();
 		}
 
@@ -390,7 +391,7 @@ namespace EveOPreview.Services
 			try
 			{
 				await this.UpdateThumbnailsList();
-				this.RefreshThumbnails();
+				this.RequestRefreshThumbnails();
 			}
 			finally
 			{
@@ -441,6 +442,11 @@ namespace EveOPreview.Services
 
 				this.ApplyClientLayout(view);
 				this.ApplyCaptionBar(view);
+
+				if (!this._configuration.ShowThumbnailPreviews)
+				{
+					view.Hide();
+				}
 
 				// TODO Add extension filter here later
 				if (view.Title != ThumbnailManager.DEFAULT_CLIENT_TITLE)
@@ -508,7 +514,48 @@ namespace EveOPreview.Services
 			}
 		}
 
+		public void UpdateThumbnailVisibility()
+		{
+			this.RequestRefreshThumbnails();
+		}
+
+		private void RequestRefreshThumbnails()
+		{
+			if (this._isRefreshThumbnailsInProgress)
+			{
+				this._refreshThumbnailsPending = true;
+				return;
+			}
+
+			this.RefreshThumbnails();
+		}
+
 		private void RefreshThumbnails()
+		{
+			if (this._isRefreshThumbnailsInProgress)
+			{
+				this._refreshThumbnailsPending = true;
+				return;
+			}
+
+			this._isRefreshThumbnailsInProgress = true;
+			try
+			{
+				this.RefreshThumbnailsCore();
+			}
+			finally
+			{
+				this._isRefreshThumbnailsInProgress = false;
+
+				if (this._refreshThumbnailsPending)
+				{
+					this._refreshThumbnailsPending = false;
+					this.RefreshThumbnails();
+				}
+			}
+		}
+
+		private void RefreshThumbnailsCore()
 		{
 			// TODO Split this method
 			IntPtr foregroundWindowHandle = this._windowManager.GetForegroundWindowHandle();
@@ -598,6 +645,17 @@ namespace EveOPreview.Services
 			}
 
 			// Hide, show, resize and move - update ZoomAnchor setting
+			if (!this._configuration.ShowThumbnailPreviews)
+			{
+				foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews)
+				{
+					entry.Value.Hide();
+				}
+
+				this.EnableViewEvents();
+				return;
+			}
+
 			foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews)
 			{
 				IThumbnailView view = entry.Value;
@@ -765,19 +823,22 @@ namespace EveOPreview.Services
 
 		private void ThumbnailViewFocused(IntPtr id)
 		{
-			if (this._isHoverEffectActive)
+			if (this._ignoreViewEvents || this._isHoverEffectActive)
+			{
+				return;
+			}
+
+			if (!this._thumbnailViews.TryGetValue(id, out IThumbnailView view))
 			{
 				return;
 			}
 
 			this._isHoverEffectActive = true;
 
-			IThumbnailView view = this._thumbnailViews[id];
-
 			view.SetTopMost(true);
 			view.SetOpacity(1.0);
 
-			if (this._configuration.ThumbnailZoomEnabled && ! view.IsPreventPreviews() )
+			if (this._configuration.ThumbnailZoomEnabled && !view.IsPreventPreviews())
 			{
 				this.ThumbnailZoomIn(view);
 			}
@@ -785,12 +846,16 @@ namespace EveOPreview.Services
 
 		private void ThumbnailViewLostFocus(IntPtr id)
 		{
-			if (!this._isHoverEffectActive)
+			if (this._ignoreViewEvents || !this._isHoverEffectActive)
 			{
 				return;
 			}
 
-			IThumbnailView view = this._thumbnailViews[id];
+			if (!this._thumbnailViews.TryGetValue(id, out IThumbnailView view))
+			{
+				this._isHoverEffectActive = false;
+				return;
+			}
 
 			if (this._configuration.ThumbnailZoomEnabled)
 			{
@@ -804,7 +869,15 @@ namespace EveOPreview.Services
 
 		private void ThumbnailActivated(IntPtr id)
 		{
-			IThumbnailView view = this._thumbnailViews[id];
+			if (this._ignoreViewEvents)
+			{
+				return;
+			}
+
+			if (!this._thumbnailViews.TryGetValue(id, out IThumbnailView view))
+			{
+				return;
+			}
 
 			Task.Run(() =>
 				{
@@ -812,10 +885,15 @@ namespace EveOPreview.Services
 				})
 				.ContinueWith((task) =>
 				{
+					if (!this._thumbnailViews.ContainsKey(id))
+					{
+						return;
+					}
+
 					// This code should be executed on UI thread
 					this.SwitchActiveClient(view.Id, view.Title);
 					this.UpdateClientLayouts();
-					this.RefreshThumbnails();
+					this.RequestRefreshThumbnails();
 				}, TaskScheduler.FromCurrentSynchronizationContext());
 		}
 
@@ -833,7 +911,7 @@ namespace EveOPreview.Services
 				}
 
 				this._windowManager.MinimizeWindow(view.Id, this._configuration.WindowsAnimationStyle, true);
-				this.RefreshThumbnails();
+				this.RequestRefreshThumbnails();
 			}
 		}
 
@@ -846,7 +924,7 @@ namespace EveOPreview.Services
 				view.SetCycleGroupIndicator(view.IsExcludedFromCycleGroup, _configuration.CycleGroupIndicatorAnchor);
 
 			}
-			this.RefreshThumbnails();
+			this.RequestRefreshThumbnails();
 		}
 
 
@@ -857,7 +935,10 @@ namespace EveOPreview.Services
 				return;
 			}
 
-			IThumbnailView view = this._thumbnailViews[id];
+			if (!this._thumbnailViews.TryGetValue(id, out IThumbnailView view))
+			{
+				return;
+			}
 
 			this.SetThumbnailsSize(view.ThumbnailSize);
 
@@ -873,7 +954,11 @@ namespace EveOPreview.Services
 				return;
 			}
 
-			IThumbnailView view = this._thumbnailViews[id];
+			if (!this._thumbnailViews.TryGetValue(id, out IThumbnailView view))
+			{
+				return;
+			}
+
 			view.Refresh(false);
 			this.EnqueueLocationChange(view);
 		}
@@ -1165,6 +1250,11 @@ namespace EveOPreview.Services
 		private bool IsManageableThumbnail(IThumbnailView view)
 		{
 			return view.Title != ThumbnailManager.DEFAULT_CLIENT_TITLE;
+		}
+
+		private bool IsCycleEligible(IThumbnailView view)
+		{
+			return view.Id != IntPtr.Zero && !view.IsExcludedFromCycleGroup;
 		}
 
 		// Quick sanity check that the window is not minimized

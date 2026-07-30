@@ -2,6 +2,7 @@ bin/
 obj/
 dist/
 publish/
+artifacts/
 tools/
 src/.vs/
 src/*/.vs/
@@ -10,5 +11,4 @@ src/*/.vs/
 *.DotSettings
 build/Fody*
 *.vs/
-EVE-O-Preview.json
 *.log

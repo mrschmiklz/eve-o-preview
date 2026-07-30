@@ -24,19 +24,34 @@ namespace EveOPreview.View
 
 		protected override void RefreshThumbnail(bool forceRefresh)
 		{
+			if (this.IsPreventPreviews())
+			{
+				this._thumbnail?.Unregister();
+				this._thumbnail = null;
+				return;
+			}
+
 			// To prevent flickering the old broken thumbnail is removed AFTER the new shiny one is created
 			IDwmThumbnail obsoleteThumbnail = forceRefresh ? this._thumbnail : null;
 
-			if ((this._thumbnail == null) || forceRefresh && ! this.IsPreventPreviews() )
+			if ((this._thumbnail == null) || forceRefresh)
 			{
 				this.RegisterThumbnail();
 			}
-			
-			obsoleteThumbnail?.Unregister();
+
+			if (obsoleteThumbnail != null && obsoleteThumbnail != this._thumbnail)
+			{
+				obsoleteThumbnail.Unregister();
+			}
 		}
 
 		protected override void ResizeThumbnail(int baseWidth, int baseHeight, int highlightWidthTop, int highlightWidthRight, int highlightWidthBottom, int highlightWidthLeft)
 		{
+			if (this._thumbnail == null)
+			{
+				return;
+			}
+
 			var left = 0 + highlightWidthLeft;
 			var top = 0 + highlightWidthTop;
 			var right = baseWidth - highlightWidthRight;

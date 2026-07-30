@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using EveOPreview.Configuration;
@@ -17,6 +17,7 @@ namespace EveOPreview.View
 
 		bool EnableClientLayoutTracking { get; set; }
 		bool HideActiveClientThumbnail { get; set; }
+		bool ShowThumbnailPreviews { get; set; }
 		bool MinimizeInactiveClients { get; set; }
 		string CycleForwardBinding { get; set; }
 		string MinimizeAllBinding { get; set; }
@@ -41,6 +42,7 @@ namespace EveOPreview.View
 		bool LockThumbnailLocation { get; set; }
 		bool ThumbnailClickThrough { get; set; }
 		void RefreshClickThroughCheckboxState();
+		void RefreshThumbnailDisplayOptionsState();
 		bool ThumbnailSnapToGrid { get; set; }
 		int ThumbnailSnapToGridSizeX { get; set; }
 		int ThumbnailSnapToGridSizeY { get; set; }

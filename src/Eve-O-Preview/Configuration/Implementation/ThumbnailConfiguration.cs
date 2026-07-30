@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -44,6 +44,7 @@ namespace EveOPreview.Configuration.Implementation
 
 			this.EnableClientLayoutTracking = false;
 			this.HideActiveClientThumbnail = true;
+			this.ShowThumbnailPreviews = false;
 			this.HideLoginClientThumbnail = false;
 			this.MinimizeInactiveClients = true;
 			this.HideCaptionOnClients = false;
@@ -131,6 +132,7 @@ namespace EveOPreview.Configuration.Implementation
 		}
 
 		public bool HideActiveClientThumbnail { get; set; }
+		public bool ShowThumbnailPreviews { get; set; }
 		public bool HideLoginClientThumbnail { get; set; }
 		public bool MinimizeInactiveClients { get; set; }
 		public bool HideCaptionOnClients { get; set; }

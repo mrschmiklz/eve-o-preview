@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -21,6 +21,7 @@ namespace EveOPreview.Configuration
 
 		bool EnableClientLayoutTracking { get; set; }
 		bool HideActiveClientThumbnail { get; set; }
+		bool ShowThumbnailPreviews { get; set; }
 		bool HideLoginClientThumbnail { get; set; }
 		bool MinimizeInactiveClients { get; set; }
 		bool HideCaptionOnClients { get; set; }

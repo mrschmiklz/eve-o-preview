@@ -7,11 +7,24 @@
   "MinimizeAllClientsHotkeys": [
     "MouseXButton2"
   ],
+  "MinimizeToTray": false,
   "MinimizeInactiveClients": true,
   "HideActiveClientThumbnail": true,
+  "ShowThumbnailPreviews": false,
+  "PreventPreviews": false,
+  "LockThumbnailLocation": false,
+  "ThumbnailClickThrough": false,
   "EnableActiveClientHighlight": true,
   "WindowsAnimationStyle": 1,
+  "ShowThumbnailsAlwaysOnTop": true,
+  "HideThumbnailsOnLostFocus": false,
+  "EnablePerClientThumbnailLayouts": false,
+  "EnableClientLayoutTracking": false,
+  "ThumbnailsOpacity": 0.5,
+  "ThumbnailSize": "384, 216",
   "ClientHotkey": {},
+  "FlatLayout": {},
+  "ClientLayout": {},
   "ExecutablesToPreview": [
     "exefile"
   ]

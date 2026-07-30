@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using EveOPreview.Configuration;
 using EveOPreview.Presenters;
@@ -16,8 +18,10 @@ namespace EveOPreview
 
 		/// <summary>The main entry point for the application.</summary>
 		[STAThread]
-		static void Main()
+		static void Main(string[] args)
 		{
+			bool smokeTest = Program.IsSmokeTestRequested(args);
+
 			Program._singleInstanceMutex = Program.GetInstanceToken();
 
 			if (Program._singleInstanceMutex == null)
@@ -32,9 +36,38 @@ namespace EveOPreview
 
 			Program.InitializeWinForms();
 
-			Application.SetCompatibleTextRenderingDefault(false);
+			if (smokeTest)
+			{
+				Program.ScheduleSmokeTestExit(TimeSpan.FromSeconds(6));
+			}
 
 			controller.Run<MainFormPresenter>();
+		}
+
+		private static bool IsSmokeTestRequested(string[] args)
+		{
+			if (args != null && args.Any(arg => string.Equals(arg, "--smoke-test", StringComparison.OrdinalIgnoreCase)))
+			{
+				return true;
+			}
+
+			return string.Equals(Environment.GetEnvironmentVariable("EVEOPREVIEW_SMOKE_TEST"), "1", StringComparison.Ordinal);
+		}
+
+		private static void ScheduleSmokeTestExit(TimeSpan delay)
+		{
+			Task.Run(async () =>
+			{
+				await Task.Delay(delay);
+				try
+				{
+					Application.Exit();
+				}
+				catch
+				{
+					Environment.Exit(0);
+				}
+			});
 		}
 
 		private static Mutex GetInstanceToken()

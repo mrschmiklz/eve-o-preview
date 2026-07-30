@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main, master]
+  pull_request:
+    branches: [develop, main, master]
+
+jobs:
+  verify-windows:
+    name: Build and verify (Windows)
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build, test, and smoke-test
+        shell: pwsh
+        run: .\scripts\build-and-test.ps1 -WithMockClients
+
+      - name: Upload verify report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-report
+          path: artifacts/verify-report.json

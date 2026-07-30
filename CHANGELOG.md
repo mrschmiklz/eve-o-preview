@@ -8,24 +8,29 @@ Download builds from [GitHub Releases](https://github.com/mrschmiklz/eve-o-previ
 
 ## [Unreleased]
 
-### Changed
-
-- Windows-only fork simplification: removed MediatR, Linux/Wine build paths, cycle groups 2–5, and duplicate hotkey registration paths.
-- Direct calls between presenter and thumbnail manager replace message-bus handlers.
-- Config schema trimmed; legacy cycle-group JSON keys are ignored on load.
-- GitHub Actions release workflow builds Windows only (no `EVEOTARGET`).
-- Version bumped to **8.0.5.0**.
+## [8.0.5.1] - 2026-07-30
 
 ### Added
 
-- Config migration v3: fork-friendly defaults on upgrade (hide active thumbnail, highlight active client, no window animation, mouse binding defaults preserved).
-- Example config: `config/EVE-O-Preview.example.json`.
+- Cycle-only default: hide all thumbnail windows by default; mouse cycle + minimize-all bindings unchanged.
+- Thumbnail tab option to fully hide previews (distinct from color-block placeholders).
+- Build-and-test script, unit tests, and CI verify workflow.
+- `--smoke-test` flag for automated exe health checks.
 
-### Removed
+### Changed
 
-- `WineCompatibilityMode` config property (unused in this Windows fork).
+- Settings UI reorganized for cycle-first flow (Cycle tab); tighter window layout.
+- Default config reset in repo root and example config.
 
-## [8.0.4.6] - 2026-07-25
+### Fixed
+
+- DWM thumbnail crash when prevent-previews and forced refresh interacted.
+- Thumbnail refresh reentrancy and safer event-handler lookups during client attach/detach.
+- Character-select cycling for clients titled `EVE`.
+
+## [8.0.5.0] - 2026-07-26
+
+### Changed
 
 ### Fixed
 

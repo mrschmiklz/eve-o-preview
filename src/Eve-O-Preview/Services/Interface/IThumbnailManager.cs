@@ -1,4 +1,4 @@
-﻿using EveOPreview.Presenters;
+using EveOPreview.Presenters;
 using EveOPreview.View;
 
 namespace EveOPreview.Services
@@ -14,6 +14,7 @@ namespace EveOPreview.Services
 		void UpdateThumbnailsSize();
 		void UpdateThumbnailFrames();
 		void UpdateThumbnailClickThrough();
+		void UpdateThumbnailVisibility();
 
 		void UpdateActionBindings();
 
