@@ -8,6 +8,18 @@ Download builds from [GitHub Releases](https://github.com/mrschmiklz/eve-o-previ
 
 ## [Unreleased]
 
+## [8.0.5.2] - 2026-07-30
+
+### Changed
+
+- Rebuilt settings window for cycle-only use: single compact panel, no preview/thumbnail/zoom/overlay tabs.
+- Dark theme for the main settings window with improved spacing and group box labels.
+- Preview visibility is always off in this build; cycle bindings, client list, and tray options remain.
+
+### Fixed
+
+- Tab layout regression from flat-button styling; group box titles no longer clipped by borders.
+
 ## [8.0.5.1] - 2026-07-30
 
 ### Added

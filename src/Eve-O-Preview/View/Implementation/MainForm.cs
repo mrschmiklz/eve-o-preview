@@ -5,31 +5,47 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace EveOPreview.View
 {
 	public partial class MainForm : Form, IMainFormView
 	{
-		#region Private fields
 		private readonly ApplicationContext _context;
-		private readonly Dictionary<ViewZoomAnchor, RadioButton> _zoomAnchorMap;
-		private readonly Dictionary<ViewZoomAnchor, RadioButton> _overlayLabelMap;
-		private readonly Dictionary<ViewZoomAnchor, RadioButton> _cycleGroupIndicatorMap;
-		private ViewZoomAnchor _cachedThumbnailZoomAnchor;
-		private ViewZoomAnchor _cachedOverlayLabelAnchor;
-		private ViewZoomAnchor _cachedCycleGroupIndicatorAnchor;
+		private readonly InputBindingCapture _inputBindingCapture;
 		private bool _suppressEvents;
 		private Size _minimumSize;
 		private Size _maximumSize;
 		private string _iconName;
-		private readonly InputBindingCapture _inputBindingCapture;
-		private CycleBindingCaptureTarget _captureTarget;
 		private string _cycleForwardBinding;
 		private string _minimizeAllBinding;
-		#endregion
+		private CycleBindingCaptureTarget _captureTarget;
+
+		private double _thumbnailOpacity = 0.5;
+		private bool _enableClientLayoutTracking;
+		private bool _hideActiveClientThumbnail = true;
+		private bool _showThumbnailsAlwaysOnTop = true;
+		private bool _preventPreviews;
+		private bool _hideThumbnailsOnLostFocus;
+		private bool _enablePerClientThumbnailLayouts;
+		private Size _thumbnailSize = new Size(384, 216);
+		private bool _enableThumbnailZoom;
+		private int _thumbnailZoomFactor = 2;
+		private ViewZoomAnchor _thumbnailZoomAnchor = ViewZoomAnchor.NW;
+		private ViewZoomAnchor _overlayLabelAnchor = ViewZoomAnchor.NW;
+		private ViewZoomAnchor _cycleGroupIndicatorAnchor = ViewZoomAnchor.NW;
+		private bool _showThumbnailOverlays = true;
+		private bool _showThumbnailFrames;
+		private bool _lockThumbnailLocation;
+		private bool _thumbnailClickThrough;
+		private bool _thumbnailSnapToGrid = true;
+		private int _thumbnailSnapToGridSizeX = 100;
+		private int _thumbnailSnapToGridSizeY = 50;
+		private bool _enableActiveClientHighlight = true;
+		private Color _activeClientHighlightColor = Color.GreenYellow;
+		private Color _preventPreviewColor = Color.Purple;
+		private Color _overlayLabelColor = Color.Orange;
+		private Font _overlayLabelFont = new Font(FontFamily.GenericSansSerif, 10.0F, FontStyle.Bold);
 
 		private enum CycleBindingCaptureTarget
 		{
@@ -41,11 +57,6 @@ namespace EveOPreview.View
 		public MainForm(ApplicationContext context)
 		{
 			this._context = context;
-			this._zoomAnchorMap = new Dictionary<ViewZoomAnchor, RadioButton>();
-			this._overlayLabelMap = new Dictionary<ViewZoomAnchor, RadioButton>();
-			this._cycleGroupIndicatorMap = new Dictionary<ViewZoomAnchor, RadioButton>();
-			this._cachedThumbnailZoomAnchor = ViewZoomAnchor.NW;
-			this._suppressEvents = false;
 			this._minimumSize = new Size(20, 20);
 			this._maximumSize = new Size(20, 20);
 
@@ -56,21 +67,10 @@ namespace EveOPreview.View
 			this._inputBindingCapture.CaptureCancelled += this.InputBindingCapture_Cancelled;
 
 			this.ThumbnailsList.DisplayMember = "Title";
+			this.AnimationStyleCombo.DataSource = Enum.GetValues(typeof(ViewAnimationStyle));
 
-			this.InitZoomAnchorMap();
-			this.InitOverlayLabelMap();
-			this.InitCycleGroupIndicatorMap();
-			this.InitFormSize();
-
-			this.AnimationStyleCombo.DataSource = Enum.GetValues(typeof(AnimationStyle));
+			MainFormTheme.Apply(this);
 			this.RefreshCycleBindingCaptureState();
-			this.LockThumbnailLocationCheckbox.CheckedChanged += this.LockThumbnailLocationCheckbox_CheckedChanged;
-			this.RefreshThumbnailDisplayOptionsState();
-		}
-
-		private void LockThumbnailLocationCheckbox_CheckedChanged(object sender, EventArgs e)
-		{
-			this.RefreshThumbnailDisplayOptionsState();
 		}
 
 		public bool MinimizeToTray
@@ -84,18 +84,14 @@ namespace EveOPreview.View
 			get => this._iconName;
 			set
 			{
-
-
 				this._iconName = value;
 
-				// Set Icon 
 				System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-				if (this._iconName == null || ((resources.GetObject(this._iconName))) == null)
+				if (this._iconName == null || resources.GetObject(this._iconName) == null)
 				{
 					this._iconName = "IconOriginal";
 				}
 
-				// pull icon from resources
 				try
 				{
 					var iconBytes = (byte[])resources.GetObject(this._iconName);
@@ -105,9 +101,9 @@ namespace EveOPreview.View
 						this.NotifyIcon.Icon = this.Icon;
 					}
 				}
-				catch (Exception ex)
+				catch
 				{
-					// Log ?
+					// Ignore missing icon resources.
 				}
 
 				if (value != "")
@@ -119,39 +115,26 @@ namespace EveOPreview.View
 
 		public double ThumbnailOpacity
 		{
-			get => Math.Min(this.ThumbnailOpacityTrackBar.Value / 100.00, 1.00);
-			set
-			{
-				int barValue = (int)(100.0 * value);
-				if (barValue > 100)
-				{
-					barValue = 100;
-				}
-				else if (barValue < 10)
-				{
-					barValue = 10;
-				}
-
-				this.ThumbnailOpacityTrackBar.Value = barValue;
-			}
+			get => this._thumbnailOpacity;
+			set => this._thumbnailOpacity = Math.Min(Math.Max(value, 0.1), 1.0);
 		}
 
 		public bool EnableClientLayoutTracking
 		{
-			get => this.EnableClientLayoutTrackingCheckBox.Checked;
-			set => this.EnableClientLayoutTrackingCheckBox.Checked = value;
+			get => this._enableClientLayoutTracking;
+			set => this._enableClientLayoutTracking = value;
 		}
 
 		public bool HideActiveClientThumbnail
 		{
-			get => this.HideActiveClientThumbnailCheckBox.Checked;
-			set => this.HideActiveClientThumbnailCheckBox.Checked = value;
+			get => this._hideActiveClientThumbnail;
+			set => this._hideActiveClientThumbnail = value;
 		}
 
 		public bool ShowThumbnailPreviews
 		{
-			get => !this.ShowThumbnailPreviewsCheckBox.Checked;
-			set => this.ShowThumbnailPreviewsCheckBox.Checked = !value;
+			get => false;
+			set { }
 		}
 
 		public bool MinimizeInactiveClients
@@ -159,6 +142,7 @@ namespace EveOPreview.View
 			get => this.MinimizeInactiveClientsCheckBox.Checked;
 			set => this.MinimizeInactiveClientsCheckBox.Checked = value;
 		}
+
 		public string CycleForwardBinding
 		{
 			get => this._cycleForwardBinding ?? string.Empty;
@@ -184,6 +168,7 @@ namespace EveOPreview.View
 			get => this.HideCaptionOnClientsCheckBox.Checked;
 			set => this.HideCaptionOnClientsCheckBox.Checked = value;
 		}
+
 		public ViewAnimationStyle WindowsAnimationStyle
 		{
 			get => (ViewAnimationStyle)this.AnimationStyleCombo.SelectedItem;
@@ -192,275 +177,146 @@ namespace EveOPreview.View
 
 		public bool ShowThumbnailsAlwaysOnTop
 		{
-			get => this.ShowThumbnailsAlwaysOnTopCheckBox.Checked;
-			set => this.ShowThumbnailsAlwaysOnTopCheckBox.Checked = value;
+			get => this._showThumbnailsAlwaysOnTop;
+			set => this._showThumbnailsAlwaysOnTop = value;
 		}
+
 		public bool PreventPreviews
 		{
-			get => this.PreventPreviewsCheckBox.Checked;
-			set => this.PreventPreviewsCheckBox.Checked = value;
+			get => this._preventPreviews;
+			set => this._preventPreviews = value;
 		}
 
 		public bool HideThumbnailsOnLostFocus
 		{
-			get => this.HideThumbnailsOnLostFocusCheckBox.Checked;
-			set => this.HideThumbnailsOnLostFocusCheckBox.Checked = value;
+			get => this._hideThumbnailsOnLostFocus;
+			set => this._hideThumbnailsOnLostFocus = value;
 		}
 
 		public bool EnablePerClientThumbnailLayouts
 		{
-			get => this.EnablePerClientThumbnailsLayoutsCheckBox.Checked;
-			set => this.EnablePerClientThumbnailsLayoutsCheckBox.Checked = value;
+			get => this._enablePerClientThumbnailLayouts;
+			set => this._enablePerClientThumbnailLayouts = value;
 		}
 
 		public Size ThumbnailSize
 		{
-			get => new Size((int)this.ThumbnailsWidthNumericEdit.Value, (int)this.ThumbnailsHeightNumericEdit.Value);
-			set
-			{
-				this.ThumbnailsWidthNumericEdit.Value = value.Width;
-				this.ThumbnailsHeightNumericEdit.Value = value.Height;
-			}
+			get => this._thumbnailSize;
+			set => this._thumbnailSize = value;
 		}
 
 		public bool EnableThumbnailZoom
 		{
-			get => this.EnableThumbnailZoomCheckBox.Checked;
-			set
-			{
-				this.EnableThumbnailZoomCheckBox.Checked = value;
-				this.RefreshZoomSettings();
-			}
+			get => this._enableThumbnailZoom;
+			set => this._enableThumbnailZoom = value;
 		}
 
 		public int ThumbnailZoomFactor
 		{
-			get => (int)this.ThumbnailZoomFactorNumericEdit.Value;
-			set => this.ThumbnailZoomFactorNumericEdit.Value = value;
+			get => this._thumbnailZoomFactor;
+			set => this._thumbnailZoomFactor = value;
 		}
 
 		public ViewZoomAnchor ThumbnailZoomAnchor
 		{
-			get
-			{
-				if (this._zoomAnchorMap[this._cachedThumbnailZoomAnchor].Checked)
-				{
-					return this._cachedThumbnailZoomAnchor;
-				}
-
-				foreach (KeyValuePair<ViewZoomAnchor, RadioButton> valuePair in this._zoomAnchorMap)
-				{
-					if (!valuePair.Value.Checked)
-					{
-						continue;
-					}
-
-					this._cachedThumbnailZoomAnchor = valuePair.Key;
-					return this._cachedThumbnailZoomAnchor;
-				}
-
-				// Default value
-				return ViewZoomAnchor.NW;
-			}
-			set
-			{
-				this._cachedThumbnailZoomAnchor = value;
-				this._zoomAnchorMap[this._cachedThumbnailZoomAnchor].Checked = true;
-			}
+			get => this._thumbnailZoomAnchor;
+			set => this._thumbnailZoomAnchor = value;
 		}
 
 		public ViewZoomAnchor OverlayLabelAnchor
 		{
-			get
-			{
-				if (this._overlayLabelMap[this._cachedOverlayLabelAnchor].Checked)
-				{
-					return this._cachedOverlayLabelAnchor;
-				}
-
-				foreach (KeyValuePair<ViewZoomAnchor, RadioButton> valuePair in this._overlayLabelMap)
-				{
-					if (!valuePair.Value.Checked)
-					{
-						continue;
-					}
-
-					this._cachedOverlayLabelAnchor = valuePair.Key;
-					return this._cachedOverlayLabelAnchor;
-				}
-
-				// Default Value
-				return ViewZoomAnchor.NW;
-			}
-			set
-			{
-				this._cachedOverlayLabelAnchor = value;
-				this._overlayLabelMap[this._cachedOverlayLabelAnchor].Checked = true;
-			}
+			get => this._overlayLabelAnchor;
+			set => this._overlayLabelAnchor = value;
 		}
 
 		public ViewZoomAnchor CycleGroupIndicatorAnchor
 		{
-			get
-			{
-				if (this._cycleGroupIndicatorMap[this._cachedCycleGroupIndicatorAnchor].Checked)
-				{
-					return this._cachedCycleGroupIndicatorAnchor;
-				}
-
-				foreach (KeyValuePair<ViewZoomAnchor, RadioButton> valuePair in this._cycleGroupIndicatorMap)
-				{
-					if (!valuePair.Value.Checked)
-					{
-						continue;
-					}
-
-					this._cachedCycleGroupIndicatorAnchor = valuePair.Key;
-					return this._cachedCycleGroupIndicatorAnchor;
-				}
-
-				// Default Value
-				return ViewZoomAnchor.NW;
-			}
-			set
-			{
-				this._cachedCycleGroupIndicatorAnchor = value;
-				this._cycleGroupIndicatorMap[this._cachedCycleGroupIndicatorAnchor].Checked = true;
-			}
+			get => this._cycleGroupIndicatorAnchor;
+			set => this._cycleGroupIndicatorAnchor = value;
 		}
 
 		public bool ShowThumbnailOverlays
 		{
-			get => this.ShowThumbnailOverlaysCheckBox.Checked;
-			set => this.ShowThumbnailOverlaysCheckBox.Checked = value;
+			get => this._showThumbnailOverlays;
+			set => this._showThumbnailOverlays = value;
 		}
 
 		public bool ShowThumbnailFrames
 		{
-			get => this.ShowThumbnailFramesCheckBox.Checked;
-			set => this.ShowThumbnailFramesCheckBox.Checked = value;
+			get => this._showThumbnailFrames;
+			set => this._showThumbnailFrames = value;
 		}
+
 		public bool LockThumbnailLocation
 		{
-			get => this.LockThumbnailLocationCheckbox.Checked;
-			set => this.LockThumbnailLocationCheckbox.Checked = value;
+			get => this._lockThumbnailLocation;
+			set => this._lockThumbnailLocation = value;
 		}
 
 		public bool ThumbnailClickThrough
 		{
-			get => this.ThumbnailClickThroughCheckbox.Checked;
-			set => this.ThumbnailClickThroughCheckbox.Checked = value;
+			get => this._thumbnailClickThrough;
+			set => this._thumbnailClickThrough = value;
 		}
 
 		public void RefreshClickThroughCheckboxState()
 		{
-			bool locked = this.LockThumbnailLocationCheckbox.Checked;
-			this.ThumbnailClickThroughCheckbox.Enabled = locked;
-
-			if (!locked && this.ThumbnailClickThroughCheckbox.Checked)
-			{
-				this.ThumbnailClickThroughCheckbox.Checked = false;
-			}
 		}
 
 		public void RefreshThumbnailDisplayOptionsState()
 		{
-			bool hideAllThumbnailWindows = !this.ShowThumbnailPreviews;
-			bool previewControlsEnabled = !hideAllThumbnailWindows;
-
-			this.PreventPreviewsCheckBox.Enabled = previewControlsEnabled;
-			this.PreventPreviewColorButton.Enabled = previewControlsEnabled;
-			this.ThumbnailOpacityTrackBar.Enabled = previewControlsEnabled;
-			this.ThumbnailsWidthNumericEdit.Enabled = previewControlsEnabled;
-			this.ThumbnailsHeightNumericEdit.Enabled = previewControlsEnabled;
-			this.LockThumbnailLocationCheckbox.Enabled = previewControlsEnabled;
-			this.ThumbnailSnapToGridCheckBox.Enabled = previewControlsEnabled;
-			this.ThumbnailSnapToGridSizeXNumericEdit.Enabled = previewControlsEnabled;
-			this.ThumbnailSnapToGridSizeYNumericEdit.Enabled = previewControlsEnabled;
-
-			this.HideActiveClientThumbnailCheckBox.Enabled = previewControlsEnabled;
-			this.ShowThumbnailsAlwaysOnTopCheckBox.Enabled = previewControlsEnabled;
-			this.HideThumbnailsOnLostFocusCheckBox.Enabled = previewControlsEnabled;
-			this.EnablePerClientThumbnailsLayoutsCheckBox.Enabled = previewControlsEnabled;
-
-			this.RefreshClickThroughCheckboxState();
-		}
-
-		private void HideAllThumbnailWindowsChanged_Handler(object sender, EventArgs e)
-		{
-			this.RefreshThumbnailDisplayOptionsState();
-			this.OptionChanged_Handler(sender, e);
 		}
 
 		public bool ThumbnailSnapToGrid
 		{
-			get => this.ThumbnailSnapToGridCheckBox.Checked;
-			set => this.ThumbnailSnapToGridCheckBox.Checked = value;
+			get => this._thumbnailSnapToGrid;
+			set => this._thumbnailSnapToGrid = value;
 		}
+
 		public int ThumbnailSnapToGridSizeX
 		{
-			get => (int)ThumbnailSnapToGridSizeXNumericEdit.Value;
-			set => ThumbnailSnapToGridSizeXNumericEdit.Value = value;
+			get => this._thumbnailSnapToGridSizeX;
+			set => this._thumbnailSnapToGridSizeX = value;
 		}
+
 		public int ThumbnailSnapToGridSizeY
 		{
-			get => (int)ThumbnailSnapToGridSizeYNumericEdit.Value;
-			set => ThumbnailSnapToGridSizeYNumericEdit.Value = value;
+			get => this._thumbnailSnapToGridSizeY;
+			set => this._thumbnailSnapToGridSizeY = value;
 		}
 
 		public bool EnableActiveClientHighlight
 		{
-			get => this.EnableActiveClientHighlightCheckBox.Checked;
-			set => this.EnableActiveClientHighlightCheckBox.Checked = value;
+			get => this._enableActiveClientHighlight;
+			set => this._enableActiveClientHighlight = value;
 		}
 
 		public Color ActiveClientHighlightColor
 		{
 			get => this._activeClientHighlightColor;
-			set
-			{
-				this._activeClientHighlightColor = value;
-				this.ActiveClientHighlightColorButton.BackColor = value;
-			}
+			set => this._activeClientHighlightColor = value;
 		}
-		private Color _activeClientHighlightColor;
 
 		public Color PreventPreviewColor
 		{
 			get => this._preventPreviewColor;
-			set
-			{
-				this._preventPreviewColor = value;
-				this.PreventPreviewColorButton.BackColor = value;
-			}
+			set => this._preventPreviewColor = value;
 		}
-		private Color _preventPreviewColor;
 
 		public Color OverlayLabelColor
 		{
-			get => this._OverlayLabelColor;
-			set
-			{
-				this._OverlayLabelColor = value;
-				this.OverlayLabelColorButton.BackColor = value;
-			}
+			get => this._overlayLabelColor;
+			set => this._overlayLabelColor = value;
 		}
-		private Color _OverlayLabelColor;
 
 		public Font OverlayLabelFont
 		{
-			get => (Font)this._OverlayLabelFont;
-			set
-			{
-				this._OverlayLabelFont = value;
-				this.LabelOverlayLabelFont.Font = value;
-			}
+			get => this._overlayLabelFont;
+			set => this._overlayLabelFont = value;
 		}
-		private Font _OverlayLabelFont;
 
 		public new void Show()
 		{
-			// Registers the current instance as the application's Main Form
 			this._context.MainForm = this;
 
 			this._suppressEvents = true;
@@ -517,9 +373,6 @@ namespace EveOPreview.View
 
 		public void RefreshZoomSettings()
 		{
-			bool enableControls = this.EnableThumbnailZoom;
-			this.ThumbnailZoomFactorNumericEdit.Enabled = enableControls;
-			this.ZoomAnchorPanel.Enabled = enableControls;
 		}
 
 		public void RefreshCycleBindingCaptureState()
@@ -528,18 +381,27 @@ namespace EveOPreview.View
 			this.CycleForwardRecordButton.Enabled = !isCapturing || this._captureTarget == CycleBindingCaptureTarget.Forward;
 			this.CycleBackwardRecordButton.Enabled = !isCapturing || this._captureTarget == CycleBindingCaptureTarget.MinimizeAll;
 			this.CycleForwardBindingTextBox.BackColor = this._captureTarget == CycleBindingCaptureTarget.Forward
-				? Color.LightGoldenrodYellow
-				: SystemColors.Window;
+				? MainFormTheme.CaptureHighlight
+				: MainFormTheme.Input;
 			this.CycleBackwardBindingTextBox.BackColor = this._captureTarget == CycleBindingCaptureTarget.MinimizeAll
-				? Color.LightGoldenrodYellow
-				: SystemColors.Window;
+				? MainFormTheme.CaptureHighlight
+				: MainFormTheme.Input;
 			this.CycleForwardRecordButton.BackColor = this._captureTarget == CycleBindingCaptureTarget.Forward
-				? Color.LightGoldenrodYellow
-				: SystemColors.Control;
+				? MainFormTheme.CaptureHighlight
+				: MainFormTheme.Button;
 			this.CycleBackwardRecordButton.BackColor = this._captureTarget == CycleBindingCaptureTarget.MinimizeAll
-				? Color.LightGoldenrodYellow
-				: SystemColors.Control;
+				? MainFormTheme.CaptureHighlight
+				: MainFormTheme.Button;
 		}
+
+		public Action ApplicationExitRequested { get; set; }
+		public Action FormActivated { get; set; }
+		public Action FormMinimized { get; set; }
+		public Action<ViewCloseRequest> FormCloseRequested { get; set; }
+		public Action ApplicationSettingsChanged { get; set; }
+		public Action ThumbnailsSizeChanged { get; set; }
+		public Action<string> ThumbnailStateChanged { get; set; }
+		public Action DocumentationLinkActivated { get; set; }
 
 		private void CycleForwardRecordButton_Click(object sender, EventArgs e)
 		{
@@ -560,7 +422,7 @@ namespace EveOPreview.View
 			}
 
 			this._captureTarget = target;
-			System.Windows.Forms.TextBox targetTextBox = target == CycleBindingCaptureTarget.Forward
+			TextBox targetTextBox = target == CycleBindingCaptureTarget.Forward
 				? this.CycleForwardBindingTextBox
 				: this.CycleBackwardBindingTextBox;
 			targetTextBox.Text = "Press a key, combo, or mouse button...";
@@ -607,48 +469,6 @@ namespace EveOPreview.View
 			this.RefreshCycleBindingCaptureState();
 		}
 
-		public Action ApplicationExitRequested { get; set; }
-
-		public Action FormActivated { get; set; }
-
-		public Action FormMinimized { get; set; }
-
-		public Action<ViewCloseRequest> FormCloseRequested { get; set; }
-
-		public Action ApplicationSettingsChanged { get; set; }
-
-		public Action ThumbnailsSizeChanged { get; set; }
-
-		public Action<string> ThumbnailStateChanged { get; set; }
-
-		public Action DocumentationLinkActivated { get; set; }
-
-		#region UI events
-		private void ContentTabControl_DrawItem(object sender, DrawItemEventArgs e)
-		{
-			TabControl control = (TabControl)sender;
-			TabPage page = control.TabPages[e.Index];
-			Rectangle bounds = control.GetTabRect(e.Index);
-
-			Graphics graphics = e.Graphics;
-
-			Brush textBrush = new SolidBrush(SystemColors.ActiveCaptionText);
-			Brush backgroundBrush = (e.State == DrawItemState.Selected)
-										? new SolidBrush(SystemColors.Control)
-										: new SolidBrush(SystemColors.ControlDark);
-			graphics.FillRectangle(backgroundBrush, e.Bounds);
-
-			// Use our own font
-			Font font = new Font("Arial", this.Font.Size * 1.5f, FontStyle.Bold, GraphicsUnit.Pixel);
-
-			// Draw string and center the text
-			StringFormat stringFlags = new StringFormat();
-			stringFlags.Alignment = StringAlignment.Center;
-			stringFlags.LineAlignment = StringAlignment.Center;
-
-			graphics.DrawString(page.Text, font, textBrush, bounds, stringFlags);
-		}
-
 		private void OptionChanged_Handler(object sender, EventArgs e)
 		{
 			if (this._suppressEvents)
@@ -659,57 +479,6 @@ namespace EveOPreview.View
 			this.ApplicationSettingsChanged?.Invoke();
 		}
 
-		private void ThumbnailSizeChanged_Handler(object sender, EventArgs e)
-		{
-			if (this._suppressEvents)
-			{
-				return;
-			}
-
-			// Perform some View work that is not properly done in the Control
-			this._suppressEvents = true;
-			Size thumbnailSize = this.ThumbnailSize;
-			thumbnailSize.Width = Math.Min(Math.Max(thumbnailSize.Width, this._minimumSize.Width), this._maximumSize.Width);
-			thumbnailSize.Height = Math.Min(Math.Max(thumbnailSize.Height, this._minimumSize.Height), this._maximumSize.Height);
-			this.ThumbnailSize = thumbnailSize;
-			this._suppressEvents = false;
-
-			this.ThumbnailsSizeChanged?.Invoke();
-		}
-
-		private void ActiveClientHighlightColorButton_Click(object sender, EventArgs e)
-		{
-			using (ColorDialog dialog = new ColorDialog())
-			{
-				dialog.Color = this.ActiveClientHighlightColor;
-
-				if (dialog.ShowDialog() != DialogResult.OK)
-				{
-					return;
-				}
-
-				this.ActiveClientHighlightColor = dialog.Color;
-			}
-
-			this.OptionChanged_Handler(sender, e);
-		}
-
-		private void OverlayLabelColorButton_Click(object sender, EventArgs e)
-		{
-			using (ColorDialog dialog = new ColorDialog())
-			{
-				dialog.Color = this.OverlayLabelColor;
-
-				if (dialog.ShowDialog() != DialogResult.OK)
-				{
-					return;
-				}
-				this.OverlayLabelColor = dialog.Color;
-			}
-
-			this.OptionChanged_Handler(sender, e);
-		}
-
 		private void ThumbnailsList_ItemCheck_Handler(object sender, ItemCheckEventArgs e)
 		{
 			if (!(this.ThumbnailsList.Items[e.Index] is IThumbnailDescription selectedItem))
@@ -718,7 +487,6 @@ namespace EveOPreview.View
 			}
 
 			selectedItem.IsDisabled = (e.NewValue == CheckState.Checked);
-
 			this.ThumbnailStateChanged?.Invoke(selectedItem.Title);
 		}
 
@@ -743,15 +511,12 @@ namespace EveOPreview.View
 			this._inputBindingCapture.Dispose();
 
 			ViewCloseRequest request = new ViewCloseRequest();
-
 			this.FormCloseRequested?.Invoke(request);
-
 			e.Cancel = !request.Allow;
 		}
 
 		private void RestoreMainForm_Handler(object sender, EventArgs e)
 		{
-			// This is form's GUI lifecycle event that is invariant to the Form data
 			base.Show();
 			this.WindowState = FormWindowState.Normal;
 			this.BringToFront();
@@ -760,90 +525,6 @@ namespace EveOPreview.View
 		private void ExitMenuItemClick_Handler(object sender, EventArgs e)
 		{
 			this.ApplicationExitRequested?.Invoke();
-		}
-		#endregion
-
-		private void InitZoomAnchorMap()
-		{
-			this._zoomAnchorMap[ViewZoomAnchor.NW] = this.ZoomAanchorNWRadioButton;
-			this._zoomAnchorMap[ViewZoomAnchor.N] = this.ZoomAanchorNRadioButton;
-			this._zoomAnchorMap[ViewZoomAnchor.NE] = this.ZoomAanchorNERadioButton;
-			this._zoomAnchorMap[ViewZoomAnchor.W] = this.ZoomAanchorWRadioButton;
-			this._zoomAnchorMap[ViewZoomAnchor.C] = this.ZoomAanchorCRadioButton;
-			this._zoomAnchorMap[ViewZoomAnchor.E] = this.ZoomAanchorERadioButton;
-			this._zoomAnchorMap[ViewZoomAnchor.SW] = this.ZoomAanchorSWRadioButton;
-			this._zoomAnchorMap[ViewZoomAnchor.S] = this.ZoomAanchorSRadioButton;
-			this._zoomAnchorMap[ViewZoomAnchor.SE] = this.ZoomAanchorSERadioButton;
-		}
-		private void InitOverlayLabelMap()
-		{
-			this._overlayLabelMap[ViewZoomAnchor.NW] = this.OverlayLabelNWRadioButton;
-			this._overlayLabelMap[ViewZoomAnchor.N] = this.OverlayLabelNRadioButton;
-			this._overlayLabelMap[ViewZoomAnchor.NE] = this.OverlayLabelNERadioButton;
-			this._overlayLabelMap[ViewZoomAnchor.W] = this.OverlayLabelWRadioButton;
-			this._overlayLabelMap[ViewZoomAnchor.C] = this.OverlayLabelCRadioButton;
-			this._overlayLabelMap[ViewZoomAnchor.E] = this.OverlayLabelERadioButton;
-			this._overlayLabelMap[ViewZoomAnchor.SW] = this.OverlayLabelSWRadioButton;
-			this._overlayLabelMap[ViewZoomAnchor.S] = this.OverlayLabelSRadioButton;
-			this._overlayLabelMap[ViewZoomAnchor.SE] = this.OverlayLabelSERadioButton;
-		}
-		private void InitCycleGroupIndicatorMap()
-		{
-			this._cycleGroupIndicatorMap[ViewZoomAnchor.NW] = this.CycleGroupIndicatorNWRadioButton;
-			this._cycleGroupIndicatorMap[ViewZoomAnchor.N] = this.CycleGroupIndicatorNRadioButton;
-			this._cycleGroupIndicatorMap[ViewZoomAnchor.NE] = this.CycleGroupIndicatorNERadioButton;
-			this._cycleGroupIndicatorMap[ViewZoomAnchor.W] = this.CycleGroupIndicatorWRadioButton;
-			this._cycleGroupIndicatorMap[ViewZoomAnchor.C] = this.CycleGroupIndicatorCRadioButton;
-			this._cycleGroupIndicatorMap[ViewZoomAnchor.E] = this.CycleGroupIndicatorERadioButton;
-			this._cycleGroupIndicatorMap[ViewZoomAnchor.SW] = this.CycleGroupIndicatorSWRadioButton;
-			this._cycleGroupIndicatorMap[ViewZoomAnchor.S] = this.CycleGroupIndicatorSRadioButton;
-			this._cycleGroupIndicatorMap[ViewZoomAnchor.SE] = this.CycleGroupIndicatorSERadioButton;
-		}
-
-		private void InitFormSize()
-		{
-			const int BUFFER_PIXEL_AMOUNT = 8;
-			const int MIN_CONTENT_HEIGHT = 360;
-
-			int targetHeight = MIN_CONTENT_HEIGHT + BUFFER_PIXEL_AMOUNT;
-
-			if (this.ClientSize.Height < targetHeight)
-			{
-				this.ClientSize = new Size(this.ClientSize.Width, targetHeight);
-			}
-		}
-
-		private void btnLabelFont_Click(object sender, EventArgs e)
-		{
-			FontDialog fontSelector = new FontDialog();
-			fontSelector.Font = OverlayLabelFont;
-			fontSelector.ShowColor = false;
-			fontSelector.ShowApply = false;
-			fontSelector.ShowHelp = false;
-			if (fontSelector.ShowDialog() != DialogResult.Cancel)
-			{
-				OverlayLabelFont = fontSelector.Font;
-				LabelOverlayLabelFont.Font = fontSelector.Font;
-				this.OptionChanged_Handler(sender, e);
-			}
-		}
-
-		private void PreventPreviewColorButton_Click(object sender, EventArgs e)
-		{
-			using (ColorDialog dialog = new ColorDialog())
-			{
-				dialog.Color = this.PreventPreviewColor;
-
-				if (dialog.ShowDialog() != DialogResult.OK)
-				{
-					return;
-				}
-
-				this.PreventPreviewColor = dialog.Color;
-			}
-
-			this.OptionChanged_Handler(sender, e);
-
 		}
 	}
 }

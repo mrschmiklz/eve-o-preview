@@ -34,5 +34,8 @@ namespace EveOPreview.Services.Interop
 
 		[DllImport("dwmapi.dll", PreserveSig = false)]
 		public static extern void DwmQueryThumbnailSourceSize(IntPtr hThumbnail, out Size size);
+
+		[DllImport("dwmapi.dll")]
+		public static extern int DwmSetWindowAttribute(IntPtr hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
 	}
 }
