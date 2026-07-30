@@ -8,6 +8,12 @@ Download builds from [GitHub Releases](https://github.com/mrschmiklz/eve-o-previ
 
 ## [Unreleased]
 
+## [8.0.5.5] - 2026-07-30
+
+### Fixed
+
+- EVE clients list crash: override `CheckedListBox.OnDrawItem` so the base class never calls the broken visual-styles checkbox renderer.
+
 ## [8.0.5.4] - 2026-07-30
 
 ### Fixed

@@ -130,8 +130,11 @@ namespace EveOPreview.View
 					trackBar.BackColor = Surface;
 					DisableVisualTheme(trackBar);
 					break;
+				case DarkCheckedListBox darkCheckedListBox:
+					SetupDarkCheckedListBox(darkCheckedListBox);
+					break;
 				case CheckedListBox checkedListBox:
-					SetupCheckedListBox(checkedListBox);
+					SetupDarkCheckedListBox(checkedListBox);
 					break;
 				case ListBox listBox:
 					listBox.BackColor = Input;
@@ -189,25 +192,13 @@ namespace EveOPreview.View
 			DisableVisualTheme(comboBox);
 		}
 
-		private static void SetupCheckedListBox(CheckedListBox checkedListBox)
-		{
-			checkedListBox.DrawMode = DrawMode.OwnerDrawFixed;
-			checkedListBox.ItemHeight = checkedListBox.Font.Height + 8;
-			checkedListBox.BackColor = Input;
-			checkedListBox.ForeColor = Foreground;
-			checkedListBox.BorderStyle = BorderStyle.FixedSingle;
-			checkedListBox.DrawItem += CheckedListBox_DrawItem;
-			DisableVisualTheme(checkedListBox);
-		}
-
-		private static void CheckedListBox_DrawItem(object sender, DrawItemEventArgs e)
+		public static void DrawCheckedListItem(CheckedListBox listBox, DrawItemEventArgs e)
 		{
 			if (e.Index < 0)
 			{
 				return;
 			}
 
-			CheckedListBox listBox = (CheckedListBox)sender;
 			bool isChecked = listBox.GetItemChecked(e.Index);
 			bool selected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
 			Color backColor = selected ? TabSelected : Input;
@@ -244,6 +235,24 @@ namespace EveOPreview.View
 				textBounds,
 				textColor,
 				TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+		}
+
+		private static void SetupDarkCheckedListBox(CheckedListBox checkedListBox)
+		{
+			if (checkedListBox is DarkCheckedListBox darkCheckedListBox)
+			{
+				darkCheckedListBox.ItemHeight = darkCheckedListBox.Font.Height + 8;
+			}
+			else
+			{
+				checkedListBox.DrawMode = DrawMode.OwnerDrawFixed;
+				checkedListBox.ItemHeight = checkedListBox.Font.Height + 8;
+			}
+
+			checkedListBox.BackColor = Input;
+			checkedListBox.ForeColor = Foreground;
+			checkedListBox.BorderStyle = BorderStyle.FixedSingle;
+			DisableVisualTheme(checkedListBox);
 		}
 
 		private static void SetupTabControl(TabControl tabControl)

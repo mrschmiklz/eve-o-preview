@@ -45,7 +45,7 @@ namespace EveOPreview.View
 			HideCaptionOnClientsCheckBox = new CheckBox();
 			ClientsGroupBox = new GroupBox();
 			ThumbnailsListLabel = new Label();
-			ThumbnailsList = new CheckedListBox();
+			ThumbnailsList = new DarkCheckedListBox();
 			VersionLabel = new Label();
 			DocumentationLink = new LinkLabel();
 			NotifyIcon = new NotifyIcon(components);
@@ -305,7 +305,7 @@ namespace EveOPreview.View
 		private CheckBox HideCaptionOnClientsCheckBox;
 		private GroupBox ClientsGroupBox;
 		private Label ThumbnailsListLabel;
-		private CheckedListBox ThumbnailsList;
+		private DarkCheckedListBox ThumbnailsList;
 		private Label VersionLabel;
 		private LinkLabel DocumentationLink;
 		private NotifyIcon NotifyIcon;
