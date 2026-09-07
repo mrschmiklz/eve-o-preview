@@ -10,7 +10,9 @@
 #   3. Performs a cross-compile build of the whole solution using
 #      EnableWindowsTargeting=true, which verifies the code compiles.
 #
-# What works on this Linux environment:  dotnet restore / dotnet build.
+# What works on this Linux environment:  dotnet restore / dotnet build, and
+#                                         cross-publishing a runnable Windows
+#                                         .exe asset (scripts/publish-windows.sh).
 # What still requires Windows:           running the app, the xUnit tests, and
 #                                         the --smoke-test. Those need the
 #                                         Microsoft.WindowsDesktop.App runtime,
