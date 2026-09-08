@@ -332,15 +332,16 @@ namespace EveOPreview.Presenters
 
 		private IThumbnailDescription CreateThumbnailDescription(string title)
 		{
-			bool isDisabled = this._configuration.IsThumbnailDisabled(title);
-			return new ThumbnailDescription(title, isDisabled);
+			bool isPriority = this._configuration.IsPriorityClient(title);
+			return new ThumbnailDescription(title, isPriority);
 		}
 
+		// The client-list checkbox marks a client as "priority" (do not auto-minimize).
 		private void UpdateThumbnailState(String title)
 		{
 			if (this._descriptionsCache.TryGetValue(title, out IThumbnailDescription description))
 			{
-				this._configuration.ToggleThumbnail(title, description.IsDisabled);
+				this._configuration.SetPriorityClient(title, description.IsPriority);
 			}
 
 			this._configurationStorage.Save();
