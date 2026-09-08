@@ -48,6 +48,15 @@ fi
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
 export DOTNET_NOLOGO=1
 
+if ! command -v dotnet >/dev/null 2>&1; then
+  echo "ERROR: 'dotnet' not found. Run .cursor/install.sh first (installs the .NET 8 SDK)." >&2
+  exit 1
+fi
+if ! command -v zip >/dev/null 2>&1; then
+  echo "ERROR: 'zip' not found. Run .cursor/install.sh first (installs prerequisites)." >&2
+  exit 1
+fi
+
 CSPROJ="src/Eve-O-Preview/Eve-O-Preview.csproj"
 
 # Default the version to the csproj ApplicationVersion.

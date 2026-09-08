@@ -27,6 +27,26 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DOTNET_DIR="$HOME/.dotnet"
 DOTNET_CHANNEL="8.0"
 
+# 0. Ensure system prerequisites (curl for the SDK download; zip/unzip for
+#    scripts/publish-windows.sh). Idempotent and best-effort.
+ensure_pkgs() {
+  local missing=()
+  local c
+  for c in curl zip unzip; do
+    command -v "$c" >/dev/null 2>&1 || missing+=("$c")
+  done
+  [ ${#missing[@]} -eq 0 ] && return 0
+  echo "==> Installing system packages: ${missing[*]}"
+  if command -v sudo >/dev/null 2>&1; then
+    sudo apt-get update -qq && sudo apt-get install -y -qq "${missing[@]}"
+  elif [ "$(id -u)" = "0" ]; then
+    apt-get update -qq && apt-get install -y -qq "${missing[@]}"
+  else
+    echo "WARNING: cannot install ${missing[*]} (no sudo/root)." >&2
+  fi
+}
+ensure_pkgs
+
 # 1. Install the .NET 8 SDK (idempotent).
 if [ ! -x "$DOTNET_DIR/dotnet" ]; then
   echo "==> Installing .NET SDK ${DOTNET_CHANNEL} into ${DOTNET_DIR}"
