@@ -8,8 +8,6 @@ using EveOPreview.View;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using System.Net;
-using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Threading;
@@ -380,7 +378,7 @@ namespace EveOPreview.Services
 			this._globalMouseInputHandler.Clear();
 		}
 
-		private async void ThumbnailUpdateTimerTick(object sender, EventArgs e)
+		private void ThumbnailUpdateTimerTick(object sender, EventArgs e)
 		{
 			if (this._isThumbnailUpdateInProgress)
 			{
@@ -390,7 +388,7 @@ namespace EveOPreview.Services
 			this._isThumbnailUpdateInProgress = true;
 			try
 			{
-				await this.UpdateThumbnailsList();
+				this.UpdateThumbnailsList();
 				this.RequestRefreshThumbnails();
 			}
 			finally
@@ -399,7 +397,7 @@ namespace EveOPreview.Services
 			}
 		}
 
-		private async Task UpdateThumbnailsList()
+		private void UpdateThumbnailsList()
 		{
 			this._processMonitor.GetUpdatedProcesses(out ICollection<IProcessInfo> addedProcesses, out ICollection<IProcessInfo> updatedProcesses, out ICollection<IProcessInfo> removedProcesses);
 
@@ -495,6 +493,7 @@ namespace EveOPreview.Services
 				view.ThumbnailFocused = null;
 				view.ThumbnailLostFocus = null;
 				view.ThumbnailActivated = null;
+				view.ThumbnailDeactivated = null;
 				view.ThumbnailToggleCycleGroup = null;
 
 				view.Close();
@@ -928,7 +927,7 @@ namespace EveOPreview.Services
 		}
 
 
-		private async void ThumbnailViewResized(IntPtr id)
+		private void ThumbnailViewResized(IntPtr id)
 		{
 			if (this._ignoreViewEvents)
 			{
@@ -1108,15 +1107,12 @@ namespace EveOPreview.Services
 			return false;
 		}
 		private void ApplyCaptionBar(IThumbnailView view)
-
 		{
 			if (view.Title == ThumbnailManager.DEFAULT_CLIENT_TITLE) return;
-			IntPtr handle = view.Id;
 
 			bool enable = this._configuration.HideCaptionOnClients;
-			bool changed = false;
-			changed = changed | SetWindowStyle(view, InteropConstants.WS_CAPTION, enable);
-			changed = changed | SetWindowStyle(view, InteropConstants.WS_THICKFRAME, enable);
+			SetWindowStyle(view, InteropConstants.WS_CAPTION, enable);
+			SetWindowStyle(view, InteropConstants.WS_THICKFRAME, enable);
 		}
 		private void ApplyClientLayout(IThumbnailView view)
 		{
