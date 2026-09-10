@@ -96,14 +96,7 @@ namespace EveOPreview.View
 					break;
 				case Label label:
 					label.ForeColor = label.Enabled ? Foreground : DisabledForeground;
-					if (label.BackColor != Color.Transparent)
-					{
-						label.BackColor = Surface;
-					}
-					else
-					{
-						label.BackColor = Color.Transparent;
-					}
+					label.BackColor = Color.Transparent;
 					break;
 				case CheckBox checkBox:
 					SetupCheckBox(checkBox);
@@ -226,7 +219,7 @@ namespace EveOPreview.View
 				}
 			}
 
-			string text = listBox.Items[e.Index]?.ToString() ?? string.Empty;
+			string text = GetCheckedListItemText(listBox, e.Index);
 			Rectangle textBounds = new Rectangle(box.Right + 6, e.Bounds.Top, e.Bounds.Width - box.Right - 10, e.Bounds.Height);
 			TextRenderer.DrawText(
 				e.Graphics,
@@ -326,11 +319,32 @@ namespace EveOPreview.View
 			}
 		}
 
+		internal static string GetCheckedListItemText(CheckedListBox listBox, int index)
+		{
+			if (listBox == null || index < 0 || index >= listBox.Items.Count)
+			{
+				return string.Empty;
+			}
+
+			object item = listBox.Items[index];
+			if (item is IThumbnailDescription description && !string.IsNullOrEmpty(description.Title))
+			{
+				return description.Title;
+			}
+
+			string text = listBox.GetItemText(item);
+			if (!string.IsNullOrEmpty(text) && text != item?.GetType().FullName && text != item?.GetType().Name)
+			{
+				return text;
+			}
+
+			return item?.ToString() ?? string.Empty;
+		}
+
 		private static void SetupGroupBox(GroupBox groupBox)
 		{
 			groupBox.BackColor = Surface;
 			groupBox.ForeColor = Foreground;
-			groupBox.Padding = new Padding(10, 24, 10, 10);
 			groupBox.Paint += GroupBox_Paint;
 			DisableVisualTheme(groupBox);
 		}
