@@ -1,0 +1,42 @@
+name: Test Build (Windows exe artifact)
+
+# Builds a self-contained Windows exe on every push to a cursor/** branch and
+# uploads it as a downloadable workflow artifact (Actions run -> Artifacts), so
+# work-in-progress builds can be downloaded and tested without a GitHub Release.
+on:
+  push:
+    branches:
+      - 'cursor/**'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build Windows exe
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish self-contained exe
+        shell: pwsh
+        run: |
+          dotnet publish src\Eve-O-Preview\Eve-O-Preview.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:AssemblyVersion=8.0.5.${{ github.run_number }} `
+            -p:FileVersion=8.0.5.${{ github.run_number }} `
+            -o publish
+
+      - name: Upload exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EVE-O-Preview-windows-8.0.5.${{ github.run_number }}
+          path: publish/EVE-O-Preview.exe
+          if-no-files-found: error
