@@ -122,6 +122,7 @@ CCP Grimmi wrote:
 | Option | Description |
 | --- | --- |
 | Show thumbnail previews | Show live thumbnail windows for each EVE client. Enabled by default in new configs |
+| Keep live previews of minimized clients | Windows cannot thumbnail an iconic window. When this is on, inactive clients are cloaked (off the desktop but still composed) so live previews keep working |
 | Hide preview of active EVE client | Determines whether the thumbnail corresponding to the active EVE client is not displayed |
 | Previews always on top | Determines whether EVE client thumbnails should stay on top of all other windows |
 | Hide previews when EVE client is not active | Determines whether all thumbnails should be visible only when an EVE client is active |
@@ -131,7 +132,7 @@ CCP Grimmi wrote:
 | Width / Height | Thumbnail size |
 | Show all previews | Record a hotkey (default **Pause**) that tiles every client as a live grid on the second monitor |
 
-Live DWM thumbnails need the EVE window visible. If **Minimize inactive EVE clients** is on, use **Show all previews** for a live grid, or turn minimize-inactive off.
+Live DWM thumbnails cannot come from an iconic (minimized) window. With **Keep live previews of minimized clients** enabled, inactive clients are cloaked instead of minimized so previews stay live while the full EVE windows stay off the desktop. Uncheck that option if you want real minimize (blank thumbnails, lower GPU).
 
 #### **Thumbnail** Tab (advanced / config file)
 | Option | Description |

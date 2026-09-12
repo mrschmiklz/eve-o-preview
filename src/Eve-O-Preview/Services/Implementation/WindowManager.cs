@@ -66,6 +66,7 @@ namespace EveOPreview.Services.Implementation
 				return false;
 			}
 
+			this.ShowWindowFromLivePreview(handle);
 			this.RestoreWindowIfMinimized(handle, animation);
 			this.ForceForegroundWindow(handle);
 
@@ -172,9 +173,9 @@ namespace EveOPreview.Services.Implementation
 			}
 		}
 
-		// Restore a window without activating/focusing it. Used by the preview
-		// overview so minimized clients start rendering again (DWM cannot produce a
-		// live thumbnail of a minimized window) without stealing focus.
+		// Restore a window without activating/focusing it. Used so minimized
+		// clients start rendering again (DWM cannot produce a live thumbnail of
+		// an iconic window) without stealing focus.
 		public void RestoreWindow(IntPtr handle)
 		{
 			if (handle == IntPtr.Zero || !User32NativeMethods.IsIconic(handle))
@@ -182,7 +183,39 @@ namespace EveOPreview.Services.Implementation
 				return;
 			}
 
-			User32NativeMethods.ShowWindowAsync(handle, WINDOWPLACEMENT.SW_SHOWNOACTIVATE);
+			this.TurnOffAnimation();
+			User32NativeMethods.ShowWindow(handle, InteropConstants.SW_SHOWNOACTIVATE);
+			this.RestoreAnimation();
+		}
+
+		// Hide a client from the desktop while keeping it composed so DWM can
+		// still feed a live thumbnail. Iconic (minimized) windows are restored
+		// without activation, then cloaked.
+		public void HideWindowForLivePreview(IntPtr handle)
+		{
+			if (handle == IntPtr.Zero)
+			{
+				return;
+			}
+
+			this.RestoreWindow(handle);
+			this.SetWindowCloaked(handle, true);
+		}
+
+		public void ShowWindowFromLivePreview(IntPtr handle)
+		{
+			if (handle == IntPtr.Zero)
+			{
+				return;
+			}
+
+			this.SetWindowCloaked(handle, false);
+		}
+
+		private void SetWindowCloaked(IntPtr handle, bool cloaked)
+		{
+			int value = cloaked ? 1 : 0;
+			DwmNativeMethods.DwmSetWindowAttribute(handle, DwmNativeMethods.DWMWA_CLOAK, ref value, sizeof(int));
 		}
 
 		public void MoveWindow(IntPtr handle, int left, int top, int width, int height)

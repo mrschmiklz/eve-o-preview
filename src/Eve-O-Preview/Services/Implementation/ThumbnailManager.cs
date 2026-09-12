@@ -389,7 +389,48 @@ namespace EveOPreview.Services
 					continue;
 				}
 
-				this._windowManager.MinimizeWindow(entry.Value.Id, this._configuration.WindowsAnimationStyle, false);
+				this.HideInactiveClient(entry.Value.Id);
+			}
+		}
+
+		private bool ShouldKeepMinimizedClientsComposed()
+		{
+			return this._configuration.PreviewMinimizedClients
+				&& (this._configuration.ShowThumbnailPreviews || this._previewOverviewActive);
+		}
+
+		private void HideInactiveClient(IntPtr handle)
+		{
+			if (handle == IntPtr.Zero)
+			{
+				return;
+			}
+
+			if (this.ShouldKeepMinimizedClientsComposed())
+			{
+				this._windowManager.HideWindowForLivePreview(handle);
+				return;
+			}
+
+			this._windowManager.ShowWindowFromLivePreview(handle);
+			this._windowManager.MinimizeWindow(handle, this._configuration.WindowsAnimationStyle, false);
+		}
+
+		private void EnsureMinimizedClientIsComposed(IThumbnailView view)
+		{
+			if (view == null || view.Id == IntPtr.Zero || view.Id == this._activeClient.Handle)
+			{
+				return;
+			}
+
+			if (!this.ShouldKeepMinimizedClientsComposed())
+			{
+				return;
+			}
+
+			if (this._windowManager.IsWindowMinimized(view.Id))
+			{
+				this._windowManager.HideWindowForLivePreview(view.Id);
 			}
 		}
 
@@ -466,7 +507,24 @@ namespace EveOPreview.Services
 					continue;
 				}
 
-				this._windowManager.RestoreWindow(entry.Value.Id);
+				bool keepVisible = entry.Key == this._activeClient.Handle
+					|| this._configuration.IsPriorityClient(entry.Value.Title);
+
+				if (keepVisible)
+				{
+					this._windowManager.ShowWindowFromLivePreview(entry.Value.Id);
+					this._windowManager.RestoreWindow(entry.Value.Id);
+					continue;
+				}
+
+				if (this.ShouldKeepMinimizedClientsComposed())
+				{
+					this._windowManager.HideWindowForLivePreview(entry.Value.Id);
+				}
+				else
+				{
+					this._windowManager.RestoreWindow(entry.Value.Id);
+				}
 			}
 		}
 
@@ -488,10 +546,11 @@ namespace EveOPreview.Services
 				if (entry.Key == this._activeClient.Handle
 					|| this._configuration.IsPriorityClient(entry.Value.Title))
 				{
+					this._windowManager.ShowWindowFromLivePreview(entry.Value.Id);
 					continue;
 				}
 
-				this._windowManager.MinimizeWindow(entry.Value.Id, this._configuration.WindowsAnimationStyle, false);
+				this.HideInactiveClient(entry.Value.Id);
 			}
 		}
 
@@ -515,6 +574,7 @@ namespace EveOPreview.Services
 			for (int index = 0; index < views.Count; index++)
 			{
 				IThumbnailView view = views[index].Value;
+				this.EnsureMinimizedClientIsComposed(view);
 				Rectangle cell = cells[index];
 
 				Size cellSize = this.FitPreviewToCell(view.Id, cell.Width, cell.Height);
@@ -895,6 +955,7 @@ namespace EveOPreview.Services
 			foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews)
 			{
 				IThumbnailView view = entry.Value;
+				this.EnsureMinimizedClientIsComposed(view);
 				// update ZoomAnchor regardless
 				view.ClientZoomAnchor = this._configuration.GetZoomAnchor(view.Title, this._configuration.ThumbnailZoomAnchor);
 
@@ -1050,7 +1111,7 @@ namespace EveOPreview.Services
 				&& this._configuration.MinimizeInactiveClients
 				&& !this._configuration.IsPriorityClient(this._activeClient.Title))
 			{
-				this._windowManager.MinimizeWindow(this._activeClient.Handle, this._configuration.WindowsAnimationStyle, false);
+				this.HideInactiveClient(this._activeClient.Handle);
 				this._windowManager.ActivateWindow(foregroundClientHandle, this._configuration.WindowsAnimationStyle);
 			}
 
@@ -1153,7 +1214,7 @@ namespace EveOPreview.Services
 					return;
 				}
 
-				this._windowManager.MinimizeWindow(view.Id, this._configuration.WindowsAnimationStyle, true);
+				this.HideInactiveClient(view.Id);
 				this.RequestRefreshThumbnails();
 			}
 		}

@@ -1,5 +1,5 @@
 {
-  "ConfigVersion": 3,
+  "ConfigVersion": 4,
   "CycleGroup1ForwardHotkeys": [
     "F14",
     "MouseXButton1"
@@ -16,6 +16,7 @@
   "EnableClientLayoutTracking": false,
   "HideActiveClientThumbnail": true,
   "ShowThumbnailPreviews": true,
+  "PreviewMinimizedClients": true,
   "HideLoginClientThumbnail": false,
   "MinimizeInactiveClients": true,
   "HideCaptionOnClients": false,

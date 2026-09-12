@@ -37,5 +37,11 @@ namespace EveOPreview.Services.Interop
 
 		[DllImport("dwmapi.dll")]
 		public static extern int DwmSetWindowAttribute(IntPtr hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
+
+		[DllImport("dwmapi.dll")]
+		public static extern int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out int pvAttribute, int cbAttribute);
+
+		public const int DWMWA_CLOAK = 13;
+		public const int DWMWA_CLOAKED = 14;
 	}
 }

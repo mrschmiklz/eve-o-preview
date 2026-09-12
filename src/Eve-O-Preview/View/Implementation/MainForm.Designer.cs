@@ -51,6 +51,7 @@ namespace EveOPreview.View
 			ThumbnailsListLabel = new Label();
 			ThumbnailsList = new DarkCheckedListBox();
 			ShowThumbnailPreviewsCheckBox = new CheckBox();
+			PreviewMinimizedClientsCheckBox = new CheckBox();
 			HideActiveClientThumbnailCheckBox = new CheckBox();
 			ShowThumbnailsAlwaysOnTopCheckBox = new CheckBox();
 			HideThumbnailsOnLostFocusCheckBox = new CheckBox();
@@ -294,6 +295,7 @@ namespace EveOPreview.View
 			PreviewsPanel.Controls.Add(HideThumbnailsOnLostFocusCheckBox);
 			PreviewsPanel.Controls.Add(ShowThumbnailsAlwaysOnTopCheckBox);
 			PreviewsPanel.Controls.Add(HideActiveClientThumbnailCheckBox);
+			PreviewsPanel.Controls.Add(PreviewMinimizedClientsCheckBox);
 			PreviewsPanel.Controls.Add(ShowThumbnailPreviewsCheckBox);
 			PreviewsPanel.Dock = DockStyle.Fill;
 			PreviewsPanel.Location = new Point(0, 0);
@@ -310,9 +312,19 @@ namespace EveOPreview.View
 			ShowThumbnailPreviewsCheckBox.UseVisualStyleBackColor = true;
 			ShowThumbnailPreviewsCheckBox.CheckedChanged += ShowThumbnailPreviewsChanged_Handler;
 
+			PreviewMinimizedClientsCheckBox.AutoSize = true;
+			PreviewMinimizedClientsCheckBox.Checked = true;
+			PreviewMinimizedClientsCheckBox.Location = new Point(12, 40);
+			PreviewMinimizedClientsCheckBox.Name = "PreviewMinimizedClientsCheckBox";
+			PreviewMinimizedClientsCheckBox.Size = new Size(280, 19);
+			PreviewMinimizedClientsCheckBox.TabIndex = 1;
+			PreviewMinimizedClientsCheckBox.Text = "Keep live previews of minimized clients";
+			PreviewMinimizedClientsCheckBox.UseVisualStyleBackColor = true;
+			PreviewMinimizedClientsCheckBox.CheckedChanged += OptionChanged_Handler;
+
 			HideActiveClientThumbnailCheckBox.AutoSize = true;
 			HideActiveClientThumbnailCheckBox.Checked = true;
-			HideActiveClientThumbnailCheckBox.Location = new Point(12, 40);
+			HideActiveClientThumbnailCheckBox.Location = new Point(12, 66);
 			HideActiveClientThumbnailCheckBox.Name = "HideActiveClientThumbnailCheckBox";
 			HideActiveClientThumbnailCheckBox.Size = new Size(188, 19);
 			HideActiveClientThumbnailCheckBox.TabIndex = 1;
@@ -322,7 +334,7 @@ namespace EveOPreview.View
 
 			ShowThumbnailsAlwaysOnTopCheckBox.AutoSize = true;
 			ShowThumbnailsAlwaysOnTopCheckBox.Checked = true;
-			ShowThumbnailsAlwaysOnTopCheckBox.Location = new Point(12, 66);
+			ShowThumbnailsAlwaysOnTopCheckBox.Location = new Point(12, 92);
 			ShowThumbnailsAlwaysOnTopCheckBox.Name = "ShowThumbnailsAlwaysOnTopCheckBox";
 			ShowThumbnailsAlwaysOnTopCheckBox.Size = new Size(141, 19);
 			ShowThumbnailsAlwaysOnTopCheckBox.TabIndex = 2;
@@ -331,7 +343,7 @@ namespace EveOPreview.View
 			ShowThumbnailsAlwaysOnTopCheckBox.CheckedChanged += OptionChanged_Handler;
 
 			HideThumbnailsOnLostFocusCheckBox.AutoSize = true;
-			HideThumbnailsOnLostFocusCheckBox.Location = new Point(12, 92);
+			HideThumbnailsOnLostFocusCheckBox.Location = new Point(12, 118);
 			HideThumbnailsOnLostFocusCheckBox.Name = "HideThumbnailsOnLostFocusCheckBox";
 			HideThumbnailsOnLostFocusCheckBox.Size = new Size(236, 19);
 			HideThumbnailsOnLostFocusCheckBox.TabIndex = 3;
@@ -341,7 +353,7 @@ namespace EveOPreview.View
 
 			ShowThumbnailOverlaysCheckBox.AutoSize = true;
 			ShowThumbnailOverlaysCheckBox.Checked = true;
-			ShowThumbnailOverlaysCheckBox.Location = new Point(12, 118);
+			ShowThumbnailOverlaysCheckBox.Location = new Point(12, 144);
 			ShowThumbnailOverlaysCheckBox.Name = "ShowThumbnailOverlaysCheckBox";
 			ShowThumbnailOverlaysCheckBox.Size = new Size(176, 19);
 			ShowThumbnailOverlaysCheckBox.TabIndex = 4;
@@ -350,7 +362,7 @@ namespace EveOPreview.View
 			ShowThumbnailOverlaysCheckBox.CheckedChanged += OptionChanged_Handler;
 
 			LockThumbnailLocationCheckBox.AutoSize = true;
-			LockThumbnailLocationCheckBox.Location = new Point(12, 144);
+			LockThumbnailLocationCheckBox.Location = new Point(12, 170);
 			LockThumbnailLocationCheckBox.Name = "LockThumbnailLocationCheckBox";
 			LockThumbnailLocationCheckBox.Size = new Size(151, 19);
 			LockThumbnailLocationCheckBox.TabIndex = 5;
@@ -359,14 +371,14 @@ namespace EveOPreview.View
 			LockThumbnailLocationCheckBox.CheckedChanged += OptionChanged_Handler;
 
 			ThumbnailOpacityLabel.AutoSize = true;
-			ThumbnailOpacityLabel.Location = new Point(12, 178);
+			ThumbnailOpacityLabel.Location = new Point(12, 204);
 			ThumbnailOpacityLabel.Name = "ThumbnailOpacityLabel";
 			ThumbnailOpacityLabel.Size = new Size(48, 15);
 			ThumbnailOpacityLabel.Text = "Opacity";
 
 			ThumbnailOpacityTrackBar.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 			ThumbnailOpacityTrackBar.AutoSize = false;
-			ThumbnailOpacityTrackBar.Location = new Point(80, 170);
+			ThumbnailOpacityTrackBar.Location = new Point(80, 196);
 			ThumbnailOpacityTrackBar.Maximum = 100;
 			ThumbnailOpacityTrackBar.Minimum = 20;
 			ThumbnailOpacityTrackBar.Name = "ThumbnailOpacityTrackBar";
@@ -377,12 +389,12 @@ namespace EveOPreview.View
 			ThumbnailOpacityTrackBar.ValueChanged += OptionChanged_Handler;
 
 			ThumbnailWidthLabel.AutoSize = true;
-			ThumbnailWidthLabel.Location = new Point(12, 214);
+			ThumbnailWidthLabel.Location = new Point(12, 240);
 			ThumbnailWidthLabel.Name = "ThumbnailWidthLabel";
 			ThumbnailWidthLabel.Size = new Size(39, 15);
 			ThumbnailWidthLabel.Text = "Width";
 
-			ThumbnailsWidthNumericEdit.Location = new Point(80, 210);
+			ThumbnailsWidthNumericEdit.Location = new Point(80, 236);
 			ThumbnailsWidthNumericEdit.Maximum = new decimal(new int[] { 960, 0, 0, 0 });
 			ThumbnailsWidthNumericEdit.Minimum = new decimal(new int[] { 100, 0, 0, 0 });
 			ThumbnailsWidthNumericEdit.Name = "ThumbnailsWidthNumericEdit";
@@ -392,12 +404,12 @@ namespace EveOPreview.View
 			ThumbnailsWidthNumericEdit.ValueChanged += ThumbnailSizeChanged_Handler;
 
 			ThumbnailHeightLabel.AutoSize = true;
-			ThumbnailHeightLabel.Location = new Point(168, 214);
+			ThumbnailHeightLabel.Location = new Point(168, 240);
 			ThumbnailHeightLabel.Name = "ThumbnailHeightLabel";
 			ThumbnailHeightLabel.Size = new Size(43, 15);
 			ThumbnailHeightLabel.Text = "Height";
 
-			ThumbnailsHeightNumericEdit.Location = new Point(220, 210);
+			ThumbnailsHeightNumericEdit.Location = new Point(220, 236);
 			ThumbnailsHeightNumericEdit.Maximum = new decimal(new int[] { 540, 0, 0, 0 });
 			ThumbnailsHeightNumericEdit.Minimum = new decimal(new int[] { 80, 0, 0, 0 });
 			ThumbnailsHeightNumericEdit.Name = "ThumbnailsHeightNumericEdit";
@@ -407,18 +419,18 @@ namespace EveOPreview.View
 			ThumbnailsHeightNumericEdit.ValueChanged += ThumbnailSizeChanged_Handler;
 
 			PreviewHintLabel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-			PreviewHintLabel.Location = new Point(12, 244);
+			PreviewHintLabel.Location = new Point(12, 270);
 			PreviewHintLabel.MaximumSize = new Size(400, 0);
 			PreviewHintLabel.Name = "PreviewHintLabel";
 			PreviewHintLabel.Size = new Size(396, 32);
-			PreviewHintLabel.Text = "Live DWM thumbnails need the EVE window visible. If inactive clients are minimized, use Show all previews for a live grid.";
+			PreviewHintLabel.Text = "Windows cannot thumbnail an iconic window. This restores minimized clients off the desktop (DWM cloak) so live previews still work.";
 
 			OverviewBindingsGroupBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 			OverviewBindingsGroupBox.Controls.Add(ShowAllPreviewsBindingTextBox);
 			OverviewBindingsGroupBox.Controls.Add(ShowAllPreviewsRecordButton);
 			OverviewBindingsGroupBox.Controls.Add(ShowAllPreviewsBindingLabel);
 			OverviewBindingsGroupBox.Controls.Add(OverviewBindingHintLabel);
-			OverviewBindingsGroupBox.Location = new Point(12, 284);
+			OverviewBindingsGroupBox.Location = new Point(12, 310);
 			OverviewBindingsGroupBox.Name = "OverviewBindingsGroupBox";
 			OverviewBindingsGroupBox.Size = new Size(392, 118);
 			OverviewBindingsGroupBox.TabIndex = 9;
@@ -455,7 +467,7 @@ namespace EveOPreview.View
 			FooterPanel.Controls.Add(DocumentationLink);
 			FooterPanel.Controls.Add(VersionLabel);
 			FooterPanel.Dock = DockStyle.Bottom;
-			FooterPanel.Location = new Point(0, 456);
+			FooterPanel.Location = new Point(0, 500);
 			FooterPanel.Name = "FooterPanel";
 			FooterPanel.Padding = new Padding(12, 6, 12, 10);
 			FooterPanel.Size = new Size(432, 56);
@@ -489,13 +501,13 @@ namespace EveOPreview.View
 			AutoScaleDimensions = new SizeF(7F, 15F);
 			AutoScaleMode = AutoScaleMode.Font;
 			BackColor = Color.FromArgb(45, 45, 48);
-			ClientSize = new Size(432, 512);
+			ClientSize = new Size(432, 556);
 			Controls.Add(ContentTabControl);
 			Controls.Add(FooterPanel);
 			FormBorderStyle = FormBorderStyle.FixedSingle;
 			Icon = (Icon)resources.GetObject("$this.Icon");
 			MaximizeBox = false;
-			MinimumSize = new Size(432, 512);
+			MinimumSize = new Size(432, 556);
 			Name = "MainForm";
 			Text = "EVE-O-Preview";
 			TopMost = true;
@@ -548,6 +560,7 @@ namespace EveOPreview.View
 		private Label ThumbnailsListLabel;
 		private DarkCheckedListBox ThumbnailsList;
 		private CheckBox ShowThumbnailPreviewsCheckBox;
+		private CheckBox PreviewMinimizedClientsCheckBox;
 		private CheckBox HideActiveClientThumbnailCheckBox;
 		private CheckBox ShowThumbnailsAlwaysOnTopCheckBox;
 		private CheckBox HideThumbnailsOnLostFocusCheckBox;

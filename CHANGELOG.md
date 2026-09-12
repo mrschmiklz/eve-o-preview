@@ -15,6 +15,7 @@ Download builds from [GitHub Releases](https://github.com/mrschmiklz/eve-o-previ
 ### Added
 
 - **Previews** tab: show thumbnail previews, hide active-client preview, always-on-top, overlay, lock location, size, opacity, and a recordable **Show all previews** hotkey (default Pause).
+- **Keep live previews of minimized clients**: Windows cannot DWM-thumbnail an iconic window, so inactive clients are cloaked (hidden but still composed) instead of minimized.
 
 ## [8.0.5.5] - 2026-07-30
 

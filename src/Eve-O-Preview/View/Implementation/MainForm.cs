@@ -145,6 +145,12 @@ namespace EveOPreview.View
 			set => this.ShowThumbnailPreviewsCheckBox.Checked = value;
 		}
 
+		public bool PreviewMinimizedClients
+		{
+			get => this.PreviewMinimizedClientsCheckBox.Checked;
+			set => this.PreviewMinimizedClientsCheckBox.Checked = value;
+		}
+
 		public bool MinimizeInactiveClients
 		{
 			get => this.MinimizeInactiveClientsCheckBox.Checked;
@@ -307,6 +313,7 @@ namespace EveOPreview.View
 			bool previewControlsEnabled = this.ShowThumbnailPreviews;
 
 			this.HideActiveClientThumbnailCheckBox.Enabled = previewControlsEnabled;
+			this.PreviewMinimizedClientsCheckBox.Enabled = previewControlsEnabled;
 			this.ShowThumbnailsAlwaysOnTopCheckBox.Enabled = previewControlsEnabled;
 			this.HideThumbnailsOnLostFocusCheckBox.Enabled = previewControlsEnabled;
 			this.ShowThumbnailOverlaysCheckBox.Enabled = previewControlsEnabled;

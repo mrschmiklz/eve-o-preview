@@ -114,6 +114,7 @@ namespace EveOPreview.Presenters
 			this.View.EnableClientLayoutTracking = this._configuration.EnableClientLayoutTracking;
 			this.View.HideActiveClientThumbnail = this._configuration.HideActiveClientThumbnail;
 			this.View.ShowThumbnailPreviews = this._configuration.ShowThumbnailPreviews;
+			this.View.PreviewMinimizedClients = this._configuration.PreviewMinimizedClients;
 			this.View.MinimizeInactiveClients = this._configuration.MinimizeInactiveClients;
 			this.View.CycleForwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys);
 			this.View.MinimizeAllBinding = GetPrimaryCycleBinding(this._configuration.MinimizeAllClientsHotkeys);
@@ -164,8 +165,10 @@ namespace EveOPreview.Presenters
 			this._configuration.EnableClientLayoutTracking = this.View.EnableClientLayoutTracking;
 			this._configuration.HideActiveClientThumbnail = this.View.HideActiveClientThumbnail;
 			bool showThumbnailPreviewsChanged = this._configuration.ShowThumbnailPreviews != this.View.ShowThumbnailPreviews;
+			bool previewMinimizedClientsChanged = this._configuration.PreviewMinimizedClients != this.View.PreviewMinimizedClients;
 			this._configuration.ShowThumbnailPreviews = this.View.ShowThumbnailPreviews;
-			if (showThumbnailPreviewsChanged)
+			this._configuration.PreviewMinimizedClients = this.View.PreviewMinimizedClients;
+			if (showThumbnailPreviewsChanged || previewMinimizedClientsChanged)
 			{
 				this._thumbnailManager.UpdateThumbnailVisibility();
 			}

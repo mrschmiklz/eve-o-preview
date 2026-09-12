@@ -16,7 +16,7 @@ namespace EveOPreview.Configuration.Implementation
 
 		public ThumbnailConfiguration()
 		{
-			this.ConfigVersion = 3;
+			this.ConfigVersion = 4;
 
 			this.CycleGroup1ForwardHotkeys = new List<string> { "F14", "MouseXButton1" };
 
@@ -46,6 +46,7 @@ namespace EveOPreview.Configuration.Implementation
 			this.EnableClientLayoutTracking = false;
 			this.HideActiveClientThumbnail = true;
 			this.ShowThumbnailPreviews = true;
+			this.PreviewMinimizedClients = true;
 			this.HideLoginClientThumbnail = false;
 			this.MinimizeInactiveClients = true;
 			this.HideCaptionOnClients = false;
@@ -134,6 +135,7 @@ namespace EveOPreview.Configuration.Implementation
 
 		public bool HideActiveClientThumbnail { get; set; }
 		public bool ShowThumbnailPreviews { get; set; }
+		public bool PreviewMinimizedClients { get; set; }
 		public bool HideLoginClientThumbnail { get; set; }
 		public bool MinimizeInactiveClients { get; set; }
 		public bool HideCaptionOnClients { get; set; }
@@ -371,6 +373,12 @@ namespace EveOPreview.Configuration.Implementation
 				this.HideActiveClientThumbnail = true;
 				this.EnableActiveClientHighlight = true;
 				this.ConfigVersion = 3;
+			}
+
+			if (this.ConfigVersion < 4)
+			{
+				this.PreviewMinimizedClients = true;
+				this.ConfigVersion = 4;
 			}
 
 			this.EnsureDefaultMouseActionBindings();
