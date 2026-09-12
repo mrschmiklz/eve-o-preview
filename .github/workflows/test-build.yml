@@ -30,13 +30,13 @@ jobs:
             -c Release `
             -r win-x64 `
             --self-contained true `
-            -p:AssemblyVersion=8.0.5.${{ github.run_number }} `
-            -p:FileVersion=8.0.5.${{ github.run_number }} `
+            -p:AssemblyVersion=8.9.0.${{ github.run_number }} `
+            -p:FileVersion=8.9.0.${{ github.run_number }} `
             -o publish
 
       - name: Upload exe artifact
         uses: actions/upload-artifact@v4
         with:
-          name: EVE-O-Preview-windows-8.0.5.${{ github.run_number }}
+          name: EVE-O-Preview-overview-test-8.9.0.${{ github.run_number }}
           path: publish/EVE-O-Preview.exe
           if-no-files-found: error
