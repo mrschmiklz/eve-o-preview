@@ -7,6 +7,9 @@
   "MinimizeAllClientsHotkeys": [
     "MouseXButton2"
   ],
+  "ShowAllPreviewsHotkeys": [
+    "Pause"
+  ],
   "MinimizeToTray": false,
   "MinimizeInactiveClients": true,
   "HideActiveClientThumbnail": true,

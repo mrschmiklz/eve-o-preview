@@ -56,6 +56,9 @@
   "MinimizeAllClientsHotkeys": [
     "MouseXButton2"
   ],
+  "ShowAllPreviewsHotkeys": [
+    "Pause"
+  ],
   "DisableThumbnail": {},
   "PriorityClients": [],
   "ExecutablesToPreview": [

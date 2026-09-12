@@ -253,6 +253,30 @@ You can still add extra keyboard bindings in `EVE-O-Preview.json`:
 
 **Note**: It is recommended to use unusual keys (e.g. F14) bound from a gaming mouse or keyboard, rather than keys EVE uses in-game.
 
+### Show All Previews (overview grid) with Hotkey Setup
+
+**Show all previews** is a toggle: press it once and every running EVE client is
+shown as an equally-sized live preview, evenly tiled in a grid across your
+**second monitor** (it falls back to the primary monitor on single-display
+setups). Click any preview to jump to that client; the overview then closes.
+Press the toggle again to close it without switching.
+
+Because Windows/DWM cannot render a preview of a *minimized* window, toggling the
+overview on briefly restores minimized clients so they render. Closing the overview
+(or selecting a client) returns them to the normal cycle state — inactive,
+non-priority clients are minimized again, while **priority clients stay open**.
+
+The default binding is the **Pause** key. You can change it in
+`EVE-O-Preview.json` (the on-screen record button for this action is coming in a
+later build):
+
+    "ShowAllPreviewsHotkeys": [
+      "Pause"
+    ]
+
+Any single key, `modifier+key` combo, or supported mouse button works, e.g.
+`"F13"`, `"Control+Alt+P"`, or a spare `"MouseXButton1"`-style binding.
+
 ### Minimize All Clients with Hotkey Setup
 
 **Minimize all clients** can be set on the **General** tab under **Client action bindings** (default: **Mouse 5**). You can also configure it in the configuration file as shown above.

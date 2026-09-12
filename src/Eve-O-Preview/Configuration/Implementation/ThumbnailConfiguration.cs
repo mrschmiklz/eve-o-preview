@@ -31,6 +31,7 @@ namespace EveOPreview.Configuration.Implementation
 			this.ClientLayout = new Dictionary<string, ClientLayout>();
 			this.ClientHotkey = new Dictionary<string, string>();
 			this.MinimizeAllClientsHotkeys = new List<string> { "MouseXButton2" };
+			this.ShowAllPreviewsHotkeys = new List<string> { "Pause" };
 			this.DisableThumbnail = new Dictionary<string, bool>();
 			this.PriorityClients = new List<string>();
 
@@ -204,6 +205,8 @@ namespace EveOPreview.Configuration.Implementation
 		[JsonProperty]
 		public List<string> MinimizeAllClientsHotkeys { get; set; }
 		[JsonProperty]
+		public List<string> ShowAllPreviewsHotkeys { get; set; }
+		[JsonProperty]
 		private Dictionary<string, bool> DisableThumbnail { get; set; }
 		[JsonProperty]
 		private List<string> PriorityClients { get; set; }
@@ -349,6 +352,11 @@ namespace EveOPreview.Configuration.Implementation
 			}
 
 			this.EnsureDefaultMouseActionBindings();
+
+			if (this.ShowAllPreviewsHotkeys == null)
+			{
+				this.ShowAllPreviewsHotkeys = new List<string>();
+			}
 
 			if (!this.LockThumbnailLocation)
 			{

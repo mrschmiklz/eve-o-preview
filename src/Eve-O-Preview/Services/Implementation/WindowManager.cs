@@ -172,6 +172,19 @@ namespace EveOPreview.Services.Implementation
 			}
 		}
 
+		// Restore a window without activating/focusing it. Used by the preview
+		// overview so minimized clients start rendering again (DWM cannot produce a
+		// live thumbnail of a minimized window) without stealing focus.
+		public void RestoreWindow(IntPtr handle)
+		{
+			if (handle == IntPtr.Zero || !User32NativeMethods.IsIconic(handle))
+			{
+				return;
+			}
+
+			User32NativeMethods.ShowWindowAsync(handle, WINDOWPLACEMENT.SW_SHOWNOACTIVATE);
+		}
+
 		public void MoveWindow(IntPtr handle, int left, int top, int width, int height)
 		{
 			User32NativeMethods.MoveWindow(handle, left, top, width, height, true);
