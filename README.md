@@ -45,6 +45,31 @@ This fork is **Windows-only** (.NET 8). Build locally or use GitHub Actions when
 dotnet build src\Eve-O-Preview\Eve-O-Preview.csproj -c Release
 ```
 
+#### Cursor Cloud Agent environment (Linux)
+
+Cursor Cloud Agents run on Linux, where the app cannot run (WPF/WinForms need the
+Windows-only `Microsoft.WindowsDesktop.App` runtime). The committed
+[`.cursor/environment.json`](.cursor/environment.json) bootstrap
+([`.cursor/install.sh`](.cursor/install.sh)) installs the .NET 8 SDK and performs a
+**cross-compile build** of the whole solution (`-p:EnableWindowsTargeting=true`) so
+agents can catch compile errors. Running the app, the xUnit tests, and the
+`--smoke-test` still requires Windows — use `scripts/build-and-test.ps1` locally or
+the `windows-2022` CI in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
+**Compile to a downloadable Windows asset (from Linux):** the agent can cross-publish
+a runnable Windows `.exe` and package it as a zip you download and run on Windows —
+the same asset the release workflow produces:
+
+```bash
+# Framework-dependent single-file exe (~2-3 MB; needs the .NET 8 Desktop Runtime)
+scripts/publish-windows.sh
+
+# Fully self-contained (~160 MB; runs on any Windows x64, no .NET install needed)
+scripts/publish-windows.sh --self-contained
+```
+
+Output: `dist/Release-<version>-Windows.zip` — unzip and run `EVE-O-Preview.exe`.
+
 Fork-specific releases: [mrschmiklz/eve-o-preview releases](https://github.com/mrschmiklz/eve-o-preview/releases). See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 Example config with fork defaults: [config/EVE-O-Preview.example.json](config/EVE-O-Preview.example.json).

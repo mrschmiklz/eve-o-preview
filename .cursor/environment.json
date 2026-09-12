@@ -1,0 +1,4 @@
+{
+  "name": "EVE-O Preview (.NET 8)",
+  "install": "bash .cursor/install.sh"
+}
