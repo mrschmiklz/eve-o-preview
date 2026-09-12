@@ -316,6 +316,28 @@ namespace EveOPreview.Configuration.Implementation
 		{
 			return this.PriorityClients.Contains(currentClient);
 		}
+
+		// Priority clients are never auto-minimized when the active client changes,
+		// so they stay visible (e.g. on a second monitor) while you cycle focus.
+		public void SetPriorityClient(string currentClient, bool isPriority)
+		{
+			if (string.IsNullOrEmpty(currentClient))
+			{
+				return;
+			}
+
+			if (isPriority)
+			{
+				if (!this.PriorityClients.Contains(currentClient))
+				{
+					this.PriorityClients.Add(currentClient);
+				}
+			}
+			else
+			{
+				this.PriorityClients.RemoveAll(client => client == currentClient);
+			}
+		}
 		public bool IsExecutableToPreview(string processName)
 		{
 			return this.ExecutablesToPreview.Any(s => s.Equals(processName, StringComparison.OrdinalIgnoreCase));

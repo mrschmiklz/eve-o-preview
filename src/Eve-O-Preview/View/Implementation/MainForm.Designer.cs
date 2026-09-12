@@ -213,7 +213,7 @@ namespace EveOPreview.View
 			ThumbnailsListLabel.Location = new Point(10, 28);
 			ThumbnailsListLabel.Name = "ThumbnailsListLabel";
 			ThumbnailsListLabel.Size = new Size(248, 15);
-			ThumbnailsListLabel.Text = "Check a client to exclude it from cycling";
+			ThumbnailsListLabel.Text = "Check a client to keep it open (never auto-minimize)";
 
 			ThumbnailsList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 			ThumbnailsList.CheckOnClick = true;
