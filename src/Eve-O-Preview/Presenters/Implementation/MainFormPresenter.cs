@@ -113,10 +113,11 @@ namespace EveOPreview.Presenters
 
 			this.View.EnableClientLayoutTracking = this._configuration.EnableClientLayoutTracking;
 			this.View.HideActiveClientThumbnail = this._configuration.HideActiveClientThumbnail;
-			this.View.ShowThumbnailPreviews = false;
+			this.View.ShowThumbnailPreviews = this._configuration.ShowThumbnailPreviews;
 			this.View.MinimizeInactiveClients = this._configuration.MinimizeInactiveClients;
 			this.View.CycleForwardBinding = GetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys);
 			this.View.MinimizeAllBinding = GetPrimaryCycleBinding(this._configuration.MinimizeAllClientsHotkeys);
+			this.View.ShowAllPreviewsBinding = GetPrimaryCycleBinding(this._configuration.ShowAllPreviewsHotkeys);
 			this.View.HideCaptionOnClients = this._configuration.HideCaptionOnClients;
 			this.View.WindowsAnimationStyle = ViewAnimationStyleConverter.Convert(this._configuration.WindowsAnimationStyle);
 			this.View.ShowThumbnailsAlwaysOnTop = this._configuration.ShowThumbnailsAlwaysOnTop;
@@ -162,8 +163,8 @@ namespace EveOPreview.Presenters
 
 			this._configuration.EnableClientLayoutTracking = this.View.EnableClientLayoutTracking;
 			this._configuration.HideActiveClientThumbnail = this.View.HideActiveClientThumbnail;
-			bool showThumbnailPreviewsChanged = this._configuration.ShowThumbnailPreviews;
-			this._configuration.ShowThumbnailPreviews = false;
+			bool showThumbnailPreviewsChanged = this._configuration.ShowThumbnailPreviews != this.View.ShowThumbnailPreviews;
+			this._configuration.ShowThumbnailPreviews = this.View.ShowThumbnailPreviews;
 			if (showThumbnailPreviewsChanged)
 			{
 				this._thumbnailManager.UpdateThumbnailVisibility();
@@ -173,9 +174,11 @@ namespace EveOPreview.Presenters
 
 			string forwardBinding = this.View.CycleForwardBinding ?? string.Empty;
 			string minimizeAllBinding = this.View.MinimizeAllBinding ?? string.Empty;
+			string showAllPreviewsBinding = this.View.ShowAllPreviewsBinding ?? string.Empty;
 
 			SetPrimaryCycleBinding(this._configuration.CycleGroup1ForwardHotkeys, forwardBinding);
 			SetPrimaryCycleBinding(this._configuration.MinimizeAllClientsHotkeys, minimizeAllBinding);
+			SetPrimaryCycleBinding(this._configuration.ShowAllPreviewsHotkeys, showAllPreviewsBinding);
 
 			if (this._configuration.HideCaptionOnClients != this.View.HideCaptionOnClients)
 			{

@@ -108,27 +108,34 @@ CCP Grimmi wrote:
 
 ### Application Options Available Via GUI
 
-#### **General** Tab
+#### **Cycle** Tab
 | Option | Description |
 | --- | --- |
 | Minimize to System Tray | Determines whether the main window form be minimized to windows tray when it is closed |
-| Track client locations | Determines whether the client's window position should be restored when it is activated or started |
-| Hide preview of active EVE client | Determines whether the thumbnail corresponding to the active EVE client is not displayed |
 | Minimize inactive EVE clients | Allows to auto-minimize inactive EVE clients to save CPU and GPU (enabled by default in this fork for new and upgraded configs) |
 | Client action bindings | Click the record button, then press a key combo or mouse button to bind **Cycle to next client** or **Minimize all clients**. Defaults: **F14** / **Mouse 4** = next client, **Mouse 5** = minimize all |
 | Animation Style | Use original animation style (0) or No Animation style (1). You may find Original is cleaner with fixed window mode and No Animation is cleaner with windowed mode. Especially when using minimize inactive clients.
 | Hide caption bar on clients | Hides (or shows) caption bar on eve clients |
-| Previews always on top | Determines whether EVE client thumbnails should stay on top of all other windows |
-| Hide previews when EVE client is not active | Determines whether all thumbnails should be visible only when an EVE client is active |
-| Unique layout for each EVE client | Determines whether thumbnails positions are different depending on the EVE client being active |
+| EVE clients | Check a client to keep it open (never auto-minimize) |
 
-#### **Thumbnail** Tab
+#### **Previews** Tab
 | Option | Description |
 | --- | --- |
-| Opacity | Determines the inactive EVE thumbnails opacity (from almost invisible 20% to 100% solid) |
-| Thumbnail Width | Thumbnails width. Can be set to any value from **100** to **640** points |
-| Thumbnail Height | Thumbnails Height. Can be set to any value from **80** to **400** points |
-| Lock Thumbnail Location | Lock position of thumbnails, preventing misclicks moving your thumbnails |
+| Show thumbnail previews | Show live thumbnail windows for each EVE client. Enabled by default in new configs |
+| Hide preview of active EVE client | Determines whether the thumbnail corresponding to the active EVE client is not displayed |
+| Previews always on top | Determines whether EVE client thumbnails should stay on top of all other windows |
+| Hide previews when EVE client is not active | Determines whether all thumbnails should be visible only when an EVE client is active |
+| Show character name overlay | Show the client name on each thumbnail |
+| Lock thumbnail location | Lock position of thumbnails, preventing misclicks moving your thumbnails |
+| Opacity | Determines the inactive EVE thumbnails opacity (from 20% to 100%) |
+| Width / Height | Thumbnail size |
+| Show all previews | Record a hotkey (default **Pause**) that tiles every client as a live grid on the second monitor |
+
+Live DWM thumbnails need the EVE window visible. If **Minimize inactive EVE clients** is on, use **Show all previews** for a live grid, or turn minimize-inactive off.
+
+#### **Thumbnail** Tab (advanced / config file)
+| Option | Description |
+| --- | --- |
 | Thumbnail Snap to Grid | Force Thumbnails to snap to defined grid when moved |
 | Snap X / Snap Y | X/Y grid Pixels |
 | Do not display previews | Prevent previews to show of clients - unless overridden by PerClient settings |
@@ -266,9 +273,7 @@ overview on briefly restores minimized clients so they render. Closing the overv
 (or selecting a client) returns them to the normal cycle state — inactive,
 non-priority clients are minimized again, while **priority clients stay open**.
 
-The default binding is the **Pause** key. You can change it in
-`EVE-O-Preview.json` (the on-screen record button for this action is coming in a
-later build):
+The default binding is the **Pause** key. Record a new binding on the **Previews** tab, or edit `EVE-O-Preview.json`:
 
     "ShowAllPreviewsHotkeys": [
       "Pause"

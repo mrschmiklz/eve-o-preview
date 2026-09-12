@@ -21,6 +21,7 @@ namespace EveOPreview.View
 		bool MinimizeInactiveClients { get; set; }
 		string CycleForwardBinding { get; set; }
 		string MinimizeAllBinding { get; set; }
+		string ShowAllPreviewsBinding { get; set; }
 		bool HideCaptionOnClients { get; set; }
 		ViewAnimationStyle WindowsAnimationStyle { get; set; }
         bool ShowThumbnailsAlwaysOnTop { get; set; }

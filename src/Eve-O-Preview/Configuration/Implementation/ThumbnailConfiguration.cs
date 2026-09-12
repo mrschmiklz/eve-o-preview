@@ -45,7 +45,7 @@ namespace EveOPreview.Configuration.Implementation
 
 			this.EnableClientLayoutTracking = false;
 			this.HideActiveClientThumbnail = true;
-			this.ShowThumbnailPreviews = false;
+			this.ShowThumbnailPreviews = true;
 			this.HideLoginClientThumbnail = false;
 			this.MinimizeInactiveClients = true;
 			this.HideCaptionOnClients = false;
@@ -375,9 +375,9 @@ namespace EveOPreview.Configuration.Implementation
 
 			this.EnsureDefaultMouseActionBindings();
 
-			if (this.ShowAllPreviewsHotkeys == null)
+			if (this.ShowAllPreviewsHotkeys == null || this.ShowAllPreviewsHotkeys.Count == 0)
 			{
-				this.ShowAllPreviewsHotkeys = new List<string>();
+				this.ShowAllPreviewsHotkeys = new List<string> { "Pause" };
 			}
 
 			if (!this.LockThumbnailLocation)

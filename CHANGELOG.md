@@ -8,6 +8,14 @@ Download builds from [GitHub Releases](https://github.com/mrschmiklz/eve-o-previ
 
 ## [Unreleased]
 
+### Fixed
+
+- Settings can show and configure thumbnail previews again. The cycle-only window had forced them off with no UI to turn them back on.
+
+### Added
+
+- **Previews** tab: show thumbnail previews, hide active-client preview, always-on-top, overlay, lock location, size, opacity, and a recordable **Show all previews** hotkey (default Pause).
+
 ## [8.0.5.5] - 2026-07-30
 
 ### Fixed

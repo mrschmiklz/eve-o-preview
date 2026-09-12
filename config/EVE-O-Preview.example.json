@@ -13,7 +13,7 @@
   "MinimizeToTray": false,
   "MinimizeInactiveClients": true,
   "HideActiveClientThumbnail": true,
-  "ShowThumbnailPreviews": false,
+  "ShowThumbnailPreviews": true,
   "PreventPreviews": false,
   "LockThumbnailLocation": false,
   "ThumbnailClickThrough": false,

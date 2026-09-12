@@ -15,7 +15,7 @@
   "ThumbnailsOpacity": 0.5,
   "EnableClientLayoutTracking": false,
   "HideActiveClientThumbnail": true,
-  "ShowThumbnailPreviews": false,
+  "ShowThumbnailPreviews": true,
   "HideLoginClientThumbnail": false,
   "MinimizeInactiveClients": true,
   "HideCaptionOnClients": false,
