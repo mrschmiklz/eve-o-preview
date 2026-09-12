@@ -36,6 +36,9 @@ namespace EveOPreview.Services.Interop
 		[DllImport("user32.dll")]
 		public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
 
+		[DllImport("user32.dll")]
+		public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
 		[DllImport("User32.dll")]
 		public static extern bool ReleaseCapture();
 

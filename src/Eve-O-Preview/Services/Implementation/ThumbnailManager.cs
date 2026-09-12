@@ -8,8 +8,6 @@ using EveOPreview.View;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using System.Net;
-using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Threading;
@@ -58,6 +56,11 @@ namespace EveOPreview.Services
 		private readonly List<string> _primaryCycleMouseBindings = new List<string>();
 		private readonly List<HotkeyHandler> _minimizeAllHotkeyHandlers = new List<HotkeyHandler>();
 		private readonly List<string> _minimizeAllMouseBindings = new List<string>();
+		private readonly List<HotkeyHandler> _showAllPreviewsHotkeyHandlers = new List<HotkeyHandler>();
+		private readonly List<string> _showAllPreviewsMouseBindings = new List<string>();
+
+		// Runtime-only "show every client as a preview grid" overview mode. Not persisted.
+		private bool _previewOverviewActive;
 		#endregion
 
 		public ThumbnailManager(IConfigurationStorage configurationStorage, IThumbnailConfiguration configuration, IProcessMonitor processMonitor, IWindowManager windowManager, IThumbnailViewFactory factory)
@@ -100,6 +103,7 @@ namespace EveOPreview.Services
 				this.ClearActionBindings();
 				this.RegisterPrimaryCycleBindingList(this._configuration.CycleGroup1ForwardHotkeys, true);
 				this.RegisterMinimizeAllBindingList(this._configuration.MinimizeAllClientsHotkeys);
+				this.RegisterShowAllPreviewsBindingList(this._configuration.ShowAllPreviewsHotkeys);
 			}
 
 			if (Application.OpenForms.Count > 0 && Application.OpenForms[0].InvokeRequired)
@@ -141,6 +145,20 @@ namespace EveOPreview.Services
 			}
 
 			this._minimizeAllMouseBindings.Clear();
+
+			foreach (HotkeyHandler handler in this._showAllPreviewsHotkeyHandlers)
+			{
+				handler.Dispose();
+			}
+
+			this._showAllPreviewsHotkeyHandlers.Clear();
+
+			foreach (string binding in this._showAllPreviewsMouseBindings)
+			{
+				this._globalMouseInputHandler.Unregister(binding);
+			}
+
+			this._showAllPreviewsMouseBindings.Clear();
 		}
 
 		private void RegisterPrimaryCycleBindingList(List<string> bindings, bool isForwards)
@@ -226,6 +244,49 @@ namespace EveOPreview.Services
 				{
 					this._globalMouseInputHandler.Register(trimmedBinding, () => this.InvokeOnUiThread(this.MinimizeAllClients));
 					this._minimizeAllMouseBindings.Add(trimmedBinding);
+				}
+			}
+		}
+
+		private void RegisterShowAllPreviewsBindingList(List<string> bindings)
+		{
+			if (bindings == null)
+			{
+				return;
+			}
+
+			foreach (string binding in bindings)
+			{
+				if (string.IsNullOrWhiteSpace(binding))
+				{
+					continue;
+				}
+
+				string trimmedBinding = binding.Trim();
+				if (InputBindingHelper.GetKind(trimmedBinding) == InputBindingKind.Keyboard)
+				{
+					Keys key = this._configuration.StringToKey(trimmedBinding);
+					if (key == Keys.None)
+					{
+						continue;
+					}
+
+					HotkeyHandler handler = new HotkeyHandler(this.GetHotkeyTarget(), key);
+					handler.Pressed += (object sender, HandledEventArgs eventArgs) =>
+					{
+						this.ToggleAllPreviews();
+						eventArgs.Handled = true;
+					};
+
+					if (handler.Register())
+					{
+						this._showAllPreviewsHotkeyHandlers.Add(handler);
+					}
+				}
+				else
+				{
+					this._globalMouseInputHandler.Register(trimmedBinding, () => this.InvokeOnUiThread(this.ToggleAllPreviews));
+					this._showAllPreviewsMouseBindings.Add(trimmedBinding);
 				}
 			}
 		}
@@ -328,16 +389,59 @@ namespace EveOPreview.Services
 					continue;
 				}
 
-				this._windowManager.MinimizeWindow(entry.Value.Id, this._configuration.WindowsAnimationStyle, false);
+				this.HideInactiveClient(entry.Value.Id);
+			}
+		}
+
+		private bool ShouldKeepMinimizedClientsComposed()
+		{
+			return this._configuration.PreviewMinimizedClients
+				&& (this._configuration.ShowThumbnailPreviews || this._previewOverviewActive);
+		}
+
+		private void HideInactiveClient(IntPtr handle)
+		{
+			if (handle == IntPtr.Zero)
+			{
+				return;
+			}
+
+			if (this.ShouldKeepMinimizedClientsComposed())
+			{
+				this._windowManager.HideWindowForLivePreview(handle);
+				return;
+			}
+
+			this._windowManager.ShowWindowFromLivePreview(handle);
+			this._windowManager.MinimizeWindow(handle, this._configuration.WindowsAnimationStyle, false);
+		}
+
+		private void EnsureMinimizedClientIsComposed(IThumbnailView view)
+		{
+			if (view == null || view.Id == IntPtr.Zero || view.Id == this._activeClient.Handle)
+			{
+				return;
+			}
+
+			if (!this.ShouldKeepMinimizedClientsComposed())
+			{
+				return;
+			}
+
+			if (this._windowManager.IsWindowMinimized(view.Id))
+			{
+				this._windowManager.HideWindowForLivePreview(view.Id);
 			}
 		}
 
 		private void CycleNextClientByHandle(bool isForwards)
 		{
-			List<KeyValuePair<IntPtr, IThumbnailView>> clients = this._thumbnailViews
-				.Where(entry => this.IsCycleEligible(entry.Value))
-				.OrderBy(entry => entry.Value.Id.ToInt64())
-				.ToList();
+			// Order by character name (with handle as a stable tiebreaker) so the
+			// rotation is predictable and does not change when clients restart.
+			List<KeyValuePair<IntPtr, IThumbnailView>> clients = ClientCycleOrder.Sort(
+				this._thumbnailViews.Where(entry => this.IsCycleEligible(entry.Value)),
+				entry => entry.Value.Title,
+				entry => entry.Key);
 
 			if (clients.Count == 0)
 			{
@@ -354,16 +458,197 @@ namespace EveOPreview.Services
 				entry.Key == this._activeClient.Handle
 				|| entry.Value.Id == this._activeClient.Handle);
 
-			if (currentIndex < 0)
-			{
-				currentIndex = 0;
-			}
-
-			int nextIndex = isForwards
-				? (currentIndex + 1) % clients.Count
-				: (currentIndex - 1 + clients.Count) % clients.Count;
+			int nextIndex = ClientCycleOrder.GetNextIndex(currentIndex, clients.Count, isForwards);
 
 			this.SetActive(clients[nextIndex]);
+		}
+
+		// Toggle a temporary "see every client at once" preview grid. Turning it on
+		// restores any minimized clients (so DWM can render their thumbnails) and
+		// tiles all previews across the primary monitor. Turning it off puts the
+		// clients back to the normal cycle state (inactive, non-priority clients
+		// minimized again).
+		public void ToggleAllPreviews()
+		{
+			if (!this._previewOverviewActive)
+			{
+				this._previewOverviewActive = true;
+				this.RestoreAllClientsForPreview();
+			}
+			else
+			{
+				this.ExitPreviewOverview();
+			}
+
+			this.RequestRefreshThumbnails();
+		}
+
+		private void ExitPreviewOverview()
+		{
+			this._previewOverviewActive = false;
+			this.RestoreConfiguredSizeLimits();
+			this.MinimizeInactiveClientsAfterOverview();
+		}
+
+		private void RestoreConfiguredSizeLimits()
+		{
+			foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews)
+			{
+				entry.Value.SetSizeLimitations(this._configuration.ThumbnailMinimumSize, this._configuration.ThumbnailMaximumSize);
+			}
+		}
+
+		private void RestoreAllClientsForPreview()
+		{
+			foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews)
+			{
+				if (entry.Value.Id == IntPtr.Zero)
+				{
+					continue;
+				}
+
+				bool keepVisible = entry.Key == this._activeClient.Handle
+					|| this._configuration.IsPriorityClient(entry.Value.Title);
+
+				if (keepVisible)
+				{
+					this._windowManager.ShowWindowFromLivePreview(entry.Value.Id);
+					this._windowManager.RestoreWindow(entry.Value.Id);
+					continue;
+				}
+
+				if (this.ShouldKeepMinimizedClientsComposed())
+				{
+					this._windowManager.HideWindowForLivePreview(entry.Value.Id);
+				}
+				else
+				{
+					this._windowManager.RestoreWindow(entry.Value.Id);
+				}
+			}
+		}
+
+		private void MinimizeInactiveClientsAfterOverview()
+		{
+			if (!this._configuration.MinimizeInactiveClients)
+			{
+				return;
+			}
+
+			foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews)
+			{
+				if (!this.IsCycleEligible(entry.Value))
+				{
+					continue;
+				}
+
+				// Keep the active client up, and never minimize a priority client.
+				if (entry.Key == this._activeClient.Handle
+					|| this._configuration.IsPriorityClient(entry.Value.Title))
+				{
+					this._windowManager.ShowWindowFromLivePreview(entry.Value.Id);
+					continue;
+				}
+
+				this.HideInactiveClient(entry.Value.Id);
+			}
+		}
+
+		private void RefreshOverviewLayout(bool forceRefresh)
+		{
+			List<KeyValuePair<IntPtr, IThumbnailView>> views = this._thumbnailViews
+				.Where(entry => entry.Value.Id != IntPtr.Zero)
+				.OrderBy(entry => entry.Value.Title ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+				.ThenBy(entry => entry.Key.ToInt64())
+				.ToList();
+
+			if (views.Count == 0)
+			{
+				return;
+			}
+
+			const int margin = 8;
+			Rectangle area = this.GetOverviewScreenArea();
+			List<Rectangle> cells = PreviewGridLayout.ComputeCells(views.Count, area, margin);
+
+			for (int index = 0; index < views.Count; index++)
+			{
+				IThumbnailView view = views[index].Value;
+				this.EnsureMinimizedClientIsComposed(view);
+				Rectangle cell = cells[index];
+
+				Size cellSize = this.FitPreviewToCell(view.Id, cell.Width, cell.Height);
+
+				// Center the aspect-fitted preview within its cell.
+				int x = cell.X + ((cell.Width - cellSize.Width) / 2);
+				int y = cell.Y + ((cell.Height - cellSize.Height) / 2);
+
+				// Overview previews may be much larger than the normal thumbnail size
+				// cap, so widen the size limits while the grid is shown.
+				view.SetSizeLimitations(new Size(1, 1), new Size(area.Width, area.Height));
+				view.ThumbnailSize = cellSize;
+				view.ThumbnailLocation = new Point(x, y);
+				view.SetOpacity(1.0);
+				view.SetTopMost(true);
+				view.IsOverlayEnabled = this._configuration.ShowThumbnailOverlays;
+				view.SetHighlight(
+					this._configuration.EnableActiveClientHighlight && (view.Id == this._activeClient.Handle),
+					this._configuration.ActiveClientHighlightThickness);
+
+				if (!view.IsActive)
+				{
+					view.Show();
+				}
+				else
+				{
+					view.Refresh(forceRefresh);
+				}
+			}
+		}
+
+		// The overview grid is shown on the second monitor when one is present,
+		// falling back to the primary monitor for single-display setups.
+		private Rectangle GetOverviewScreenArea()
+		{
+			foreach (Screen screen in Screen.AllScreens)
+			{
+				if (!screen.Primary)
+				{
+					return screen.WorkingArea;
+				}
+			}
+
+			return Screen.PrimaryScreen.WorkingArea;
+		}
+
+		// Fit a preview into a grid cell, preserving the client's aspect ratio.
+		private Size FitPreviewToCell(IntPtr handle, int availableWidth, int availableHeight)
+		{
+			if (availableWidth < 1)
+			{
+				availableWidth = 1;
+			}
+
+			if (availableHeight < 1)
+			{
+				availableHeight = 1;
+			}
+
+			Size clientSize = this._windowManager.GetClientAreaSize(handle);
+			double aspect = (clientSize.Width > 0 && clientSize.Height > 0)
+				? (double)clientSize.Width / clientSize.Height
+				: 16.0 / 9.0;
+
+			int width = availableWidth;
+			int height = (int)Math.Round(width / aspect);
+
+			if (height > availableHeight)
+			{
+				height = availableHeight;
+				width = (int)Math.Round(height * aspect);
+			}
+
+			return new Size(Math.Max(width, 1), Math.Max(height, 1));
 		}
 
 		public void Start()
@@ -375,12 +660,13 @@ namespace EveOPreview.Services
 
 		public void Stop()
 		{
+			this._previewOverviewActive = false;
 			this._thumbnailUpdateTimer.Stop();
 			this.ClearActionBindings();
 			this._globalMouseInputHandler.Clear();
 		}
 
-		private async void ThumbnailUpdateTimerTick(object sender, EventArgs e)
+		private void ThumbnailUpdateTimerTick(object sender, EventArgs e)
 		{
 			if (this._isThumbnailUpdateInProgress)
 			{
@@ -390,7 +676,7 @@ namespace EveOPreview.Services
 			this._isThumbnailUpdateInProgress = true;
 			try
 			{
-				await this.UpdateThumbnailsList();
+				this.UpdateThumbnailsList();
 				this.RequestRefreshThumbnails();
 			}
 			finally
@@ -399,7 +685,7 @@ namespace EveOPreview.Services
 			}
 		}
 
-		private async Task UpdateThumbnailsList()
+		private void UpdateThumbnailsList()
 		{
 			this._processMonitor.GetUpdatedProcesses(out ICollection<IProcessInfo> addedProcesses, out ICollection<IProcessInfo> updatedProcesses, out ICollection<IProcessInfo> removedProcesses);
 
@@ -495,6 +781,7 @@ namespace EveOPreview.Services
 				view.ThumbnailFocused = null;
 				view.ThumbnailLostFocus = null;
 				view.ThumbnailActivated = null;
+				view.ThumbnailDeactivated = null;
 				view.ThumbnailToggleCycleGroup = null;
 
 				view.Close();
@@ -628,6 +915,15 @@ namespace EveOPreview.Services
 
 			this.DisableViewEvents();
 
+			// Preview overview mode: tile every client as a grid and skip the normal
+			// per-client layout / hide logic entirely.
+			if (this._previewOverviewActive)
+			{
+				this.RefreshOverviewLayout(forceRefresh);
+				this.EnableViewEvents();
+				return;
+			}
+
 			// Snap thumbnail
 			// No need to update Thumbnails while one of them is highlighted
 			if ((!this._isHoverEffectActive) && this.TryDequeueLocationChange(out var locationChange))
@@ -659,6 +955,7 @@ namespace EveOPreview.Services
 			foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews)
 			{
 				IThumbnailView view = entry.Value;
+				this.EnsureMinimizedClientIsComposed(view);
 				// update ZoomAnchor regardless
 				view.ClientZoomAnchor = this._configuration.GetZoomAnchor(view.Title, this._configuration.ThumbnailZoomAnchor);
 
@@ -814,7 +1111,7 @@ namespace EveOPreview.Services
 				&& this._configuration.MinimizeInactiveClients
 				&& !this._configuration.IsPriorityClient(this._activeClient.Title))
 			{
-				this._windowManager.MinimizeWindow(this._activeClient.Handle, this._configuration.WindowsAnimationStyle, false);
+				this.HideInactiveClient(this._activeClient.Handle);
 				this._windowManager.ActivateWindow(foregroundClientHandle, this._configuration.WindowsAnimationStyle);
 			}
 
@@ -893,6 +1190,13 @@ namespace EveOPreview.Services
 					// This code should be executed on UI thread
 					this.SwitchActiveClient(view.Id, view.Title);
 					this.UpdateClientLayouts();
+
+					// Selecting a client from the preview grid dismisses the overview.
+					if (this._previewOverviewActive)
+					{
+						this.ExitPreviewOverview();
+					}
+
 					this.RequestRefreshThumbnails();
 				}, TaskScheduler.FromCurrentSynchronizationContext());
 		}
@@ -910,7 +1214,7 @@ namespace EveOPreview.Services
 					return;
 				}
 
-				this._windowManager.MinimizeWindow(view.Id, this._configuration.WindowsAnimationStyle, true);
+				this.HideInactiveClient(view.Id);
 				this.RequestRefreshThumbnails();
 			}
 		}
@@ -928,7 +1232,7 @@ namespace EveOPreview.Services
 		}
 
 
-		private async void ThumbnailViewResized(IntPtr id)
+		private void ThumbnailViewResized(IntPtr id)
 		{
 			if (this._ignoreViewEvents)
 			{
@@ -1108,15 +1412,12 @@ namespace EveOPreview.Services
 			return false;
 		}
 		private void ApplyCaptionBar(IThumbnailView view)
-
 		{
 			if (view.Title == ThumbnailManager.DEFAULT_CLIENT_TITLE) return;
-			IntPtr handle = view.Id;
 
 			bool enable = this._configuration.HideCaptionOnClients;
-			bool changed = false;
-			changed = changed | SetWindowStyle(view, InteropConstants.WS_CAPTION, enable);
-			changed = changed | SetWindowStyle(view, InteropConstants.WS_THICKFRAME, enable);
+			SetWindowStyle(view, InteropConstants.WS_CAPTION, enable);
+			SetWindowStyle(view, InteropConstants.WS_THICKFRAME, enable);
 		}
 		private void ApplyClientLayout(IThumbnailView view)
 		{

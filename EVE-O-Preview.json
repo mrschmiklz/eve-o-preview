@@ -1,5 +1,5 @@
 {
-  "ConfigVersion": 3,
+  "ConfigVersion": 4,
   "CycleGroup1ForwardHotkeys": [
     "F14",
     "MouseXButton1"
@@ -15,7 +15,8 @@
   "ThumbnailsOpacity": 0.5,
   "EnableClientLayoutTracking": false,
   "HideActiveClientThumbnail": true,
-  "ShowThumbnailPreviews": false,
+  "ShowThumbnailPreviews": true,
+  "PreviewMinimizedClients": true,
   "HideLoginClientThumbnail": false,
   "MinimizeInactiveClients": true,
   "HideCaptionOnClients": false,
@@ -55,6 +56,9 @@
   "ClientHotkey": {},
   "MinimizeAllClientsHotkeys": [
     "MouseXButton2"
+  ],
+  "ShowAllPreviewsHotkeys": [
+    "Pause"
   ],
   "DisableThumbnail": {},
   "PriorityClients": [],

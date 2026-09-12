@@ -1,0 +1,48 @@
+name: Test Build (Windows zip asset)
+
+# Builds a self-contained Windows zip on every push to a cursor/** branch and
+# uploads it as a downloadable workflow artifact (Actions run -> Artifacts),
+# matching the GitHub Release asset name: Release-<version>-Windows.zip.
+# Work-in-progress builds can be downloaded and tested without a public release.
+on:
+  push:
+    branches:
+      - 'cursor/**'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build Windows zip
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish self-contained exe
+        shell: pwsh
+        run: |
+          dotnet publish src\Eve-O-Preview\Eve-O-Preview.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:AssemblyVersion=8.9.0.${{ github.run_number }} `
+            -p:FileVersion=8.9.0.${{ github.run_number }} `
+            -o publish
+
+      - name: Create Release zip asset
+        shell: pwsh
+        run: |
+          Compress-Archive -Path publish\* -DestinationPath "Release-8.9.0.${{ github.run_number }}-Windows.zip"
+
+      - name: Upload zip asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: Release-8.9.0.${{ github.run_number }}-Windows
+          path: Release-8.9.0.${{ github.run_number }}-Windows.zip
+          if-no-files-found: error

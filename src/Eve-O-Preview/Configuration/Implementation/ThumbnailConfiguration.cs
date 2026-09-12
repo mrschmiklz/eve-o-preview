@@ -16,7 +16,7 @@ namespace EveOPreview.Configuration.Implementation
 
 		public ThumbnailConfiguration()
 		{
-			this.ConfigVersion = 3;
+			this.ConfigVersion = 4;
 
 			this.CycleGroup1ForwardHotkeys = new List<string> { "F14", "MouseXButton1" };
 
@@ -31,6 +31,7 @@ namespace EveOPreview.Configuration.Implementation
 			this.ClientLayout = new Dictionary<string, ClientLayout>();
 			this.ClientHotkey = new Dictionary<string, string>();
 			this.MinimizeAllClientsHotkeys = new List<string> { "MouseXButton2" };
+			this.ShowAllPreviewsHotkeys = new List<string> { "Pause" };
 			this.DisableThumbnail = new Dictionary<string, bool>();
 			this.PriorityClients = new List<string>();
 
@@ -44,7 +45,8 @@ namespace EveOPreview.Configuration.Implementation
 
 			this.EnableClientLayoutTracking = false;
 			this.HideActiveClientThumbnail = true;
-			this.ShowThumbnailPreviews = false;
+			this.ShowThumbnailPreviews = true;
+			this.PreviewMinimizedClients = true;
 			this.HideLoginClientThumbnail = false;
 			this.MinimizeInactiveClients = true;
 			this.HideCaptionOnClients = false;
@@ -133,6 +135,7 @@ namespace EveOPreview.Configuration.Implementation
 
 		public bool HideActiveClientThumbnail { get; set; }
 		public bool ShowThumbnailPreviews { get; set; }
+		public bool PreviewMinimizedClients { get; set; }
 		public bool HideLoginClientThumbnail { get; set; }
 		public bool MinimizeInactiveClients { get; set; }
 		public bool HideCaptionOnClients { get; set; }
@@ -203,6 +206,8 @@ namespace EveOPreview.Configuration.Implementation
 		private Dictionary<string, string> ClientHotkey { get; set; }
 		[JsonProperty]
 		public List<string> MinimizeAllClientsHotkeys { get; set; }
+		[JsonProperty]
+		public List<string> ShowAllPreviewsHotkeys { get; set; }
 		[JsonProperty]
 		private Dictionary<string, bool> DisableThumbnail { get; set; }
 		[JsonProperty]
@@ -313,6 +318,28 @@ namespace EveOPreview.Configuration.Implementation
 		{
 			return this.PriorityClients.Contains(currentClient);
 		}
+
+		// Priority clients are never auto-minimized when the active client changes,
+		// so they stay visible (e.g. on a second monitor) while you cycle focus.
+		public void SetPriorityClient(string currentClient, bool isPriority)
+		{
+			if (string.IsNullOrEmpty(currentClient))
+			{
+				return;
+			}
+
+			if (isPriority)
+			{
+				if (!this.PriorityClients.Contains(currentClient))
+				{
+					this.PriorityClients.Add(currentClient);
+				}
+			}
+			else
+			{
+				this.PriorityClients.RemoveAll(client => client == currentClient);
+			}
+		}
 		public bool IsExecutableToPreview(string processName)
 		{
 			return this.ExecutablesToPreview.Any(s => s.Equals(processName, StringComparison.OrdinalIgnoreCase));
@@ -348,7 +375,18 @@ namespace EveOPreview.Configuration.Implementation
 				this.ConfigVersion = 3;
 			}
 
+			if (this.ConfigVersion < 4)
+			{
+				this.PreviewMinimizedClients = true;
+				this.ConfigVersion = 4;
+			}
+
 			this.EnsureDefaultMouseActionBindings();
+
+			if (this.ShowAllPreviewsHotkeys == null || this.ShowAllPreviewsHotkeys.Count == 0)
+			{
+				this.ShowAllPreviewsHotkeys = new List<string> { "Pause" };
+			}
 
 			if (!this.LockThumbnailLocation)
 			{

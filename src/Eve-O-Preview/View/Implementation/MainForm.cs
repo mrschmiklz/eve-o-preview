@@ -19,24 +19,18 @@ namespace EveOPreview.View
 		private string _iconName;
 		private string _cycleForwardBinding;
 		private string _minimizeAllBinding;
+		private string _showAllPreviewsBinding;
 		private CycleBindingCaptureTarget _captureTarget;
 
-		private double _thumbnailOpacity = 0.5;
 		private bool _enableClientLayoutTracking;
-		private bool _hideActiveClientThumbnail = true;
-		private bool _showThumbnailsAlwaysOnTop = true;
 		private bool _preventPreviews;
-		private bool _hideThumbnailsOnLostFocus;
 		private bool _enablePerClientThumbnailLayouts;
-		private Size _thumbnailSize = new Size(384, 216);
 		private bool _enableThumbnailZoom;
 		private int _thumbnailZoomFactor = 2;
 		private ViewZoomAnchor _thumbnailZoomAnchor = ViewZoomAnchor.NW;
 		private ViewZoomAnchor _overlayLabelAnchor = ViewZoomAnchor.NW;
 		private ViewZoomAnchor _cycleGroupIndicatorAnchor = ViewZoomAnchor.NW;
-		private bool _showThumbnailOverlays = true;
 		private bool _showThumbnailFrames;
-		private bool _lockThumbnailLocation;
 		private bool _thumbnailClickThrough;
 		private bool _thumbnailSnapToGrid = true;
 		private int _thumbnailSnapToGridSizeX = 100;
@@ -51,7 +45,8 @@ namespace EveOPreview.View
 		{
 			None,
 			Forward,
-			MinimizeAll
+			MinimizeAll,
+			ShowAllPreviews
 		}
 
 		public MainForm(ApplicationContext context)
@@ -115,8 +110,21 @@ namespace EveOPreview.View
 
 		public double ThumbnailOpacity
 		{
-			get => this._thumbnailOpacity;
-			set => this._thumbnailOpacity = Math.Min(Math.Max(value, 0.1), 1.0);
+			get => Math.Min(this.ThumbnailOpacityTrackBar.Value / 100.00, 1.00);
+			set
+			{
+				int barValue = (int)(100.0 * value);
+				if (barValue > this.ThumbnailOpacityTrackBar.Maximum)
+				{
+					barValue = this.ThumbnailOpacityTrackBar.Maximum;
+				}
+				else if (barValue < this.ThumbnailOpacityTrackBar.Minimum)
+				{
+					barValue = this.ThumbnailOpacityTrackBar.Minimum;
+				}
+
+				this.ThumbnailOpacityTrackBar.Value = barValue;
+			}
 		}
 
 		public bool EnableClientLayoutTracking
@@ -127,14 +135,20 @@ namespace EveOPreview.View
 
 		public bool HideActiveClientThumbnail
 		{
-			get => this._hideActiveClientThumbnail;
-			set => this._hideActiveClientThumbnail = value;
+			get => this.HideActiveClientThumbnailCheckBox.Checked;
+			set => this.HideActiveClientThumbnailCheckBox.Checked = value;
 		}
 
 		public bool ShowThumbnailPreviews
 		{
-			get => false;
-			set { }
+			get => this.ShowThumbnailPreviewsCheckBox.Checked;
+			set => this.ShowThumbnailPreviewsCheckBox.Checked = value;
+		}
+
+		public bool PreviewMinimizedClients
+		{
+			get => this.PreviewMinimizedClientsCheckBox.Checked;
+			set => this.PreviewMinimizedClientsCheckBox.Checked = value;
 		}
 
 		public bool MinimizeInactiveClients
@@ -160,6 +174,16 @@ namespace EveOPreview.View
 			{
 				this._minimizeAllBinding = value ?? string.Empty;
 				this.CycleBackwardBindingTextBox.Text = InputBindingHelper.ToDisplayString(this._minimizeAllBinding);
+			}
+		}
+
+		public string ShowAllPreviewsBinding
+		{
+			get => this._showAllPreviewsBinding ?? string.Empty;
+			set
+			{
+				this._showAllPreviewsBinding = value ?? string.Empty;
+				this.ShowAllPreviewsBindingTextBox.Text = InputBindingHelper.ToDisplayString(this._showAllPreviewsBinding);
 			}
 		}
 
@@ -192,8 +216,8 @@ namespace EveOPreview.View
 
 		public bool ShowThumbnailsAlwaysOnTop
 		{
-			get => this._showThumbnailsAlwaysOnTop;
-			set => this._showThumbnailsAlwaysOnTop = value;
+			get => this.ShowThumbnailsAlwaysOnTopCheckBox.Checked;
+			set => this.ShowThumbnailsAlwaysOnTopCheckBox.Checked = value;
 		}
 
 		public bool PreventPreviews
@@ -204,8 +228,8 @@ namespace EveOPreview.View
 
 		public bool HideThumbnailsOnLostFocus
 		{
-			get => this._hideThumbnailsOnLostFocus;
-			set => this._hideThumbnailsOnLostFocus = value;
+			get => this.HideThumbnailsOnLostFocusCheckBox.Checked;
+			set => this.HideThumbnailsOnLostFocusCheckBox.Checked = value;
 		}
 
 		public bool EnablePerClientThumbnailLayouts
@@ -216,8 +240,14 @@ namespace EveOPreview.View
 
 		public Size ThumbnailSize
 		{
-			get => this._thumbnailSize;
-			set => this._thumbnailSize = value;
+			get => new Size((int)this.ThumbnailsWidthNumericEdit.Value, (int)this.ThumbnailsHeightNumericEdit.Value);
+			set
+			{
+				decimal width = Math.Min(Math.Max(value.Width, this.ThumbnailsWidthNumericEdit.Minimum), this.ThumbnailsWidthNumericEdit.Maximum);
+				decimal height = Math.Min(Math.Max(value.Height, this.ThumbnailsHeightNumericEdit.Minimum), this.ThumbnailsHeightNumericEdit.Maximum);
+				this.ThumbnailsWidthNumericEdit.Value = width;
+				this.ThumbnailsHeightNumericEdit.Value = height;
+			}
 		}
 
 		public bool EnableThumbnailZoom
@@ -252,8 +282,8 @@ namespace EveOPreview.View
 
 		public bool ShowThumbnailOverlays
 		{
-			get => this._showThumbnailOverlays;
-			set => this._showThumbnailOverlays = value;
+			get => this.ShowThumbnailOverlaysCheckBox.Checked;
+			set => this.ShowThumbnailOverlaysCheckBox.Checked = value;
 		}
 
 		public bool ShowThumbnailFrames
@@ -264,8 +294,8 @@ namespace EveOPreview.View
 
 		public bool LockThumbnailLocation
 		{
-			get => this._lockThumbnailLocation;
-			set => this._lockThumbnailLocation = value;
+			get => this.LockThumbnailLocationCheckBox.Checked;
+			set => this.LockThumbnailLocationCheckBox.Checked = value;
 		}
 
 		public bool ThumbnailClickThrough
@@ -280,6 +310,22 @@ namespace EveOPreview.View
 
 		public void RefreshThumbnailDisplayOptionsState()
 		{
+			bool previewControlsEnabled = this.ShowThumbnailPreviews;
+
+			this.HideActiveClientThumbnailCheckBox.Enabled = previewControlsEnabled;
+			this.PreviewMinimizedClientsCheckBox.Enabled = previewControlsEnabled;
+			this.ShowThumbnailsAlwaysOnTopCheckBox.Enabled = previewControlsEnabled;
+			this.HideThumbnailsOnLostFocusCheckBox.Enabled = previewControlsEnabled;
+			this.ShowThumbnailOverlaysCheckBox.Enabled = previewControlsEnabled;
+			this.LockThumbnailLocationCheckBox.Enabled = previewControlsEnabled;
+			this.ThumbnailOpacityTrackBar.Enabled = previewControlsEnabled;
+			this.ThumbnailsWidthNumericEdit.Enabled = previewControlsEnabled;
+			this.ThumbnailsHeightNumericEdit.Enabled = previewControlsEnabled;
+			this.ThumbnailOpacityLabel.Enabled = previewControlsEnabled;
+			this.ThumbnailWidthLabel.Enabled = previewControlsEnabled;
+			this.ThumbnailHeightLabel.Enabled = previewControlsEnabled;
+
+			MainFormTheme.RefreshEnabledAppearance(this.PreviewsPanel);
 		}
 
 		public bool ThumbnailSnapToGrid
@@ -345,6 +391,10 @@ namespace EveOPreview.View
 		{
 			this._minimumSize = minimumSize;
 			this._maximumSize = maximumSize;
+			this.ThumbnailsWidthNumericEdit.Minimum = Math.Max(1, minimumSize.Width);
+			this.ThumbnailsWidthNumericEdit.Maximum = Math.Max(this.ThumbnailsWidthNumericEdit.Minimum, maximumSize.Width);
+			this.ThumbnailsHeightNumericEdit.Minimum = Math.Max(1, minimumSize.Height);
+			this.ThumbnailsHeightNumericEdit.Maximum = Math.Max(this.ThumbnailsHeightNumericEdit.Minimum, maximumSize.Height);
 		}
 
 		public void Minimize()
@@ -368,7 +418,7 @@ namespace EveOPreview.View
 
 			foreach (IThumbnailDescription view in thumbnails)
 			{
-				this.ThumbnailsList.SetItemChecked(this.ThumbnailsList.Items.Add(view), view.IsDisabled);
+				this.ThumbnailsList.SetItemChecked(this.ThumbnailsList.Items.Add(view), view.IsPriority);
 			}
 
 			this.ThumbnailsList.EndUpdate();
@@ -395,16 +445,23 @@ namespace EveOPreview.View
 			bool isCapturing = this._inputBindingCapture.IsCapturing;
 			this.CycleForwardRecordButton.Enabled = !isCapturing || this._captureTarget == CycleBindingCaptureTarget.Forward;
 			this.CycleBackwardRecordButton.Enabled = !isCapturing || this._captureTarget == CycleBindingCaptureTarget.MinimizeAll;
+			this.ShowAllPreviewsRecordButton.Enabled = !isCapturing || this._captureTarget == CycleBindingCaptureTarget.ShowAllPreviews;
 			this.CycleForwardBindingTextBox.BackColor = this._captureTarget == CycleBindingCaptureTarget.Forward
 				? MainFormTheme.CaptureHighlight
 				: MainFormTheme.Input;
 			this.CycleBackwardBindingTextBox.BackColor = this._captureTarget == CycleBindingCaptureTarget.MinimizeAll
 				? MainFormTheme.CaptureHighlight
 				: MainFormTheme.Input;
+			this.ShowAllPreviewsBindingTextBox.BackColor = this._captureTarget == CycleBindingCaptureTarget.ShowAllPreviews
+				? MainFormTheme.CaptureHighlight
+				: MainFormTheme.Input;
 			this.CycleForwardRecordButton.BackColor = this._captureTarget == CycleBindingCaptureTarget.Forward
 				? MainFormTheme.CaptureHighlight
 				: MainFormTheme.Button;
 			this.CycleBackwardRecordButton.BackColor = this._captureTarget == CycleBindingCaptureTarget.MinimizeAll
+				? MainFormTheme.CaptureHighlight
+				: MainFormTheme.Button;
+			this.ShowAllPreviewsRecordButton.BackColor = this._captureTarget == CycleBindingCaptureTarget.ShowAllPreviews
 				? MainFormTheme.CaptureHighlight
 				: MainFormTheme.Button;
 		}
@@ -428,6 +485,32 @@ namespace EveOPreview.View
 			this.StartBindingCapture(CycleBindingCaptureTarget.MinimizeAll);
 		}
 
+		private void ShowAllPreviewsRecordButton_Click(object sender, EventArgs e)
+		{
+			this.StartBindingCapture(CycleBindingCaptureTarget.ShowAllPreviews);
+		}
+
+		private void ContentTabControl_DrawItem(object sender, DrawItemEventArgs e)
+		{
+			MainFormTheme.DrawTab((TabControl)sender, e);
+		}
+
+		private void ShowThumbnailPreviewsChanged_Handler(object sender, EventArgs e)
+		{
+			this.RefreshThumbnailDisplayOptionsState();
+			this.OptionChanged_Handler(sender, e);
+		}
+
+		private void ThumbnailSizeChanged_Handler(object sender, EventArgs e)
+		{
+			if (this._suppressEvents)
+			{
+				return;
+			}
+
+			this.ThumbnailsSizeChanged?.Invoke();
+		}
+
 		private void StartBindingCapture(CycleBindingCaptureTarget target)
 		{
 			if (this._inputBindingCapture.IsCapturing && this._captureTarget == target)
@@ -437,13 +520,23 @@ namespace EveOPreview.View
 			}
 
 			this._captureTarget = target;
-			TextBox targetTextBox = target == CycleBindingCaptureTarget.Forward
-				? this.CycleForwardBindingTextBox
-				: this.CycleBackwardBindingTextBox;
-			targetTextBox.Text = "Press a key, combo, or mouse button...";
+			this.GetBindingTextBox(target).Text = "Press a key, combo, or mouse button...";
 
 			this._inputBindingCapture.Start();
 			this.RefreshCycleBindingCaptureState();
+		}
+
+		private TextBox GetBindingTextBox(CycleBindingCaptureTarget target)
+		{
+			switch (target)
+			{
+				case CycleBindingCaptureTarget.Forward:
+					return this.CycleForwardBindingTextBox;
+				case CycleBindingCaptureTarget.MinimizeAll:
+					return this.CycleBackwardBindingTextBox;
+				default:
+					return this.ShowAllPreviewsBindingTextBox;
+			}
 		}
 
 		private void StopBindingCapture()
@@ -463,6 +556,10 @@ namespace EveOPreview.View
 			{
 				this.MinimizeAllBinding = binding;
 			}
+			else if (this._captureTarget == CycleBindingCaptureTarget.ShowAllPreviews)
+			{
+				this.ShowAllPreviewsBinding = binding;
+			}
 
 			this._captureTarget = CycleBindingCaptureTarget.None;
 			this.RefreshCycleBindingCaptureState();
@@ -478,6 +575,10 @@ namespace EveOPreview.View
 			else if (this._captureTarget == CycleBindingCaptureTarget.MinimizeAll)
 			{
 				this.MinimizeAllBinding = this._minimizeAllBinding;
+			}
+			else if (this._captureTarget == CycleBindingCaptureTarget.ShowAllPreviews)
+			{
+				this.ShowAllPreviewsBinding = this._showAllPreviewsBinding;
 			}
 
 			this._captureTarget = CycleBindingCaptureTarget.None;
@@ -501,7 +602,7 @@ namespace EveOPreview.View
 				return;
 			}
 
-			selectedItem.IsDisabled = (e.NewValue == CheckState.Checked);
+			selectedItem.IsPriority = (e.NewValue == CheckState.Checked);
 			this.ThumbnailStateChanged?.Invoke(selectedItem.Title);
 		}
 
