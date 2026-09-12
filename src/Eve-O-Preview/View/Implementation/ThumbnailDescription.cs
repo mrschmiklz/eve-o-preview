@@ -2,13 +2,13 @@
 {
 	sealed class ThumbnailDescription : IThumbnailDescription
 	{
-		public ThumbnailDescription(string title, bool isDisabled)
+		public ThumbnailDescription(string title, bool isPriority)
 		{
 			this.Title = title;
-			this.IsDisabled = isDisabled;
+			this.IsPriority = isPriority;
 		}
 
 		public string Title { get; set; }
-		public bool IsDisabled { get; set; }
+		public bool IsPriority { get; set; }
 	}
 }

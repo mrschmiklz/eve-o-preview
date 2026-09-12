@@ -368,7 +368,7 @@ namespace EveOPreview.View
 
 			foreach (IThumbnailDescription view in thumbnails)
 			{
-				this.ThumbnailsList.SetItemChecked(this.ThumbnailsList.Items.Add(view), view.IsDisabled);
+				this.ThumbnailsList.SetItemChecked(this.ThumbnailsList.Items.Add(view), view.IsPriority);
 			}
 
 			this.ThumbnailsList.EndUpdate();
@@ -501,7 +501,7 @@ namespace EveOPreview.View
 				return;
 			}
 
-			selectedItem.IsDisabled = (e.NewValue == CheckState.Checked);
+			selectedItem.IsPriority = (e.NewValue == CheckState.Checked);
 			this.ThumbnailStateChanged?.Invoke(selectedItem.Title);
 		}
 
