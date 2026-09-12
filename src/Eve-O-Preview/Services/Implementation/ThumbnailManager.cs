@@ -443,11 +443,25 @@ namespace EveOPreview.Services
 			}
 			else
 			{
-				this._previewOverviewActive = false;
-				this.MinimizeInactiveClientsAfterOverview();
+				this.ExitPreviewOverview();
 			}
 
 			this.RequestRefreshThumbnails();
+		}
+
+		private void ExitPreviewOverview()
+		{
+			this._previewOverviewActive = false;
+			this.RestoreConfiguredSizeLimits();
+			this.MinimizeInactiveClientsAfterOverview();
+		}
+
+		private void RestoreConfiguredSizeLimits()
+		{
+			foreach (KeyValuePair<IntPtr, IThumbnailView> entry in this._thumbnailViews)
+			{
+				entry.Value.SetSizeLimitations(this._configuration.ThumbnailMinimumSize, this._configuration.ThumbnailMaximumSize);
+			}
 		}
 
 		private void RestoreAllClientsForPreview()
@@ -501,24 +515,24 @@ namespace EveOPreview.Services
 				return;
 			}
 
-			Rectangle workingArea = Screen.PrimaryScreen.WorkingArea;
-			int columns = (int)Math.Ceiling(Math.Sqrt(views.Count));
-			int rows = (int)Math.Ceiling((double)views.Count / columns);
 			const int margin = 8;
-			int cellWidth = workingArea.Width / columns;
-			int cellHeight = workingArea.Height / rows;
+			Rectangle area = this.GetOverviewScreenArea();
+			List<Rectangle> cells = PreviewGridLayout.ComputeCells(views.Count, area, margin);
 
 			for (int index = 0; index < views.Count; index++)
 			{
 				IThumbnailView view = views[index].Value;
-				int column = index % columns;
-				int row = index / columns;
+				Rectangle cell = cells[index];
 
-				Size cellSize = this.FitPreviewToCell(view.Id, cellWidth - (2 * margin), cellHeight - (2 * margin));
+				Size cellSize = this.FitPreviewToCell(view.Id, cell.Width, cell.Height);
 
-				int x = workingArea.X + (column * cellWidth) + ((cellWidth - cellSize.Width) / 2);
-				int y = workingArea.Y + (row * cellHeight) + ((cellHeight - cellSize.Height) / 2);
+				// Center the aspect-fitted preview within its cell.
+				int x = cell.X + ((cell.Width - cellSize.Width) / 2);
+				int y = cell.Y + ((cell.Height - cellSize.Height) / 2);
 
+				// Overview previews may be much larger than the normal thumbnail size
+				// cap, so widen the size limits while the grid is shown.
+				view.SetSizeLimitations(new Size(1, 1), new Size(area.Width, area.Height));
 				view.ThumbnailSize = cellSize;
 				view.ThumbnailLocation = new Point(x, y);
 				view.SetOpacity(1.0);
@@ -537,6 +551,21 @@ namespace EveOPreview.Services
 					view.Refresh(forceRefresh);
 				}
 			}
+		}
+
+		// The overview grid is shown on the second monitor when one is present,
+		// falling back to the primary monitor for single-display setups.
+		private Rectangle GetOverviewScreenArea()
+		{
+			foreach (Screen screen in Screen.AllScreens)
+			{
+				if (!screen.Primary)
+				{
+					return screen.WorkingArea;
+				}
+			}
+
+			return Screen.PrimaryScreen.WorkingArea;
 		}
 
 		// Fit a preview into a grid cell, preserving the client's aspect ratio.
@@ -1110,8 +1139,7 @@ namespace EveOPreview.Services
 					// Selecting a client from the preview grid dismisses the overview.
 					if (this._previewOverviewActive)
 					{
-						this._previewOverviewActive = false;
-						this.MinimizeInactiveClientsAfterOverview();
+						this.ExitPreviewOverview();
 					}
 
 					this.RequestRefreshThumbnails();

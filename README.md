@@ -231,8 +231,9 @@ You can still add extra keyboard bindings in `EVE-O-Preview.json`:
 ### Show All Previews (overview grid) with Hotkey Setup
 
 **Show all previews** is a toggle: press it once and every running EVE client is
-shown as an equally-sized live preview, tiled in a grid across your primary
-monitor. Click any preview to jump to that client; the overview then closes.
+shown as an equally-sized live preview, evenly tiled in a grid across your
+**second monitor** (it falls back to the primary monitor on single-display
+setups). Click any preview to jump to that client; the overview then closes.
 Press the toggle again to close it without switching.
 
 Because Windows/DWM cannot render a preview of a *minimized* window, toggling the
