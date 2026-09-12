@@ -1,8 +1,9 @@
-name: Test Build (Windows exe artifact)
+name: Test Build (Windows zip asset)
 
-# Builds a self-contained Windows exe on every push to a cursor/** branch and
-# uploads it as a downloadable workflow artifact (Actions run -> Artifacts), so
-# work-in-progress builds can be downloaded and tested without a GitHub Release.
+# Builds a self-contained Windows zip on every push to a cursor/** branch and
+# uploads it as a downloadable workflow artifact (Actions run -> Artifacts),
+# matching the GitHub Release asset name: Release-<version>-Windows.zip.
+# Work-in-progress builds can be downloaded and tested without a public release.
 on:
   push:
     branches:
@@ -11,7 +12,7 @@ on:
 
 jobs:
   build-windows:
-    name: Build Windows exe
+    name: Build Windows zip
     runs-on: windows-2022
 
     steps:
@@ -34,9 +35,14 @@ jobs:
             -p:FileVersion=8.9.0.${{ github.run_number }} `
             -o publish
 
-      - name: Upload exe artifact
+      - name: Create Release zip asset
+        shell: pwsh
+        run: |
+          Compress-Archive -Path publish\* -DestinationPath "Release-8.9.0.${{ github.run_number }}-Windows.zip"
+
+      - name: Upload zip asset
         uses: actions/upload-artifact@v4
         with:
-          name: EVE-O-Preview-overview-test-8.9.0.${{ github.run_number }}
-          path: publish/EVE-O-Preview.exe
+          name: Release-8.9.0.${{ github.run_number }}-Windows
+          path: Release-8.9.0.${{ github.run_number }}-Windows.zip
           if-no-files-found: error
