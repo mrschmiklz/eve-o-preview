@@ -8,6 +8,13 @@ Download builds from [GitHub Releases](https://github.com/mrschmiklz/eve-o-previ
 
 ## [Unreleased]
 
+## [8.0.5.6] - 2026-09-10
+
+### Fixed
+
+- Settings window layout: binding labels, record buttons, and value boxes now share a grid so they no longer overlap or sit on different baselines.
+- EVE clients list now shows the client title instead of `EveOPreview.View.ThumbnailDescription`.
+
 ## [8.0.5.5] - 2026-07-30
 
 ### Fixed

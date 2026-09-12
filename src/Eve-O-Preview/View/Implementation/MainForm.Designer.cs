@@ -27,6 +27,10 @@ namespace EveOPreview.View
 			ToolStripMenuItem TitleMenuItem;
 			ToolStripSeparator SeparatorMenuItem;
 			Label AnimationStyleLabel;
+			TableLayoutPanel MainLayout;
+			TableLayoutPanel BindingsLayout;
+			TableLayoutPanel AnimationLayout;
+			TableLayoutPanel ClientsLayout;
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
 
 			MainPanel = new Panel();
@@ -55,10 +59,18 @@ namespace EveOPreview.View
 			TitleMenuItem = new ToolStripMenuItem();
 			SeparatorMenuItem = new ToolStripSeparator();
 			AnimationStyleLabel = new Label();
+			MainLayout = new TableLayoutPanel();
+			BindingsLayout = new TableLayoutPanel();
+			AnimationLayout = new TableLayoutPanel();
+			ClientsLayout = new TableLayoutPanel();
 
 			MainPanel.SuspendLayout();
+			MainLayout.SuspendLayout();
 			ClientCycleBindingsGroupBox.SuspendLayout();
+			BindingsLayout.SuspendLayout();
+			AnimationLayout.SuspendLayout();
 			ClientsGroupBox.SuspendLayout();
+			ClientsLayout.SuspendLayout();
 			FooterPanel.SuspendLayout();
 			TrayMenu.SuspendLayout();
 			SuspendLayout();
@@ -81,13 +93,7 @@ namespace EveOPreview.View
 			SeparatorMenuItem.Name = "SeparatorMenuItem";
 			SeparatorMenuItem.Size = new Size(150, 6);
 
-			MainPanel.Controls.Add(ClientsGroupBox);
-			MainPanel.Controls.Add(HideCaptionOnClientsCheckBox);
-			MainPanel.Controls.Add(AnimationStyleLabel);
-			MainPanel.Controls.Add(AnimationStyleCombo);
-			MainPanel.Controls.Add(MinimizeInactiveClientsCheckBox);
-			MainPanel.Controls.Add(ClientCycleBindingsGroupBox);
-			MainPanel.Controls.Add(MinimizeToTrayCheckBox);
+			MainPanel.Controls.Add(MainLayout);
 			MainPanel.Dock = DockStyle.Fill;
 			MainPanel.Location = new Point(0, 0);
 			MainPanel.Name = "MainPanel";
@@ -95,8 +101,30 @@ namespace EveOPreview.View
 			MainPanel.Size = new Size(416, 408);
 			MainPanel.TabIndex = 0;
 
+			MainLayout.BackColor = Color.Transparent;
+			MainLayout.ColumnCount = 1;
+			MainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+			MainLayout.Controls.Add(MinimizeToTrayCheckBox, 0, 0);
+			MainLayout.Controls.Add(ClientCycleBindingsGroupBox, 0, 1);
+			MainLayout.Controls.Add(MinimizeInactiveClientsCheckBox, 0, 2);
+			MainLayout.Controls.Add(AnimationLayout, 0, 3);
+			MainLayout.Controls.Add(HideCaptionOnClientsCheckBox, 0, 4);
+			MainLayout.Controls.Add(ClientsGroupBox, 0, 5);
+			MainLayout.Dock = DockStyle.Fill;
+			MainLayout.Location = new Point(12, 14);
+			MainLayout.Name = "MainLayout";
+			MainLayout.RowCount = 6;
+			MainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+			MainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 172F));
+			MainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+			MainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+			MainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+			MainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+			MainLayout.TabIndex = 0;
+
 			MinimizeToTrayCheckBox.AutoSize = true;
-			MinimizeToTrayCheckBox.Location = new Point(12, 14);
+			MinimizeToTrayCheckBox.Dock = DockStyle.Fill;
+			MinimizeToTrayCheckBox.Margin = new Padding(0, 0, 0, 10);
 			MinimizeToTrayCheckBox.Name = "MinimizeToTrayCheckBox";
 			MinimizeToTrayCheckBox.Size = new Size(141, 19);
 			MinimizeToTrayCheckBox.TabIndex = 0;
@@ -104,71 +132,94 @@ namespace EveOPreview.View
 			MinimizeToTrayCheckBox.UseVisualStyleBackColor = true;
 			MinimizeToTrayCheckBox.CheckedChanged += OptionChanged_Handler;
 
-			ClientCycleBindingsGroupBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-			ClientCycleBindingsGroupBox.Controls.Add(CycleBackwardBindingTextBox);
-			ClientCycleBindingsGroupBox.Controls.Add(CycleBackwardRecordButton);
-			ClientCycleBindingsGroupBox.Controls.Add(CycleBackwardBindingLabel);
-			ClientCycleBindingsGroupBox.Controls.Add(CycleForwardBindingTextBox);
-			ClientCycleBindingsGroupBox.Controls.Add(CycleForwardRecordButton);
-			ClientCycleBindingsGroupBox.Controls.Add(CycleForwardBindingLabel);
-			ClientCycleBindingsGroupBox.Controls.Add(ClientCycleBindingHintLabel);
-			ClientCycleBindingsGroupBox.Location = new Point(12, 44);
+			ClientCycleBindingsGroupBox.Controls.Add(BindingsLayout);
+			ClientCycleBindingsGroupBox.Dock = DockStyle.Fill;
+			ClientCycleBindingsGroupBox.Margin = new Padding(0, 0, 0, 10);
 			ClientCycleBindingsGroupBox.Name = "ClientCycleBindingsGroupBox";
-			ClientCycleBindingsGroupBox.Size = new Size(392, 142);
+			ClientCycleBindingsGroupBox.Padding = new Padding(10, 16, 10, 8);
 			ClientCycleBindingsGroupBox.TabIndex = 1;
 			ClientCycleBindingsGroupBox.TabStop = false;
 			ClientCycleBindingsGroupBox.Text = "Mouse and keyboard bindings";
 
+			BindingsLayout.BackColor = Color.Transparent;
+			BindingsLayout.ColumnCount = 3;
+			BindingsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+			BindingsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 32F));
+			BindingsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+			BindingsLayout.Controls.Add(ClientCycleBindingHintLabel, 0, 0);
+			BindingsLayout.Controls.Add(CycleForwardBindingLabel, 0, 1);
+			BindingsLayout.Controls.Add(CycleForwardRecordButton, 1, 1);
+			BindingsLayout.Controls.Add(CycleForwardBindingTextBox, 2, 1);
+			BindingsLayout.Controls.Add(CycleBackwardBindingLabel, 0, 2);
+			BindingsLayout.Controls.Add(CycleBackwardRecordButton, 1, 2);
+			BindingsLayout.Controls.Add(CycleBackwardBindingTextBox, 2, 2);
+			BindingsLayout.Dock = DockStyle.Fill;
+			BindingsLayout.Name = "BindingsLayout";
+			BindingsLayout.RowCount = 3;
+			BindingsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+			BindingsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+			BindingsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+			BindingsLayout.TabIndex = 0;
+
+			ClientCycleBindingHintLabel.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top;
 			ClientCycleBindingHintLabel.AutoSize = true;
-			ClientCycleBindingHintLabel.Location = new Point(10, 28);
-			ClientCycleBindingHintLabel.MaximumSize = new Size(370, 0);
+			BindingsLayout.SetColumnSpan(ClientCycleBindingHintLabel, 3);
+			ClientCycleBindingHintLabel.Margin = new Padding(0, 4, 0, 8);
+			ClientCycleBindingHintLabel.MaximumSize = new Size(360, 0);
 			ClientCycleBindingHintLabel.Name = "ClientCycleBindingHintLabel";
 			ClientCycleBindingHintLabel.Text = "Click the box, then press a key or mouse button. Defaults: Mouse 4 = next client, Mouse 5 = minimize all.";
 
+			CycleForwardBindingLabel.Anchor = AnchorStyles.Left;
 			CycleForwardBindingLabel.AutoSize = true;
-			CycleForwardBindingLabel.Location = new Point(10, 66);
+			CycleForwardBindingLabel.Margin = new Padding(0, 0, 8, 0);
 			CycleForwardBindingLabel.Name = "CycleForwardBindingLabel";
-			CycleForwardBindingLabel.Size = new Size(118, 15);
 			CycleForwardBindingLabel.Text = "Cycle to next client";
+			CycleForwardBindingLabel.TextAlign = ContentAlignment.MiddleLeft;
 
-			CycleForwardRecordButton.Location = new Point(136, 62);
+			CycleForwardRecordButton.Dock = DockStyle.Fill;
+			CycleForwardRecordButton.Margin = new Padding(0, 2, 6, 2);
 			CycleForwardRecordButton.Name = "CycleForwardRecordButton";
-			CycleForwardRecordButton.Size = new Size(24, 24);
 			CycleForwardRecordButton.TabIndex = 2;
+			CycleForwardRecordButton.Text = "...";
 			CycleForwardRecordButton.UseVisualStyleBackColor = true;
 			CycleForwardRecordButton.Click += CycleForwardRecordButton_Click;
 
-			CycleForwardBindingTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-			CycleForwardBindingTextBox.Location = new Point(168, 63);
+			CycleForwardBindingTextBox.Cursor = Cursors.Hand;
+			CycleForwardBindingTextBox.Dock = DockStyle.Fill;
+			CycleForwardBindingTextBox.Margin = new Padding(0, 2, 0, 2);
 			CycleForwardBindingTextBox.Name = "CycleForwardBindingTextBox";
 			CycleForwardBindingTextBox.ReadOnly = true;
-			CycleForwardBindingTextBox.Size = new Size(214, 23);
 			CycleForwardBindingTextBox.TabIndex = 3;
 			CycleForwardBindingTextBox.TabStop = false;
+			CycleForwardBindingTextBox.Click += CycleForwardRecordButton_Click;
 
+			CycleBackwardBindingLabel.Anchor = AnchorStyles.Left;
 			CycleBackwardBindingLabel.AutoSize = true;
-			CycleBackwardBindingLabel.Location = new Point(10, 98);
+			CycleBackwardBindingLabel.Margin = new Padding(0, 0, 8, 0);
 			CycleBackwardBindingLabel.Name = "CycleBackwardBindingLabel";
-			CycleBackwardBindingLabel.Size = new Size(114, 15);
 			CycleBackwardBindingLabel.Text = "Minimize all clients";
+			CycleBackwardBindingLabel.TextAlign = ContentAlignment.MiddleLeft;
 
-			CycleBackwardRecordButton.Location = new Point(136, 94);
+			CycleBackwardRecordButton.Dock = DockStyle.Fill;
+			CycleBackwardRecordButton.Margin = new Padding(0, 2, 6, 2);
 			CycleBackwardRecordButton.Name = "CycleBackwardRecordButton";
-			CycleBackwardRecordButton.Size = new Size(24, 24);
 			CycleBackwardRecordButton.TabIndex = 4;
+			CycleBackwardRecordButton.Text = "...";
 			CycleBackwardRecordButton.UseVisualStyleBackColor = true;
 			CycleBackwardRecordButton.Click += CycleBackwardRecordButton_Click;
 
-			CycleBackwardBindingTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-			CycleBackwardBindingTextBox.Location = new Point(168, 95);
+			CycleBackwardBindingTextBox.Cursor = Cursors.Hand;
+			CycleBackwardBindingTextBox.Dock = DockStyle.Fill;
+			CycleBackwardBindingTextBox.Margin = new Padding(0, 2, 0, 2);
 			CycleBackwardBindingTextBox.Name = "CycleBackwardBindingTextBox";
 			CycleBackwardBindingTextBox.ReadOnly = true;
-			CycleBackwardBindingTextBox.Size = new Size(214, 23);
 			CycleBackwardBindingTextBox.TabIndex = 5;
 			CycleBackwardBindingTextBox.TabStop = false;
+			CycleBackwardBindingTextBox.Click += CycleBackwardRecordButton_Click;
 
 			MinimizeInactiveClientsCheckBox.AutoSize = true;
-			MinimizeInactiveClientsCheckBox.Location = new Point(12, 198);
+			MinimizeInactiveClientsCheckBox.Dock = DockStyle.Fill;
+			MinimizeInactiveClientsCheckBox.Margin = new Padding(0, 0, 0, 10);
 			MinimizeInactiveClientsCheckBox.Name = "MinimizeInactiveClientsCheckBox";
 			MinimizeInactiveClientsCheckBox.Size = new Size(168, 19);
 			MinimizeInactiveClientsCheckBox.TabIndex = 2;
@@ -176,22 +227,39 @@ namespace EveOPreview.View
 			MinimizeInactiveClientsCheckBox.UseVisualStyleBackColor = true;
 			MinimizeInactiveClientsCheckBox.CheckedChanged += OptionChanged_Handler;
 
-			AnimationStyleLabel.AutoSize = true;
-			AnimationStyleLabel.Location = new Point(12, 228);
-			AnimationStyleLabel.Name = "AnimationStyleLabel";
-			AnimationStyleLabel.Size = new Size(96, 15);
-			AnimationStyleLabel.Text = "Animation style";
+			AnimationLayout.AutoSize = true;
+			AnimationLayout.BackColor = Color.Transparent;
+			AnimationLayout.ColumnCount = 2;
+			AnimationLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+			AnimationLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+			AnimationLayout.Controls.Add(AnimationStyleLabel, 0, 0);
+			AnimationLayout.Controls.Add(AnimationStyleCombo, 1, 0);
+			AnimationLayout.Dock = DockStyle.Fill;
+			AnimationLayout.Margin = new Padding(0, 0, 0, 10);
+			AnimationLayout.Name = "AnimationLayout";
+			AnimationLayout.RowCount = 1;
+			AnimationLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+			AnimationLayout.TabIndex = 3;
 
+			AnimationStyleLabel.Anchor = AnchorStyles.Left;
+			AnimationStyleLabel.AutoSize = true;
+			AnimationStyleLabel.Margin = new Padding(0, 0, 8, 0);
+			AnimationStyleLabel.Name = "AnimationStyleLabel";
+			AnimationStyleLabel.Text = "Animation style";
+			AnimationStyleLabel.TextAlign = ContentAlignment.MiddleLeft;
+
+			AnimationStyleCombo.Anchor = AnchorStyles.Left;
 			AnimationStyleCombo.DropDownStyle = ComboBoxStyle.DropDownList;
 			AnimationStyleCombo.FormattingEnabled = true;
-			AnimationStyleCombo.Location = new Point(120, 224);
+			AnimationStyleCombo.Margin = new Padding(0, 1, 0, 1);
 			AnimationStyleCombo.Name = "AnimationStyleCombo";
 			AnimationStyleCombo.Size = new Size(180, 23);
 			AnimationStyleCombo.TabIndex = 3;
 			AnimationStyleCombo.SelectedIndexChanged += OptionChanged_Handler;
 
 			HideCaptionOnClientsCheckBox.AutoSize = true;
-			HideCaptionOnClientsCheckBox.Location = new Point(12, 258);
+			HideCaptionOnClientsCheckBox.Dock = DockStyle.Fill;
+			HideCaptionOnClientsCheckBox.Margin = new Padding(0, 0, 0, 10);
 			HideCaptionOnClientsCheckBox.Name = "HideCaptionOnClientsCheckBox";
 			HideCaptionOnClientsCheckBox.Size = new Size(168, 19);
 			HideCaptionOnClientsCheckBox.TabIndex = 4;
@@ -199,29 +267,39 @@ namespace EveOPreview.View
 			HideCaptionOnClientsCheckBox.UseVisualStyleBackColor = true;
 			HideCaptionOnClientsCheckBox.CheckedChanged += OptionChanged_Handler;
 
-			ClientsGroupBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-			ClientsGroupBox.Controls.Add(ThumbnailsList);
-			ClientsGroupBox.Controls.Add(ThumbnailsListLabel);
-			ClientsGroupBox.Location = new Point(12, 288);
+			ClientsGroupBox.Controls.Add(ClientsLayout);
+			ClientsGroupBox.Dock = DockStyle.Fill;
+			ClientsGroupBox.Margin = new Padding(0);
 			ClientsGroupBox.Name = "ClientsGroupBox";
-			ClientsGroupBox.Size = new Size(392, 112);
+			ClientsGroupBox.Padding = new Padding(10, 16, 10, 8);
 			ClientsGroupBox.TabIndex = 5;
 			ClientsGroupBox.TabStop = false;
 			ClientsGroupBox.Text = "EVE clients";
 
+			ClientsLayout.BackColor = Color.Transparent;
+			ClientsLayout.ColumnCount = 1;
+			ClientsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+			ClientsLayout.Controls.Add(ThumbnailsListLabel, 0, 0);
+			ClientsLayout.Controls.Add(ThumbnailsList, 0, 1);
+			ClientsLayout.Dock = DockStyle.Fill;
+			ClientsLayout.Name = "ClientsLayout";
+			ClientsLayout.RowCount = 2;
+			ClientsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+			ClientsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+			ClientsLayout.TabIndex = 0;
+
 			ThumbnailsListLabel.AutoSize = true;
-			ThumbnailsListLabel.Location = new Point(10, 28);
+			ThumbnailsListLabel.Dock = DockStyle.Fill;
+			ThumbnailsListLabel.Margin = new Padding(0, 4, 0, 6);
 			ThumbnailsListLabel.Name = "ThumbnailsListLabel";
-			ThumbnailsListLabel.Size = new Size(248, 15);
 			ThumbnailsListLabel.Text = "Check a client to exclude it from cycling";
 
-			ThumbnailsList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 			ThumbnailsList.CheckOnClick = true;
+			ThumbnailsList.Dock = DockStyle.Fill;
 			ThumbnailsList.FormattingEnabled = true;
 			ThumbnailsList.IntegralHeight = false;
-			ThumbnailsList.Location = new Point(10, 48);
+			ThumbnailsList.Margin = new Padding(0);
 			ThumbnailsList.Name = "ThumbnailsList";
-			ThumbnailsList.Size = new Size(372, 54);
 			ThumbnailsList.TabIndex = 0;
 			ThumbnailsList.ItemCheck += ThumbnailsList_ItemCheck_Handler;
 
@@ -275,12 +353,17 @@ namespace EveOPreview.View
 			FormClosing += MainFormClosing_Handler;
 			Resize += MainFormResize_Handler;
 
+			MainLayout.ResumeLayout(false);
+			MainLayout.PerformLayout();
+			BindingsLayout.ResumeLayout(false);
+			BindingsLayout.PerformLayout();
+			AnimationLayout.ResumeLayout(false);
+			AnimationLayout.PerformLayout();
+			ClientsLayout.ResumeLayout(false);
+			ClientsLayout.PerformLayout();
 			MainPanel.ResumeLayout(false);
-			MainPanel.PerformLayout();
 			ClientCycleBindingsGroupBox.ResumeLayout(false);
-			ClientCycleBindingsGroupBox.PerformLayout();
 			ClientsGroupBox.ResumeLayout(false);
-			ClientsGroupBox.PerformLayout();
 			FooterPanel.ResumeLayout(false);
 			FooterPanel.PerformLayout();
 			TrayMenu.ResumeLayout(false);

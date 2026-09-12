@@ -436,6 +436,12 @@ namespace EveOPreview.View
 				return;
 			}
 
+			if (this._captureTarget != CycleBindingCaptureTarget.None && this._captureTarget != target)
+			{
+				this.CycleForwardBindingTextBox.Text = InputBindingHelper.ToDisplayString(this._cycleForwardBinding);
+				this.CycleBackwardBindingTextBox.Text = InputBindingHelper.ToDisplayString(this._minimizeAllBinding);
+			}
+
 			this._captureTarget = target;
 			TextBox targetTextBox = target == CycleBindingCaptureTarget.Forward
 				? this.CycleForwardBindingTextBox

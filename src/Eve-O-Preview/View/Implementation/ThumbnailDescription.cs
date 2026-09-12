@@ -10,5 +10,10 @@
 
 		public string Title { get; set; }
 		public bool IsDisabled { get; set; }
+
+		public override string ToString()
+		{
+			return this.Title ?? string.Empty;
+		}
 	}
 }
